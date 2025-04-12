@@ -71,6 +71,7 @@ export default function Home() {
             <WalletComponent />
             <RiskAssessmentComponent userId={user?.uid || 'default'} />
             <ReferralTrackingComponent />
+             <SupportComponent />
           </div>
         )}
         <SummaryComponent />
@@ -120,6 +121,13 @@ function ReferralTrackingComponent() {
   return (
     <div>
       <h1 className="text-2xl font-bold mb-4">Referral Tracking</h1>
+    </div>
+  );
+}
+function SupportComponent() {
+  return (
+    <div>
+      <h1 className="text-2xl font-bold mb-4">Support</h1>
     </div>
   );
 }

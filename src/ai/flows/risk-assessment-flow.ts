@@ -12,15 +12,6 @@ import {z} from 'genkit';
 
 const RiskAssessmentInputSchema = z.object({
   userId: z.string().describe('The ID of the user for whom to assess risk.'),
-  transactionHistory: z.array(z.object({
-    type: z.string().describe('The type of transaction (e.g., Deposit, Withdrawal, Loan).'),
-    amount: z.number().describe('The amount of the transaction.'),
-    date: z.string().describe('The date of the transaction (YYYY-MM-DD).'),
-  })).optional().describe('The transaction history of the user.'),
-  profileData: z.object({
-    membership: z.string().describe('The membership tier of the user (e.g., Basic, Ambassador).'),
-    kycStatus: z.string().describe('The KYC status of the user (e.g., Verified, Pending).'),
-  }).optional().describe('The profile data of the user.')
 });
 export type RiskAssessmentInput = z.infer<typeof RiskAssessmentInputSchema>;
 
@@ -89,17 +80,19 @@ const prompt = ai.definePrompt({
   A lower score indicates lower risk, while a higher score indicates higher risk.
   Provide a detailed explanation of the risk score, including the factors that influenced it.
 
+  Here's the user ID: {{userId}}
+
   First, call the getUserTransactionHistory tool to get the transaction history.
   Then, call the getUserProfile tool to get the user profile.
 
   Transaction History:
-  {{#each (getUserTransactionHistory userId=userId)}}
+  {{#each (await getUserTransactionHistory userId=userId)}}
   - Type: {{this.type}}, Amount: {{this.amount}}, Date: {{this.date}}
   {{/each}}
 
   User Profile:
-  - Membership: {{(getUserProfile userId=userId).membership}}
-  - KYC Status: {{(getUserProfile userId=userId).kycStatus}}
+  - Membership: {{(await getUserProfile userId=userId).membership}}
+  - KYC Status: {{(await getUserProfile userId=userId).kycStatus}}
 
   Based on the transaction history and user profile, determine a risk score and explain your reasoning.
   Provide the risk score as a number and the explanation as a string.`,
