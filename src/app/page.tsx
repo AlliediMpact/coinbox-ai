@@ -6,6 +6,7 @@ import SummaryComponent from "@/components/SummaryComponent";
 import { Home as HomeIcon, Users, Coins, Wallet, Shield, Share2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import AdminDashboard from "@/components/AdminDashboard";
+import Image from 'next/image';
 
 export default function Home() {
   const { user } = useAuth();
@@ -20,6 +21,14 @@ export default function Home() {
       <Sidebar>
         <SidebarTrigger />
         <SidebarContent>
+          <div className="flex justify-center p-4">
+            <Image
+              src="/CoinBoxLogo02.png"
+              alt="CoinBox Logo"
+              width={100}
+              height={100}
+            />
+          </div>
           <SidebarMenu>
             <SidebarMenuItem>
               <SidebarMenuButton onClick={() => handleNavigation('/dashboard')} tooltip="Home" >
@@ -131,3 +140,4 @@ function SupportComponent() {
     </div>
   );
 }
+
