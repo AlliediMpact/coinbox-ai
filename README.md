@@ -21,18 +21,19 @@ Our mission is to provide an innovative, user-friendly, and secure digital marke
 - **Referral System:** Tiered commissions based on performance, Automated payouts with multiple withdrawal options, Leaderboard & Bonuses.
 - **Wallet Management:** Multiple payment options (Stripe, Bank Transfer, Crypto), Transaction history, KYC integration.
 - **Risk Assesment** Leverages AI to asses risk
--   **Security:** Data encryption at rest and transit, KYC, GDPR and CCPA compliance.
+- **Security:** Data encryption at rest and transit, KYC, GDPR and CCPA compliance.
 - **Text Summarization** Leverages AI to create summaries
--   **Admin dashboard:** Comprehensive user management, transaction monitoring and system configuration, reporting and analytics, KYC & Compliance.
-   -   **User Management:** Verify accounts, enable/disable users.
-    -   **Transaction Monitoring:** Review transactions, approve withdrawals.
-    -   **Membership Management:** Adjust fees, upgrade/downgrade plans.
-    -   **Referral System Management:** Monitor commission payouts.
-    -   **KYC & Compliance:** Review ID verifications, manage disputes.
-	-	**Reporting and analytics**: Generate reports on platform usage, transaction volume, and revenue.
-        -   **Membership Management**: adjust fees, upgrade/downgrade plans.
-        -   **KYC & Compliance**: Review ID verifications, Manage Disputes
-        -   **Referral System Management**: Monitor Commission Payouts.
+- **Customer Support:** Live Chat, Support Tickets, FAQ &amp; Help Center
+- **Admin dashboard:** Comprehensive user management, transaction monitoring and system configuration, reporting and analytics, KYC &amp; Compliance.
+    - **User Management:** Verify accounts, enable/disable users.
+    - **Transaction Monitoring:** Review transactions, approve withdrawals.
+    - **Membership Management:** Adjust fees, upgrade/downgrade plans.
+    - **Referral System Management:** Monitor commission payouts.
+    - **KYC &amp; Compliance:** Review ID verifications, manage disputes.
+    - **Reporting and analytics**: Generate reports on platform usage, transaction volume, and revenue.
+    - **Membership Management**: adjust fees, upgrade/downgrade plans.
+    - **KYC &amp; Compliance**: Review ID verifications, Manage Disputes
+    - **Referral System Management**: Monitor Commission Payouts.
 
 ## UI/UX Improvements
 
@@ -54,5 +55,11 @@ Our mission is to provide an innovative, user-friendly, and secure digital marke
 
 -Tier-based commission program
 
-To get started, take a look at src/app/page.tsx.
+## Revenue Model
 
+- Transaction Fees: R10 per transaction.
+- Membership Fees: One-time security deposit.
+- Loan Interest Fees: 20% repayment fee.
+- Premium Features: Priority transactions, staking, financial insights.
+
+To get started, take a look at src/app/page.tsx.
