@@ -20,7 +20,6 @@ Our mission is to provide an innovative, user-friendly, and secure digital marke
 - **Peer-to-Peer Trading:** Automated matching algorithm, Escrow, Dispute Resolution with clear guidelines and automated transaction system.
 - **Referral System:** Tiered commissions based on performance, Automated payouts with multiple withdrawal options, Leaderboard & Bonuses.
 - **Wallet Management:** Multiple payment options (Stripe, Bank Transfer, Crypto), Transaction history, KYC integration.
-- **Risk Assesment** Leverages AI to asses risk
 -   **Security:** Data encryption at rest and transit, KYC, GDPR and CCPA compliance.
 - **Text Summarization** Leverages AI to create summaries
 -   **Admin dashboard:** Comprehensive user management, transaction monitoring and system configuration, reporting and analytics, KYC & Compliance.
@@ -57,6 +56,3 @@ Our mission is to provide an innovative, user-friendly, and secure digital marke
 -Tier-based commission program
 
 To get started, take a look at src/app/page.tsx.
-
-
-
