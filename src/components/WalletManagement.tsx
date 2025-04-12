@@ -2,7 +2,7 @@
 
 import {Card, CardContent, CardDescription, CardHeader, CardTitle} from "@/components/ui/card";
 import {Button} from "@/components/ui/button";
-import {useState} from "react";
+import {useState, useEffect} from "react";
 import {Dialog, DialogClose, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger} from "@/components/ui/dialog";
 import {Input} from "@/components/ui/input";
 import {
@@ -12,8 +12,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { useToast } from "@/hooks/use-toast"; // Import the useToast hook
 
-const transactionHistory = [
+const initialTransactionHistory = [
   {id: 1, type: "Deposit", amount: "R1000", date: "2024-07-14", method: "Stripe"},
   {id: 2, type: "Withdrawal", amount: "R200", date: "2024-07-13", method: "Bank Transfer"},
   {id: 3, type: "Loan", amount: "R300", date: "2024-07-12", method: "Coin Transfer"},
@@ -23,12 +24,100 @@ export default function WalletManagement() {
   const [open, setOpen] = useState(false);
   const [depositMethod, setDepositMethod] = useState("Stripe");
   const [depositAmount, setDepositAmount] = useState("");
+  const [transactionHistory, setTransactionHistory] = useState(initialTransactionHistory);
+  const [walletBalance, setWalletBalance] = useState(1800); // Initial wallet balance
+  const { toast } = useToast();
 
-  const handleDeposit = () => {
-    // Implement deposit logic, integrating with Stripe or other payment gateways
-    alert(`Depositing R${depositAmount} via ${depositMethod}`);
-    setOpen(false);
-  };
+    // Load wallet balance from local storage on component mount
+    useEffect(() => {
+        const storedBalance = localStorage.getItem('walletBalance');
+        if (storedBalance) {
+            setWalletBalance(parseFloat(storedBalance));
+        }
+    }, []);
+
+    // Save wallet balance to local storage whenever it changes
+    useEffect(() => {
+        localStorage.setItem('walletBalance', walletBalance.toString());
+    }, [walletBalance]);
+
+
+    const handleDeposit = () => {
+        const amount = parseFloat(depositAmount);
+        if (isNaN(amount) || amount <= 0) {
+            toast({
+                title: "Error",
+                description: "Please enter a valid deposit amount.",
+                variant: "destructive",
+            });
+            return;
+        }
+
+        // Simulate successful deposit
+        const newBalance = walletBalance + amount;
+        setWalletBalance(newBalance);
+        setTransactionHistory([
+            ...transactionHistory,
+            {
+                id: transactionHistory.length + 1,
+                type: "Deposit",
+                amount: `R${amount}`,
+                date: new Date().toLocaleDateString(),
+                method: depositMethod,
+            },
+        ]);
+
+        toast({
+            title: "Deposit Successful",
+            description: `Successfully deposited R${amount} via ${depositMethod}.`,
+        });
+        setDepositAmount("");
+        setOpen(false);
+    };
+
+
+    const handleWithdrawal = () => {
+        const amount = parseFloat(depositAmount);
+        if (isNaN(amount) || amount <= 0) {
+            toast({
+                title: "Error",
+                description: "Please enter a valid withdrawal amount.",
+                variant: "destructive",
+            });
+            return;
+        }
+
+        if (amount > walletBalance) {
+            toast({
+                title: "Error",
+                description: "Insufficient balance.",
+                variant: "destructive",
+            });
+            return;
+        }
+
+        // Simulate successful withdrawal
+        const newBalance = walletBalance - amount;
+        setWalletBalance(newBalance);
+        setTransactionHistory([
+            ...transactionHistory,
+            {
+                id: transactionHistory.length + 1,
+                type: "Withdrawal",
+                amount: `R${amount}`,
+                date: new Date().toLocaleDateString(),
+                method: depositMethod,
+            },
+        ]);
+
+        toast({
+            title: "Withdrawal Initiated",
+            description: `Successfully initiated withdrawal of R${amount} via ${depositMethod}.`,
+        });
+        setDepositAmount("");
+        setOpen(false);
+    };
+
 
   return (
     <Card>
@@ -38,7 +127,7 @@ export default function WalletManagement() {
       </CardHeader>
       <CardContent className="grid gap-4">
         <div>
-          <strong>Wallet Balance:</strong> R1,800
+          <strong>Wallet Balance:</strong> R{walletBalance}
         </div>
         <div>
           <strong>Transaction History:</strong>
@@ -55,11 +144,11 @@ export default function WalletManagement() {
         </div>
         <Dialog open={open} onOpenChange={setOpen}>
           <DialogTrigger asChild>
-            <Button>Deposit Funds</Button>
+            <Button>Deposit / Withdraw Funds</Button>
           </DialogTrigger>
           <DialogContent>
             <DialogHeader>
-              <DialogTitle>Deposit Funds</DialogTitle>
+              <DialogTitle>Deposit / Withdraw Funds</DialogTitle>
               <DialogDescription>Select a payment method and enter the deposit amount.</DialogDescription>
             </DialogHeader>
             <div className="grid gap-4 py-4">
@@ -93,9 +182,12 @@ export default function WalletManagement() {
                   Cancel
                 </Button>
               </DialogClose>
-              <Button type="button" onClick={handleDeposit}>
-                Deposit
-              </Button>
+                <Button type="button" onClick={handleDeposit} className="bg-green-500 text-white hover:bg-green-700">
+                    Deposit
+                </Button>
+                <Button type="button" onClick={handleWithdrawal} className="bg-red-500 text-white hover:bg-red-700">
+                    Withdraw
+                </Button>
             </div>
           </DialogContent>
         </Dialog>
@@ -103,3 +195,4 @@ export default function WalletManagement() {
     </Card>
   );
 }
+
