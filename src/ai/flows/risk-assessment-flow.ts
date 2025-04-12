@@ -79,6 +79,65 @@ const getUserProfile = ai.defineTool({
   return { membership: "Basic", kycStatus: "Verified" };
 });
 
+const getLoanHistory = ai.defineTool({
+  name: 'getLoanHistory',
+  description: 'Fetches the loan history for a given user ID. Returns a list of loans with amount and status.',
+  inputSchema: z.object({
+    userId: z.string().describe('The ID of the user.'),
+  }),
+  outputSchema: z.array(z.object({
+    amount: z.number().describe('The amount of each loan.'),
+    status: z.string().describe('The status of the loan (e.g., active, repaid, defaulted).'),
+  })).describe('The loan history of the user.')
+}, async (input) => {
+  // Placeholder implementation - replace with actual data fetching logic
+  console.log(`Fetching loan history for user: ${input.userId}`);
+  // Simulate fetching loan history from a database or service
+  const loanHistory = [
+    { amount: 500, status: "repaid" },
+    { amount: 1000, status: "active" },
+  ];
+  return loanHistory;
+});
+
+const getActiveInvestments = ai.defineTool({
+  name: 'getActiveInvestments',
+  description: 'Fetches the active investments for a given user ID. Returns a list of investments with amount and maturity date.',
+  inputSchema: z.object({
+    userId: z.string().describe('The ID of the user.'),
+  }),
+  outputSchema: z.array(z.object({
+    amount: z.number().describe('The amount of each active investment.'),
+    maturityDate: z.string().describe('The maturity date of the investment (YYYY-MM-DD).'),
+  })).describe('The active investments of the user.')
+}, async (input) => {
+  // Placeholder implementation - replace with actual data fetching logic
+  console.log(`Fetching active investments for user: ${input.userId}`);
+  // Simulate fetching active investments from a database or service
+  const activeInvestments = [
+    { amount: 2000, maturityDate: "2024-12-31" },
+    { amount: 500, maturityDate: "2025-06-30" },
+  ];
+  return activeInvestments;
+});
+
+const getPaymentBehavior = ai.defineTool({
+  name: 'getPaymentBehavior',
+  description: 'Fetches the payment behavior for a given user ID. Returns the number of on-time and missed payments.',
+  inputSchema: z.object({
+    userId: z.string().describe('The ID of the user.'),
+  }),
+  outputSchema: z.object({
+    ontimePayments: z.number().describe('The number of on-time payments made by the user.'),
+    missedPayments: z.number().describe('The number of missed payments by the user.'),
+  }).describe('The payment behavior of the user.')
+}, async (input) => {
+  // Placeholder implementation - replace with actual data fetching logic
+  console.log(`Fetching payment behavior for user: ${input.userId}`);
+  // Simulate fetching payment behavior from a database or service
+  return { ontimePayments: 10, missedPayments: 2 };
+});
+
 const prompt = ai.definePrompt({
   name: 'riskAssessmentPrompt',
   input: {
@@ -96,39 +155,36 @@ const prompt = ai.definePrompt({
 
   First, call the getUserTransactionHistory tool to get the transaction history.
   Then, call the getUserProfile tool to get the user profile.
+  Then, call the getLoanHistory tool to get the loan history.
+  Then, call the getActiveInvestments tool to get the active investments.
+  Finally, call the getPaymentBehavior tool to get the payment behavior.
 
   Transaction History:
-  {{#each (await getUserTransactionHistory userId=userId)}}
+  {{#each (getUserTransactionHistory userId=userId)}}
   - Type: {{this.type}}, Amount: {{this.amount}}, Date: {{this.date}}
   {{/each}}
 
   User Profile:
-  - Membership: {{(await getUserProfile userId=userId).membership}}
-  - KYC Status: {{(await getUserProfile userId=userId).kycStatus}}
+  - Membership: {{(getUserProfile userId=userId).membership}}
+  - KYC Status: {{(getUserProfile userId=userId).kycStatus}}
 
-  {% if loanHistory %}
   Loan History:
-  {{#each loanHistory}}
+  {{#each (getLoanHistory userId=userId)}}
   - Amount: {{this.amount}}, Status: {{this.status}}
   {{/each}}
-  {% endif %}
 
-  {% if activeInvestments %}
   Active Investments:
-  {{#each activeInvestments}}
+  {{#each (getActiveInvestments userId=userId)}}
   - Amount: {{this.amount}}, Maturity Date: {{this.maturityDate}}
   {{/each}}
-  {% endif %}
 
-  {% if paymentBehaviour %}
   Payment Behavior:
-  - On-time Payments: {{paymentBehaviour.ontimePayments}}
-  - Missed Payments: {{paymentBehaviour.missedPayments}}
-  {% endif %}
+  - On-time Payments: {{(getPaymentBehavior userId=userId).ontimePayments}}
+  - Missed Payments: {{(getPaymentBehavior userId=userId).missedPayments}}
 
   Based on the transaction history, user profile, loan history, active investments, and payment behavior, determine a risk score and explain your reasoning.
   Provide the risk score as a number and the explanation as a string.`,
-  tools: [getUserTransactionHistory, getUserProfile],
+  tools: [getUserTransactionHistory, getUserProfile, getLoanHistory, getActiveInvestments, getPaymentBehavior],
 });
 
 const riskAssessmentFlow = ai.defineFlow<
