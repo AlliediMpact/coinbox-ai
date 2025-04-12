@@ -150,8 +150,7 @@ export default function Home() {
                                 </DropdownMenuItem>
                                 <DropdownMenuItem onClick={() => {
                                     signOutUser();
-                                    router.push('/auth');
-                                }}>
+                                    router.push('/auth')}>
                                     Logout
                                 </DropdownMenuItem>
                             </DropdownMenuContent>
