@@ -31,12 +31,15 @@ import {
     CardTitle,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 
 export default function Home() {
     const { user, signOutUser } = useAuth();
     const router = useRouter();
     const [walletBalance, setWalletBalance] = useState(0);
     const [commissionBalance, setCommissionBalance] = useState(0);
+    const [searchTerm, setSearchTerm] = useState('');
+    const [searchResults, setSearchResults] = useState<any[]>([]);
     useEffect(() => {
         // Mock data for demonstration
         setWalletBalance(1800);
@@ -45,6 +48,23 @@ export default function Home() {
 
     const handleNavigation = (path: string) => {
         router.push(path);
+    };
+
+    const handleSearch = (event: React.ChangeEvent<HTMLInputElement>) => {
+        setSearchTerm(event.target.value);
+        // Mock data for search results
+        const mockResults = [
+            { id: 1, title: "Trading Guide", link: "/trading/guide" },
+            { id: 2, title: "Wallet FAQs", link: "/wallet/faq" },
+            { id: 3, title: "Referral Program Details", link: "/referral/details" },
+        ];
+
+        // Filter mock results based on search term
+        const filteredResults = mockResults.filter(result =>
+            result.title.toLowerCase().includes(event.target.value.toLowerCase())
+        );
+
+        setSearchResults(filteredResults);
     };
 
     return (
@@ -59,6 +79,8 @@ export default function Home() {
                                 alt="CoinBox Logo"
                                 width={100}
                                 height={100}
+                                style={{ cursor: 'pointer' }}
+                                onClick={() => router.push('/')}
                             />
                         </div>
                         <SidebarMenu>
@@ -115,8 +137,30 @@ export default function Home() {
                                 alt="CoinBox Logo"
                                 width={50}
                                 height={50}
+                                style={{ cursor: 'pointer' }}
+                                onClick={() => router.push('/')}
                             />
-                            <h1 className="text-3xl font-bold ml-2">CoinBox Connect</h1>
+                            <div className="w-64 ml-4">
+                                <Input
+                                    type="search"
+                                    placeholder="Search..."
+                                    value={searchTerm}
+                                    onChange={handleSearch}
+                                />
+                                {searchTerm && searchResults.length > 0 && (
+                                    <Card className="absolute z-10 w-64 mt-1">
+                                        <CardContent className="p-2">
+                                            <ul>
+                                                {searchResults.map(result => (
+                                                    <li key={result.id} className="p-1 hover:bg-secondary cursor-pointer" onClick={() => router.push(result.link)}>
+                                                        {result.title}
+                                                    </li>
+                                                ))}
+                                            </ul>
+                                        </CardContent>
+                                    </Card>
+                                )}
+                            </div>
                         </div>
                         {user ? (
                             <div className="flex items-center space-x-4">
@@ -205,3 +249,4 @@ export default function Home() {
         </>
     );
 }
+
