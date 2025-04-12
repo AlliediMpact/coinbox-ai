@@ -8,6 +8,7 @@ import {
   signOut,
   onAuthStateChanged,
   User,
+  updateProfile,
 } from 'firebase/auth';
 import { app } from '@/lib/firebase';
 
@@ -47,16 +48,31 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
     return () => unsubscribe();
   }, [auth]);
 
-  const signUp = async (email: string, password: string, additionalData = {}) => {
-    try {
-      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-      // You can update the user profile or store additional data in Firestore
-      console.log(userCredential)
-    } catch (error: any) {
-      console.error('Signup error:', error.message);
-      throw error;
-    }
-  };
+    const signUp = async (email: string, password: string, additionalData = {}) => {
+        try {
+            const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+            const { user } = userCredential;
+
+            // Update user profile with additional data
+            await updateProfile(user, {
+                displayName: additionalData.fullName || null,
+                // You can add more profile properties here if needed
+            });
+
+            // You can store additional user data in Firestore or Realtime Database here
+            // For example, you might want to store:
+            // - fullName
+            // - phone
+            // - referralCode
+            // - membershipTier
+
+            console.log("Sign up successful:", user);
+        } catch (error: any) {
+            console.error('Signup error:', error.message);
+            throw error;
+        }
+    };
+
 
   const signIn = async (email: string, password: string) => {
     try {

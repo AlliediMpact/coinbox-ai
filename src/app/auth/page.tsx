@@ -9,14 +9,33 @@ import { Mail, Key, Facebook } from 'lucide-react'; // Import icons
 import { cn } from "@/lib/utils";
 import React from 'react';
 import Image from 'next/image';
+import { useAuth } from '@/components/AuthProvider'; // Import useAuth
+import { useToast } from "@/hooks/use-toast"; // Import the useToast hook
+import {
+    Dialog,
+    DialogClose,
+    DialogContent,
+    DialogDescription,
+    DialogHeader,
+    DialogTitle,
+    DialogTrigger,
+} from "@/components/ui/dialog";
+
 
 export default function AuthPage() {
   const router = useRouter();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [fullName, setFullName] = useState('');
+  const [phone, setPhone] = useState('');
+  const [referralCode, setReferralCode] = useState('');
   const [showSignIn, setShowSignIn] = useState(true);
   const [showForgotPassword, setShowForgotPassword] = useState(false); // State for forgot password
   const cardRef = useRef<HTMLDivElement>(null); // Ref for the card element
+  const [membershipTier, setMembershipTier] = useState('Basic'); // Default value
+  const { signUp, signIn } = useAuth();
+  const { toast } = useToast(); // Initialize the useToast hook
+  const [open, setOpen] = useState(false); // Dialog for password reset
 
   useEffect(() => {
     // Animation code using the cardRef
@@ -56,15 +75,44 @@ export default function AuthPage() {
     }
   }, []);
 
-  const handleSignIn = async (e: React.FormEvent) => {
-    e.preventDefault();
-    router.push('/auth/signin'); // Redirect to sign-in page
-  };
+    const handleSignIn = async (e: React.FormEvent) => {
+        e.preventDefault();
+        try {
+            await signIn(email, password);
+            router.push('/dashboard'); // Redirect to dashboard after successful sign in
+            toast({
+                title: "Sign In Successful",
+                description: `Welcome back, ${email}!`,
+            });
+        } catch (error: any) {
+            console.error("Failed to sign in:", error.message);
+            toast({
+                title: "Sign In Error",
+                description: error.message,
+                variant: "destructive",
+            });
+        }
+    };
 
-  const handleSignUp = async (e: React.FormEvent) => {
-    e.preventDefault();
-    router.push('/auth/signup'); // Redirect to sign-up page
-  };
+    const handleSignUp = async (e: React.FormEvent) => {
+        e.preventDefault();
+        try {
+            await signUp(email, password, { fullName, phone, referralCode, membershipTier });
+            router.push('/dashboard'); // Redirect to dashboard after successful sign up
+            toast({
+                title: "Sign Up Successful",
+                description: "Account created successfully! Redirecting to dashboard...",
+            });
+        } catch (error: any) {
+            console.error("Failed to sign up:", error.message);
+            toast({
+                title: "Sign Up Error",
+                description: error.message,
+                variant: "destructive",
+            });
+        }
+    };
+
 
   const handleGoogleSignIn = async () => {
     // Implement Google Sign-In logic here
@@ -130,9 +178,12 @@ export default function AuthPage() {
                   <Mail className="mr-2 h-4 w-4" />
                   Sign In with Email/Password
                 </Button>
-              <Button variant="link" onClick={toggleForgotPassword} className="button-link">
-                Forgot your password?
-              </Button>
+                <Button variant="link" onClick={() => {
+                    toggleForgotPassword();
+                    setOpen(true); // Open the dialog
+                }} className="button-link">
+                    Forgot your password?
+                </Button>
             </form>
           ) : showForgotPassword ? (
             <form onSubmit={(e) => e.preventDefault()} className="grid gap-2">
@@ -155,12 +206,79 @@ export default function AuthPage() {
               </Button>
             </form>
           ) : (
-            <div>
-              <Button onClick={handleSignUp} className="button">Create Account</Button>
+            <form onSubmit={handleSignUp} className="grid gap-2">
+              <div className="grid gap-2">
+                <Label htmlFor="fullName">Full Name</Label>
+                <Input
+                  type="text"
+                  id="fullName"
+                  placeholder="Full Name"
+                  value={fullName}
+                  onChange={(e) => setFullName(e.target.value)}
+                  required
+                />
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="email">Email</Label>
+                <Input
+                  id="email"
+                  type="email"
+                  placeholder="Email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
+                />
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="phone">Phone Number</Label>
+                <Input
+                  type="tel"
+                  id="phone"
+                  placeholder="Phone Number"
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value)}
+                  required
+                />
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="referralCode">Referral Code (Optional)</Label>
+                <Input
+                  type="text"
+                  id="referralCode"
+                  placeholder="Referral Code (Optional)"
+                  value={referralCode}
+                  onChange={(e) => setReferralCode(e.target.value)}
+                />
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="password">Password</Label>
+                <Input
+                  type="password"
+                  id="password"
+                  placeholder="Password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                />
+              </div>
+              {/* Membership Tier Selection */}
+              <Select onValueChange={(value) => setMembershipTier(value)}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select Membership Tier" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Basic">Basic</SelectItem>
+                  <SelectItem value="Ambassador">Ambassador</SelectItem>
+                  <SelectItem value="Business">Business</SelectItem>
+                </SelectContent>
+              </Select>
+              <Button type="submit" className="bg-primary text-primary-foreground hover:bg-primary/80">
+                Create Account
+              </Button>
               <Button variant="link" onClick={toggleForm} className="button-link">
                 Already have an account? Sign In
               </Button>
-            </div>
+            </form>
           )}
           {!showForgotPassword && (
             <>
@@ -182,6 +300,39 @@ export default function AuthPage() {
           )}
         </CardContent>
       </Card>
+        <Dialog open={open} onOpenChange={setOpen}>
+            <DialogContent>
+                <DialogHeader>
+                    <DialogTitle>Reset Password</DialogTitle>
+                    <DialogDescription>
+                        Enter your email to reset your password.
+                    </DialogDescription>
+                </DialogHeader>
+                <div className="grid gap-4 py-4">
+                    <div className="grid gap-2">
+                        <Label htmlFor="email">Email</Label>
+                        <Input
+                            id="email"
+                            type="email"
+                            placeholder="Email"
+                            value={email}
+                            onChange={(e) => setEmail(e.target.value)}
+                            required
+                        />
+                    </div>
+                </div>
+                <div className="flex justify-end space-x-2">
+                    <DialogClose asChild>
+                        <Button type="button" variant="secondary">
+                            Cancel
+                        </Button>
+                    </DialogClose>
+                    <Button type="submit" className="bg-primary text-primary-foreground hover:bg-primary/80">
+                        Reset Password
+                    </Button>
+                </div>
+            </DialogContent>
+        </Dialog>
     </div>
   );
 }

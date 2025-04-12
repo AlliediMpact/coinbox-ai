@@ -23,7 +23,7 @@ Our mission is to provide an innovative, user-friendly, and secure digital marke
 - **Risk Assesment** Leverages AI to asses risk
 - **Security:** Data encryption at rest and transit, KYC, GDPR and CCPA compliance.
 - **Text Summarization** Leverages AI to create summaries
-- **Customer Support:** Live Chat, Support Tickets, FAQ &amp; Help Center
+- **Customer Support:** Live Chat, Support Tickets, FAQ & Help Center
 - **Admin dashboard:** Comprehensive user management, transaction monitoring and system configuration, reporting and analytics, KYC &amp; Compliance.
     - **User Management:** Verify accounts, enable/disable users.
     - **Transaction Monitoring:** Review transactions, approve withdrawals.
