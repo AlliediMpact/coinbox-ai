@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { useState, useEffect, useRef } from 'react';
-import { Mail, Key, Facebook } from 'lucide-react'; // Import icons
+import { Mail, Key, Facebook, Google } from 'lucide-react'; // Import icons
 import { cn } from "@/lib/utils";
 import React from 'react';
 import Image from 'next/image';
@@ -31,57 +31,57 @@ import {
 
 
 export default function AuthPage() {
-  const router = useRouter();
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [fullName, setFullName] = useState('');
-  const [phone, setPhone] = useState('');
-  const [referralCode, setReferralCode] = useState('');
-  const [showSignIn, setShowSignIn] = useState(true);
-  const [showForgotPassword, setShowForgotPassword] = useState(false); // State for forgot password
-  const cardRef = useRef<HTMLDivElement>(null); // Ref for the card element
-  const [membershipTier, setMembershipTier] = useState('Basic'); // Default value
-  const { signUp, signIn } = useAuth();
-  const { toast } = useToast(); // Initialize the useToast hook
-  const [open, setOpen] = useState(false); // Dialog for password reset
+    const router = useRouter();
+    const [email, setEmail] = useState('');
+    const [password, setPassword] = useState('');
+    const [fullName, setFullName] = useState('');
+    const [phone, setPhone] = useState('');
+    const [referralCode, setReferralCode] = useState('');
+    const [showSignIn, setShowSignIn] = useState(true);
+    const [showForgotPassword, setShowForgotPassword] = useState(false); // State for forgot password
+    const cardRef = useRef<HTMLDivElement>(null); // Ref for the card element
+    const [membershipTier, setMembershipTier] = useState('Basic'); // Default value
+    const { signUp, signIn } = useAuth();
+    const { toast } = useToast(); // Initialize the useToast hook
+    const [open, setOpen] = useState(false); // Dialog for password reset
 
-  useEffect(() => {
-    // Animation code using the cardRef
-    const card = cardRef.current;
+    useEffect(() => {
+        // Animation code using the cardRef
+        const card = cardRef.current;
 
-    if (card) {
-      const handleMouseMove = (e: MouseEvent) => {
-        const rect = card.getBoundingClientRect();
-        const x = e.clientX - rect.left;
-        const y = e.clientY - rect.top;
+        if (card) {
+            const handleMouseMove = (e: MouseEvent) => {
+                const rect = card.getBoundingClientRect();
+                const x = e.clientX - rect.left;
+                const y = e.clientY - rect.top;
 
-        const normalizedX = x / rect.width - 0.5;
-        const normalizedY = y / rect.height - 0.5;
+                const normalizedX = x / rect.width - 0.5;
+                const normalizedY = y / rect.height - 0.5;
 
-        // Tilt settings
-        const tiltX = normalizedY * 10; // Reduced tilt
-        const tiltY = -normalizedX * 10; // Reduced tilt
+                // Tilt settings
+                const tiltX = normalizedY * 10; // Reduced tilt
+                const tiltY = -normalizedX * 10; // Reduced tilt
 
-        // Parallax settings
-        const translateX = normalizedX * 20; // Reduced parallax
-        const translateY = normalizedY * 20; // Reduced parallax
+                // Parallax settings
+                const translateX = normalizedX * 20; // Reduced parallax
+                const translateY = normalizedY * 20; // Reduced parallax
 
-        card.style.transform = `perspective(600px) rotateX(${tiltX}deg) rotateY(${tiltY}deg) translate(${translateX}px, ${translateY}px)`;
-      };
+                card.style.transform = `perspective(600px) rotateX(${tiltX}deg) rotateY(${tiltY}deg) translate(${translateX}px, ${translateY}px)`;
+            };
 
-      const handleMouseLeave = () => {
-        card.style.transform = `perspective(600px) rotateX(0deg) rotateY(0deg) translate(0, 0)`;
-      };
+            const handleMouseLeave = () => {
+                card.style.transform = `perspective(600px) rotateX(0deg) rotateY(0deg) translate(0, 0)`;
+            };
 
-      card.addEventListener('mousemove', handleMouseMove);
-      card.addEventListener('mouseleave', handleMouseLeave);
+            card.addEventListener('mousemove', handleMouseMove);
+            card.addEventListener('mouseleave', handleMouseLeave);
 
-      return () => {
-        card.removeEventListener('mousemove', handleMouseMove);
-        card.removeEventListener('mouseleave', handleMouseLeave);
-      };
-    }
-  }, []);
+            return () => {
+                card.removeEventListener('mousemove', handleMouseMove);
+                card.removeEventListener('mouseleave', handleMouseLeave);
+            };
+        }
+    }, []);
 
     const handleSignIn = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -122,245 +122,232 @@ export default function AuthPage() {
     };
 
 
-  const handleGoogleSignIn = async () => {
-    // Implement Google Sign-In logic here
-    console.log("Signing in with Google");
-  };
+    const handleGoogleSignIn = async () => {
+        // Implement Google Sign-In logic here
+        console.log("Signing in with Google");
+    };
 
-  const handleFacebookSignIn = async () => {
-    // Implement Facebook Sign-In logic here
-    console.log("Signing in with Facebook");
-  };
+    const handleFacebookSignIn = async () => {
+        // Implement Facebook Sign-In logic here
+        console.log("Signing in with Facebook");
+    };
 
-  const toggleForm = () => {
-    setShowSignIn(!showSignIn);
-    setShowForgotPassword(false); // Reset forgot password state when toggling
-  };
+    const toggleForm = () => {
+        setShowSignIn(!showSignIn);
+        setShowForgotPassword(false); // Reset forgot password state when toggling
+    };
 
     const toggleForgotPassword = () => {
         setShowForgotPassword(!showForgotPassword);
         setShowSignIn(false); // Hide sign-in form when showing forgot password
     };
 
-  return (
-    <div className="flex items-center justify-center h-screen auth-page">
-      <Card ref={cardRef} className="w-[450px] transition-transform duration-300">
-        <CardHeader className="space-y-2">
-          <CardTitle className="text-2xl">
-            {showSignIn ? "Sign In" : showForgotPassword ? "Reset Password" : "Sign Up"}
-          </CardTitle>
-          <CardDescription>
-            {showSignIn
-              ? "Enter your email and password to sign in"
-              : showForgotPassword
-                ? "Enter your email to reset your password"
-                : "Create an account to start your journey"}
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="grid gap-4">
-          {showSignIn ? (
-            <form onSubmit={handleSignIn} className="grid gap-2">
-              <div className="grid gap-2">
-                <Label htmlFor="email">Email</Label>
-                <Input
-                  id="email"
-                  type="email"
-                  placeholder="Email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  required
-                />
-              </div>
-              <div className="grid gap-2">
-                <Label htmlFor="password">Password</Label>
-                <Input
-                  id="password"
-                  type="password"
-                  placeholder="Password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  required
-                />
-              </div>
-                <Button type="submit" className="bg-primary text-primary-foreground hover:bg-primary/80">
-                  <Mail className="mr-2 h-4 w-4" />
-                  Sign In with Email/Password
-                </Button>
-                <Button variant="link" onClick={() => {
-                    toggleForgotPassword();
-                    setOpen(true); // Open the dialog
-                }} className="button-link">
-                    Forgot your password?
-                </Button>
-                <Button variant="link" onClick={toggleForm} className="button-link">
-                    Create an account? Sign Up
-                </Button>
-            </form>
-          ) : showForgotPassword ? (
-            <form onSubmit={(e) => e.preventDefault()} className="grid gap-2">
-              <div className="grid gap-2">
-                <Label htmlFor="email">Email</Label>
-                <Input
-                  id="email"
-                  type="email"
-                  placeholder="Email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  required
-                />
-              </div>
-              <Button type="submit" className="bg-primary text-primary-foreground hover:bg-primary/80">
-                Reset Password
-              </Button>
-              <Button variant="link" onClick={() => setShowSignIn(true)} className="button-link">
-                Back to Sign In
-              </Button>
-            </form>
-          ) : (
-            <form onSubmit={handleSignUp} className="grid gap-2">
-              <div className="grid gap-2">
-                <Label htmlFor="fullName">Full Name</Label>
-                <Input
-                  type="text"
-                  id="fullName"
-                  placeholder="Full Name"
-                  value={fullName}
-                  onChange={(e) => setFullName(e.target.value)}
-                  required
-                />
-              </div>
-              <div className="grid gap-2">
-                <Label htmlFor="email">Email</Label>
-                <Input
-                  id="email"
-                  type="email"
-                  placeholder="Email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  required
-                />
-              </div>
-              <div className="grid gap-2">
-                <Label htmlFor="phone">Phone Number</Label>
-                <Input
-                  type="tel"
-                  id="phone"
-                  placeholder="Phone Number"
-                  value={phone}
-                  onChange={(e) => setPhone(e.target.value)}
-                  required
-                />
-              </div>
-              <div className="grid gap-2">
-                <Label htmlFor="referralCode">Referral Code (Optional)</Label>
-                <Input
-                  type="text"
-                  id="referralCode"
-                  placeholder="Referral Code (Optional)"
-                  value={referralCode}
-                  onChange={(e) => setReferralCode(e.target.value)}
-                />
-              </div>
-              <div className="grid gap-2">
-                <Label htmlFor="password">Password</Label>
-                <Input
-                  type="password"
-                  id="password"
-                  placeholder="Password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  required
-                />
-              </div>
-              {/* Membership Tier Selection */}
-              <Select onValueChange={(value) => setMembershipTier(value)}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select Membership Tier" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="Basic">Basic</SelectItem>
-                  <SelectItem value="Ambassador">Ambassador</SelectItem>
-                  <SelectItem value="Business">Business</SelectItem>
-                </SelectContent>
-              </Select>
-              <Button type="submit" className="bg-primary text-primary-foreground hover:bg-primary/80">
-                Create Account
-              </Button>
-              <Button variant="link" onClick={toggleForm} className="button-link">
-                Already have an account? Sign In
-              </Button>
-            </form>
-          )}
-          {!showForgotPassword && (
-            <>
-              <Button variant="outline" onClick={() => router.push('/auth/otp')} className="button">
-                <Key className="mr-2 h-4 w-4" />
-                Sign In with OTP
-              </Button>
-              <div className="flex justify-center gap-4 mt-4">
-                <Button variant="secondary" onClick={handleGoogleSignIn} className="button">
-                  <Mail className="mr-2 h-4 w-4" />
-                  Sign In with Google
-                </Button>
-                <Button variant="secondary" onClick={handleFacebookSignIn} className="button">
-                  <Facebook className="mr-2 h-4 w-4" />
-                  Sign In with Facebook
-                </Button>
-              </div>
-            </>
-          )}
-        </CardContent>
-      </Card>
-        <Dialog open={open} onOpenChange={setOpen}>
-            <DialogContent>
-                <DialogHeader>
-                    <DialogTitle>Reset Password</DialogTitle>
-                    <DialogDescription>
-                        Enter your email to reset your password.
-                    </DialogDescription>
-                </DialogHeader>
-                <div className="grid gap-4 py-4">
-                    <div className="grid gap-2">
-                        <Label htmlFor="email">Email</Label>
-                        <Input
-                            id="email"
-                            type="email"
-                            placeholder="Email"
-                            value={email}
-                            onChange={(e) => setEmail(e.target.value)}
-                            required
-                        />
+    return (
+        <div className="flex items-center justify-center h-screen auth-page">
+            <Card ref={cardRef} className="w-[450px] transition-transform duration-300">
+                <CardHeader className="space-y-2">
+                    <CardTitle className="text-2xl">
+                        {showSignIn ? "Sign In" : showForgotPassword ? "Reset Password" : "Sign Up"}
+                    </CardTitle>
+                    <CardDescription>
+                        {showSignIn
+                            ? "Enter your email and password to sign in"
+                            : showForgotPassword
+                                ? "Enter your email to reset your password"
+                                : "Create an account to start your journey"}
+                    </CardDescription>
+                </CardHeader>
+                <CardContent className="grid gap-4">
+                    {showSignIn ? (
+                        <form onSubmit={handleSignIn} className="grid gap-2">
+                            <div className="grid gap-2">
+                                <Label htmlFor="email">Email</Label>
+                                <Input
+                                    id="email"
+                                    type="email"
+                                    placeholder="Email"
+                                    value={email}
+                                    onChange={(e) => setEmail(e.target.value)}
+                                    required
+                                />
+                            </div>
+                            <div className="grid gap-2">
+                                <Label htmlFor="password">Password</Label>
+                                <Input
+                                    id="password"
+                                    type="password"
+                                    placeholder="Password"
+                                    value={password}
+                                    onChange={(e) => setPassword(e.target.value)}
+                                    required
+                                />
+                            </div>
+                            <Button type="submit" className="bg-primary text-primary-foreground hover:bg-primary/80">
+                                <Mail className="mr-2 h-4 w-4" />
+                                Sign In with Email/Password
+                            </Button>
+                            <Button variant="link" onClick={() => {
+                                toggleForgotPassword();
+                                setOpen(true); // Open the dialog
+                            }} className="button-link">
+                                Forgot your password?
+                            </Button>
+                            <Button variant="link" onClick={toggleForm} className="button-link">
+                                Create an account? Sign Up
+                            </Button>
+                        </form>
+                    ) : showForgotPassword ? (
+                        <form onSubmit={(e) => e.preventDefault()} className="grid gap-2">
+                            <div className="grid gap-2">
+                                <Label htmlFor="email">Email</Label>
+                                <Input
+                                    id="email"
+                                    type="email"
+                                    placeholder="Email"
+                                    value={email}
+                                    onChange={(e) => setEmail(e.target.value)}
+                                    required
+                                />
+                            </div>
+                            <Button type="submit" className="bg-primary text-primary-foreground hover:bg-primary/80">
+                                Reset Password
+                            </Button>
+                            <Button variant="link" onClick={() => setShowSignIn(true)} className="button-link">
+                                Back to Sign In
+                            </Button>
+                        </form>
+                    ) : (
+                        <form onSubmit={handleSignUp} className="grid gap-2">
+                            <div className="grid gap-2">
+                                <Label htmlFor="fullName">Full Name</Label>
+                                <Input
+                                    type="text"
+                                    id="fullName"
+                                    placeholder="Full Name"
+                                    value={fullName}
+                                    onChange={(e) => setFullName(e.target.value)}
+                                    required
+                                />
+                            </div>
+                            <div className="grid gap-2">
+                                <Label htmlFor="email">Email</Label>
+                                <Input
+                                    id="email"
+                                    type="email"
+                                    placeholder="Email"
+                                    value={email}
+                                    onChange={(e) => setEmail(e.target.value)}
+                                    required
+                                />
+                            </div>
+                            <div className="grid gap-2">
+                                <Label htmlFor="phone">Phone Number</Label>
+                                <Input
+                                    type="tel"
+                                    id="phone"
+                                    placeholder="Phone Number"
+                                    value={phone}
+                                    onChange={(e) => setPhone(e.target.value)}
+                                    required
+                                />
+                            </div>
+                            <div className="grid gap-2">
+                                <Label htmlFor="referralCode">Referral Code (Optional)</Label>
+                                <Input
+                                    type="text"
+                                    id="referralCode"
+                                    placeholder="Referral Code (Optional)"
+                                    value={referralCode}
+                                    onChange={(e) => setReferralCode(e.target.value)}
+                                />
+                            </div>
+                            <div className="grid gap-2">
+                                <Label htmlFor="password">Password</Label>
+                                <Input
+                                    type="password"
+                                    id="password"
+                                    placeholder="Password"
+                                    value={password}
+                                    onChange={(e) => setPassword(e.target.value)}
+                                    required
+                                />
+                            </div>
+                            {/* Membership Tier Selection */}
+                            <Select onValueChange={(value) => setMembershipTier(value)}>
+                                <SelectTrigger>
+                                    <SelectValue placeholder="Select Membership Tier" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="Basic">Basic</SelectItem>
+                                    <SelectItem value="Ambassador">Ambassador</SelectItem>
+                                    <SelectItem value="Business">Business</SelectItem>
+                                </SelectContent>
+                            </Select>
+                            <Button type="submit" className="bg-primary text-primary-foreground hover:bg-primary/80">
+                                Create Account
+                            </Button>
+                            <Button variant="link" onClick={toggleForm} className="button-link">
+                                Already have an account? Sign In
+                            </Button>
+                        </form>
+                    )}
+                    {!showForgotPassword && (
+                        <>
+                            <Button variant="outline" onClick={() => router.push('/auth/otp')} className="button">
+                                <Key className="mr-2 h-4 w-4" />
+                                Sign In with OTP
+                            </Button>
+                            <div className="flex justify-center gap-4 mt-4">
+                                <Button variant="secondary" onClick={handleGoogleSignIn} className="button">
+                                    <Google className="mr-2 h-4 w-4" />
+                                    Sign In with Google
+                                </Button>
+                                <Button variant="secondary" onClick={handleFacebookSignIn} className="button">
+                                    <Facebook className="mr-2 h-4 w-4" />
+                                    Sign In with Facebook
+                                </Button>
+                            </div>
+                        </>
+                    )}
+                </CardContent>
+            </Card>
+            <Dialog open={open} onOpenChange={setOpen}>
+                <DialogContent>
+                    <DialogHeader>
+                        <DialogTitle>Reset Password</DialogTitle>
+                        <DialogDescription>
+                            Enter your email to reset your password.
+                        </DialogDescription>
+                    </DialogHeader>
+                    <div className="grid gap-4 py-4">
+                        <div className="grid gap-2">
+                            <Label htmlFor="email">Email</Label>
+                            <Input
+                                id="email"
+                                type="email"
+                                placeholder="Email"
+                                value={email}
+                                onChange={(e) => setEmail(e.target.value)}
+                                required
+                            />
+                        </div>
                     </div>
-                </div>
-                <div className="flex justify-end space-x-2">
-                    <DialogClose asChild>
-                        <Button type="button" variant="secondary">
-                            Cancel
+                    <div className="flex justify-end space-x-2">
+                        <DialogClose asChild>
+                            <Button type="button" variant="secondary">
+                                Cancel
+                            </Button>
+                        </DialogClose>
+                        <Button type="submit" className="bg-primary text-primary-foreground hover:bg-primary/80">
+                            Reset Password
                         </Button>
-                    </DialogClose>
-                    <Button type="submit" className="bg-primary text-primary-foreground hover:bg-primary/80">
-                        Reset Password
-                    </Button>
-                </div>
-            </DialogContent>
-        </Dialog>
-    </div>
-  );
+                    </div>
+                </DialogContent>
+            </Dialog>
+        </div>
+    );
 }
 
-//const Label = React.forwardRef<HTMLLabelElement, React.HTMLAttributes<HTMLLabelElement>>(
-//  ({ className, ...props }, ref) => {
-//    return (
-//      <label
-//        className={cn(
-//          "text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 label",
-//          className
-//        )}
-//        ref={ref}
-//        {...props}
-//      />
-//    )
-//  }
-//)
-//Label.displayName = "Label"
+
+
 
