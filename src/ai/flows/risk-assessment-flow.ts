@@ -89,13 +89,13 @@ const prompt = ai.definePrompt({
   Then, call the getUserProfile tool to get the user profile.
 
   Transaction History:
-  {{#each (await getUserTransactionHistory userId=userId)}}
+  {{#each (getUserTransactionHistory userId=userId)}}
   - Type: {{this.type}}, Amount: {{this.amount}}, Date: {{this.date}}
   {{/each}}
 
   User Profile:
-  - Membership: {{(await getUserProfile userId=userId).membership}}
-  - KYC Status: {{(await getUserProfile userId=userId).kycStatus}}
+  - Membership: {{(getUserProfile userId=userId).membership}}
+  - KYC Status: {{(getUserProfile userId=userId).kycStatus}}
 
   Based on the transaction history and user profile, determine a risk score and explain your reasoning.
   Provide the risk score as a number and the explanation as a string.`,

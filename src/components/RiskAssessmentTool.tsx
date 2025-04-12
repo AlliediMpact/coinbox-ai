@@ -43,7 +43,7 @@ export default function RiskAssessmentTool({ userId }: RiskAssessmentToolProps) 
           <div>Loading risk assessment...</div>
         ) : error ? (
           <div className="text-red-500">Error: {error}</div>
-        ) : riskScore !== null ? (
+        ) : riskScore !== null && explanation !== null ? (
           <>
             <div>
               <strong>Risk Score:</strong> {riskScore}
