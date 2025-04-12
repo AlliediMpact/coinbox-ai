@@ -47,7 +47,7 @@ export default function AuthPage() {
     };
 
   return (
-    <div className="flex items-center justify-center h-screen bg-background">
+    <div className="flex items-center justify-center h-screen auth-page">
       <Card className="w-[450px]">
         <CardHeader className="space-y-2">
           <CardTitle className="text-2xl">
@@ -90,7 +90,7 @@ export default function AuthPage() {
                   <Mail className="mr-2 h-4 w-4" />
                   Sign In with Email/Password
                 </Button>
-              <Button variant="link" onClick={toggleForgotPassword}>
+              <Button variant="link" onClick={toggleForgotPassword} className="button-link">
                 Forgot your password?
               </Button>
             </form>
@@ -110,30 +110,30 @@ export default function AuthPage() {
               <Button type="submit" className="bg-primary text-primary-foreground hover:bg-primary/80">
                 Reset Password
               </Button>
-              <Button variant="link" onClick={() => setShowSignIn(true)}>
+              <Button variant="link" onClick={() => setShowSignIn(true)} className="button-link">
                 Back to Sign In
               </Button>
             </form>
           ) : (
             <div>
-              <Button onClick={handleSignUp}>Create Account</Button>
-              <Button variant="link" onClick={toggleForm}>
+              <Button onClick={handleSignUp} className="button">Create Account</Button>
+              <Button variant="link" onClick={toggleForm} className="button-link">
                 Already have an account? Sign In
               </Button>
             </div>
           )}
           {!showForgotPassword && (
             <>
-              <Button variant="outline" onClick={() => router.push('/auth/otp')}>
+              <Button variant="outline" onClick={() => router.push('/auth/otp')} className="button">
                 <Key className="mr-2 h-4 w-4" />
                 Sign In with OTP
               </Button>
               <div className="flex justify-center gap-4 mt-4">
-                <Button variant="secondary" onClick={handleGoogleSignIn}>
+                <Button variant="secondary" onClick={handleGoogleSignIn} className="button">
                   <Mail className="mr-2 h-4 w-4" />
                   Sign In with Google
                 </Button>
-                <Button variant="secondary" onClick={handleFacebookSignIn}>
+                <Button variant="secondary" onClick={handleFacebookSignIn} className="button">
                   <Facebook className="mr-2 h-4 w-4" />
                   Sign In with Facebook
                 </Button>
@@ -151,7 +151,7 @@ const Label = React.forwardRef<HTMLLabelElement, React.HTMLAttributes<HTMLLabelE
     return (
       <label
         className={cn(
-          "text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70",
+          "text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 label",
           className
         )}
         ref={ref}
