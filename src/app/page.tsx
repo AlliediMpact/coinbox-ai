@@ -24,7 +24,7 @@ import {
 import { useState, useEffect } from 'react';
 
 export default function Home() {
-  const { user } = useAuth();
+  const { user, signOutUser } = useAuth();
   const router = useRouter();
   const [walletBalance, setWalletBalance] = useState(0);
   const [commissionBalance, setCommissionBalance] = useState(0);

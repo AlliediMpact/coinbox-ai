@@ -34,6 +34,7 @@ Our mission is to provide an innovative, user-friendly, and secure digital marke
         -   **KYC & Compliance**: Review ID verifications, Manage Disputes
         -   **Referral System Management**: Monitor Commission Payouts.
 		-   **AI Integration**: Risk Assessment and Text Summarization
+		-   **Revenue Model**: Transaction Fees, Membership Fees, Loan Interest Fees, Premium Features.
 
 ## UI/UX Improvements
 
@@ -56,5 +57,6 @@ Our mission is to provide an innovative, user-friendly, and secure digital marke
 -Tier-based commission program
 
 To get started, take a look at src/app/page.tsx.
+
 
 
