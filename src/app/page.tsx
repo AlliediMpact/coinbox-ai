@@ -1,4 +1,3 @@
-
 import {Sidebar, SidebarContent, SidebarTrigger} from '@/components/ui/sidebar';
 import SummaryComponent from "@/components/SummaryComponent";
 import MembershipManagement from "@/components/MembershipManagement";
@@ -31,4 +30,5 @@ export default function Home() {
     </div>
   );
 }
+
 
