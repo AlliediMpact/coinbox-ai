@@ -24,6 +24,15 @@ const RiskAssessmentInputSchema = z.object({
     ontimePayments: z.number().describe('The number of on-time payments made by the user.'),
     missedPayments: z.number().describe('The number of missed payments by the user.'),
   }).optional().describe('The payment behavior of the user.'),
+  transactionHistory: z.array(z.object({
+    type: z.string().describe('The type of transaction (e.g., Deposit, Withdrawal, Loan).'),
+    amount: z.number().describe('The amount of the transaction.'),
+    date: z.string().describe('The date of the transaction (YYYY-MM-DD).'),
+  })).optional().describe('The transaction history of the user.'),
+  userProfile: z.object({
+    membership: z.string().describe('The membership tier of the user (e.g., Basic, Ambassador).'),
+    kycStatus: z.string().describe('The KYC status of the user (e.g., Verified, Pending).'),
+  }).optional().describe('The profile data of the user.')
 });
 export type RiskAssessmentInput = z.infer<typeof RiskAssessmentInputSchema>;
 
@@ -138,6 +147,58 @@ const getPaymentBehavior = ai.defineTool({
   return { ontimePayments: 10, missedPayments: 2 };
 });
 
+const getUserData = ai.defineTool({
+  name: 'getUserData',
+  description: 'Fetches all available user data including transaction history, profile, loan history, active investments, and payment behavior.',
+  inputSchema: z.object({
+    userId: z.string().describe('The ID of the user.'),
+  }),
+  outputSchema: z.object({
+    transactionHistory: z.array(z.object({
+      type: z.string().describe('The type of transaction (e.g., Deposit, Withdrawal, Loan).'),
+      amount: z.number().describe('The amount of the transaction.'),
+      date: z.string().describe('The date of the transaction (YYYY-MM-DD).'),
+    })).optional().describe('The transaction history of the user.'),
+    userProfile: z.object({
+      membership: z.string().describe('The membership tier of the user (e.g., Basic, Ambassador).'),
+      kycStatus: z.string().describe('The KYC status of the user (e.g., Verified, Pending).'),
+    }).optional().describe('The profile data of the user.'),
+    loanHistory: z.array(z.object({
+      amount: z.number().describe('The amount of each loan.'),
+      status: z.string().describe('The status of the loan (e.g., active, repaid, defaulted).'),
+    })).optional().describe('The loan history of the user.'),
+    activeInvestments: z.array(z.object({
+      amount: z.number().describe('The amount of each active investment.'),
+      maturityDate: z.string().describe('The maturity date of the investment (YYYY-MM-DD).'),
+    })).optional().describe('The active investments of the user.'),
+    paymentBehavior: z.object({
+      ontimePayments: z.number().describe('The number of on-time payments made by the user.'),
+      missedPayments: z.number().describe('The number of missed payments by the user.'),
+    }).optional().describe('The payment behavior of the user.')
+  }).describe('All available user data.')
+}, async (input) => {
+  // Placeholder implementation - replace with actual data fetching logic
+  console.log(`Fetching all data for user: ${input.userId}`);
+  // Simulate fetching all user data from a database or service
+  const transactionHistory = [
+    { type: "Deposit", amount: 1000, date: "2024-07-15" },
+    { type: "Withdrawal", amount: 200, date: "2024-07-14" },
+    { type: "Loan", amount: 300, date: "2024-07-12" }
+  ];
+  const userProfile = { membership: "Basic", kycStatus: "Verified" };
+  const loanHistory = [
+    { amount: 500, status: "repaid" },
+    { amount: 1000, status: "active" },
+  ];
+  const activeInvestments = [
+    { amount: 2000, maturityDate: "2024-12-31" },
+    { amount: 500, maturityDate: "2025-06-30" },
+  ];
+  const paymentBehavior = { ontimePayments: 10, missedPayments: 2 };
+
+  return { transactionHistory, userProfile, loanHistory, activeInvestments, paymentBehavior };
+});
+
 const prompt = ai.definePrompt({
   name: 'riskAssessmentPrompt',
   input: {
@@ -146,45 +207,61 @@ const prompt = ai.definePrompt({
   output: {
     schema: RiskAssessmentOutputSchema,
   },
-  prompt: `You are an AI assistant that assesses financial risk based on user transaction history and profile.
-  Given the transaction history, loan history, active investments, payment behavior, and profile, generate a risk score between 0 and 100.
+  prompt: `You are an AI assistant that assesses financial risk based on user data.
+  Given the user data, generate a risk score between 0 and 100.
   A lower score indicates lower risk, while a higher score indicates higher risk.
   Provide a detailed explanation of the risk score, including the factors that influenced it.
 
   Here's the user ID: {{userId}}
 
-  First, call the getUserTransactionHistory tool to get the transaction history.
-  Then, call the getUserProfile tool to get the user profile.
-  Then, call the getLoanHistory tool to get the loan history.
-  Then, call the getActiveInvestments tool to get the active investments.
-  Finally, call the getPaymentBehavior tool to get the payment behavior.
+  First, call the getUserData tool to get all available user data.
 
   Transaction History:
-  {{#each (getUserTransactionHistory userId=userId)}}
-  - Type: {{this.type}}, Amount: {{this.amount}}, Date: {{this.date}}
-  {{/each}}
+  {{#if (getUserData userId=userId).transactionHistory}}
+    {{#each (getUserData userId=userId).transactionHistory}}
+      - Type: {{this.type}}, Amount: {{this.amount}}, Date: {{this.date}}
+    {{/each}}
+  {{else}}
+    - No transaction history available.
+  {{/if}}
 
   User Profile:
-  - Membership: {{(getUserProfile userId=userId).membership}}
-  - KYC Status: {{(getUserProfile userId=userId).kycStatus}}
+  {{#if (getUserData userId=userId).userProfile}}
+    - Membership: {{(getUserData userId=userId).userProfile.membership}}
+    - KYC Status: {{(getUserData userId=userId).userProfile.kycStatus}}
+  {{else}}
+    - No user profile available.
+  {{/if}}
 
   Loan History:
-  {{#each (getLoanHistory userId=userId)}}
-  - Amount: {{this.amount}}, Status: {{this.status}}
-  {{/each}}
+  {{#if (getUserData userId=userId).loanHistory}}
+    {{#each (getUserData userId=userId).loanHistory}}
+      - Amount: {{this.amount}}, Status: {{this.status}}
+    {{/each}}
+  {{else}}
+    - No loan history available.
+  {{/if}}
 
   Active Investments:
-  {{#each (getActiveInvestments userId=userId)}}
-  - Amount: {{this.amount}}, Maturity Date: {{this.maturityDate}}
-  {{/each}}
+  {{#if (getUserData userId=userId).activeInvestments}}
+    {{#each (getUserData userId=userId).activeInvestments}}
+      - Amount: {{this.amount}}, Maturity Date: {{this.maturityDate}}
+    {{/each}}
+  {{else}}
+    - No active investments available.
+  {{/if}}
 
   Payment Behavior:
-  - On-time Payments: {{(getPaymentBehavior userId=userId).ontimePayments}}
-  - Missed Payments: {{(getPaymentBehavior userId=userId).missedPayments}}
+  {{#if (getUserData userId=userId).paymentBehavior}}
+    - On-time Payments: {{(getUserData userId=userId).paymentBehavior.ontimePayments}}
+    - Missed Payments: {{(getUserData userId=userId).paymentBehavior.missedPayments}}
+  {{else}}
+    - No payment behavior available.
+  {{/if}}
 
-  Based on the transaction history, user profile, loan history, active investments, and payment behavior, determine a risk score and explain your reasoning.
+  Based on the available user data, determine a risk score and explain your reasoning.
   Provide the risk score as a number and the explanation as a string.`,
-  tools: [getUserTransactionHistory, getUserProfile, getLoanHistory, getActiveInvestments, getPaymentBehavior],
+  tools: [getUserData],
 });
 
 const riskAssessmentFlow = ai.defineFlow<

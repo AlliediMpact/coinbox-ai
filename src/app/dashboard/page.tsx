@@ -7,6 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Coins, Home as HomeIcon, ReferralCode, Share2, Shield, Users, Wallet } from 'lucide-react';
 import RiskAssessmentTool from "@/components/RiskAssessmentTool";
+import SummaryComponent from "@/components/SummaryComponent";
 
 const recentTransactions = [
   { id: 1, type: "Deposit", amount: "R1000", date: "2024-07-15" },
@@ -83,6 +84,16 @@ export default function Dashboard() {
           <CardContent>
             <RiskAssessmentTool userId={user.uid} />
           </CardContent>
+        </Card>
+
+        <Card>
+            <CardHeader>
+                <CardTitle>Text Summarization</CardTitle>
+                <CardDescription>Summarize any text using AI.</CardDescription>
+            </CardHeader>
+            <CardContent>
+                <SummaryComponent />
+            </CardContent>
         </Card>
       </div>
 
