@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { useState, useEffect, useRef } from 'react';
-import { Mail, Key, Facebook, Google } from 'lucide-react'; // Import icons
+import { Mail, Key } from 'lucide-react'; // Import icons
 import { cn } from "@/lib/utils";
 import React from 'react';
 import Image from 'next/image';
@@ -299,11 +299,17 @@ export default function AuthPage() {
                             </Button>
                             <div className="flex justify-center gap-4 mt-4">
                                 <Button variant="secondary" onClick={handleGoogleSignIn} className="button">
-                                    <Google className="mr-2 h-4 w-4" />
+                                    {/* Google Icon as Inline SVG */}
+                                    <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+                                        <path d="M19.6758 8.78049C19.7133 9.46341 19.7133 10.1463 19.6758 10.8293C18.7805 16.2317 14.4146 19.9999 9.99987 19.9999C4.47703 19.9999 0 15.5228 0 9.9999C0 4.47706 4.47703 0 9.99987 0C12.7381 0 15.1452 1.14927 16.8403 2.84437L13.8658 5.81883C12.861 4.81395 11.5244 4.16342 9.99987 4.16342C6.77654 4.16342 4.16341 6.77655 4.16341 9.9999C4.16341 13.2232 6.77654 15.8363 9.99987 15.8363C12.2171 15.8363 13.6988 14.6997 14.078 13.2649H9.99987V9.9999H16.8769C17.0974 10.6668 17.2293 11.3741 17.2293 12.1219C17.2293 13.7451 16.366 15.0335 14.9755 15.9412C16.3121 17.5317 18.407 18.678 19.6758 18.7155C19.6758 17.9943 19.6758 17.2732 19.6758 16.5521C19.6758 15.1219 19.6758 13.6917 19.6758 12.2615C19.6758 11.9208 19.6758 11.5801 19.6758 11.2393C19.6758 10.9366 19.6758 10.634 19.6758 10.3313C19.6758 9.09756 19.6758 7.86382 19.6758 6.62996C19.6758 6.62996 19.6758 7.97305 19.6758 8.78049Z"/>
+                                    </svg>
                                     Sign In with Google
                                 </Button>
                                 <Button variant="secondary" onClick={handleFacebookSignIn} className="button">
-                                    <Facebook className="mr-2 h-4 w-4" />
+                                    {/* Facebook Icon as Inline SVG */}
+                                    <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+                                        <path d="M11.7063 4.03125H14.0625V0H11.7063C8.8625 0 6.71875 2.14375 6.71875 4.9875V7.34375H4.3625V10H6.71875V19.9688H11.7063V10H14.0625L14.8438 7.34375H11.7063V4.03125Z"/>
+                                    </svg>
                                     Sign In with Facebook
                                 </Button>
                             </div>
@@ -347,7 +353,3 @@ export default function AuthPage() {
         </div>
     );
 }
-
-
-
-
