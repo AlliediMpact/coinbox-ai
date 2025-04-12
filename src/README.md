@@ -16,14 +16,14 @@ Our mission is to provide an innovative, user-friendly, and secure digital marke
 
 ## Features
 
-- **Authentication:** Email/Password, OTP, Social Login (Google, Facebook), MFA. Includes enhanced security and account recovery.
-- **Peer-to-Peer Trading:** Automated matching algorithm, Escrow, Dispute Resolution with clear guidelines and automated transaction system.
-- **Referral System:** Tiered commissions based on performance, Automated payouts with multiple withdrawal options, Leaderboard & Bonuses.
-- **Wallet Management:** Multiple payment options (Stripe, Bank Transfer, Crypto), Transaction history, KYC integration.
+-   **Authentication:** Email/Password, OTP, Social Login (Google, Facebook), MFA. Includes enhanced security and account recovery.
+-   **Peer-to-Peer Trading:** Automated matching algorithm, Escrow, Dispute Resolution with clear guidelines and automated transaction system.
+-   **Referral System:** Tiered commissions based on performance, Automated payouts with multiple withdrawal options, Leaderboard & Bonuses.
+-   **Wallet Management:** Multiple payment options (Stripe, Bank Transfer, Crypto), Transaction history, KYC integration.
 -   **Security:** Data encryption at rest and transit, KYC, GDPR and CCPA compliance.
-- **Text Summarization** Leverages AI to create summaries
+-   **Text Summarization** Leverages AI to create summaries
 -   **Admin dashboard:** Comprehensive user management, transaction monitoring and system configuration, reporting and analytics, KYC & Compliance.
-   -   **User Management:** Verify accounts, enable/disable users.
+    -   **User Management:** Verify accounts, enable/disable users.
     -   **Transaction Monitoring:** Review transactions, approve withdrawals.
     -   **Membership Management:** Adjust fees, upgrade/downgrade plans.
     -   **Referral System Management:** Monitor commission payouts.
