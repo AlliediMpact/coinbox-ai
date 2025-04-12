@@ -22,6 +22,20 @@ import {
 } from "@/components/ui/tooltip"
 import { useAuth } from '@/components/AuthProvider';
 
+// Mock function to simulate fetching loan limit based on membership tier
+const getLoanLimitForUser = (membershipTier: string) => {
+    switch (membershipTier) {
+        case "Basic":
+            return 500;
+        case "Ambassador":
+            return 1000;
+        case "Business":
+            return 5000;
+        default:
+            return 0;
+    }
+};
+
 export default function CoinTrading() {
   const [tickets, setTickets] = useState([
     {id: 1, type: "Borrow", amount: "200", status: "Open"},
@@ -39,6 +53,7 @@ export default function CoinTrading() {
 	const { toast } = useToast(); // Initialize the useToast hook
     const { user } = useAuth();
     const [walletBalance, setWalletBalance] = useState(1800); // Mock Balance
+    const [borrowing, setBorrowing] = useState(false); // Track if borrowing flow is active
 
     useEffect(() => {
         // Load wallet balance from local storage on component mount
@@ -65,7 +80,6 @@ export default function CoinTrading() {
     const canAffordInvestment = (amount: number) => {
         return walletBalance >= amount;
     };
-
 
     const handleInvestCoins = () => {
         const amount = parseFloat(investmentAmount);
@@ -111,11 +125,53 @@ export default function CoinTrading() {
     };
 
     const handleBorrowCoins = () => {
+        const amount = parseFloat(loanAmount);
+        const membershipTier = "Basic"; // Replace with user's actual membership tier
+        const loanLimit = getLoanLimitForUser(membershipTier);
+        console.log(loanLimit)
+        if (isNaN(amount) || amount <= 0) {
+            toast({
+                title: "Error",
+                description: "Please enter a valid loan amount.",
+                variant: "destructive",
+            });
+            return;
+        }
+        if (amount > loanLimit) {
+            toast({
+                title: "Error",
+                description: `You cannot borrow more than your loan limit: ${loanLimit}.`,
+                variant: "destructive",
+            });
+            return;
+        }
+        if (borrowing) {
+            return;
+        }
+
         // Implement borrow coin logic here
-        toast({
-            title: "Loan Initiated",
-            description: `Borrowing ${loanAmount} coins with a 20% repayment fee. Please agree to the terms and conditions.`,
-        });
+        setBorrowing(true); // Start borrowing process
+        setTimeout(() => {
+            // Simulate successful borrowing
+            setWalletBalance(prevBalance => prevBalance + amount);
+            localStorage.setItem('walletBalance', (walletBalance + amount).toString());
+            setTradeOffers(prevOffers => [
+                ...prevOffers,
+                {
+                    id: prevOffers.length + 1,
+                    type: "Borrow",
+                    amount: amount.toString(),
+                    interest: "20", // fixed 20% repayment fee
+                    status: "Active",
+                },
+            ]);
+            toast({
+                title: "Loan Initiated",
+                description: `Borrowing ${loanAmount} coins with a 20% repayment fee.`,
+            });
+            setLoanAmount("");
+            setBorrowing(false); // End borrowing process
+        }, 2000);
     };
 
   // Mock function to simulate automated matching
@@ -205,12 +261,13 @@ export default function CoinTrading() {
 					  placeholder="Loan Amount"
 					  value={loanAmount}
 					  onChange={(e) => setLoanAmount(e.target.value)}
+					  disabled={borrowing} // Disable input while borrowing
 				  />
                      <TooltipProvider>
                       <Tooltip>
                         <TooltipTrigger asChild>
-                             <Button variant="secondary" size="sm" onClick={handleBorrowCoins}>
-                                  Borrow Coins
+                             <Button variant="secondary" size="sm" onClick={handleBorrowCoins} disabled={borrowing}>
+                                 {borrowing ? "Borrowing..." : "Borrow Coins"}
                               </Button>
                          </TooltipTrigger>
                         <TooltipContent>

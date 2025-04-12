@@ -134,9 +134,9 @@ const prompt = ai.definePrompt({
   {{#if creditScore}}
   Credit Score: {{creditScore}}
   {{else}}
-  {{#tool_call getUserCreditScore userId=userId}}
+  {{tool_call getUserCreditScore userId=userId}}
   No credit score provided, but I am using the getUserCreditScore tool to retrieve it.
-  {{/if}}
+  {{/tool_call}}
   {{/if}}
   
   {{#if income}}
@@ -166,10 +166,17 @@ const riskAssessmentFlow = ai.defineFlow<
     outputSchema: RiskAssessmentOutputSchema,
   },
   async input => {
+    // If a credit score is not explicitly provided, try to fetch it using the tool.
     let creditScore: number | undefined = input.creditScore;
-    if (!creditScore) {
-      const creditScoreResult = await getUserCreditScore({ userId: input.userId });
-      creditScore = creditScoreResult;
+    try {
+      if (!creditScore) {
+        const creditScoreResult = await getUserCreditScore({ userId: input.userId });
+        creditScore = creditScoreResult;
+      }
+    } catch (error) {
+      console.error("Failed to retrieve credit score:", error);
+      // Handle the error appropriately, e.g., set a default score or inform the user.
+      creditScore = 600; // A default score in case of failure.
     }
 
     const augmentedInput = {
