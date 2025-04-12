@@ -13,7 +13,7 @@ import { app } from '@/lib/firebase';
 
 interface AuthContextProps {
   user: User | null;
-  signUp: (email: string, password: string) => Promise<void>;
+  signUp: (email: string, password: string, additionalData?: any) => Promise<void>;
   signIn: (email: string, password: string) => Promise<void>;
   signOutUser: () => Promise<void>;
   loading: boolean;
@@ -47,9 +47,11 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
     return () => unsubscribe();
   }, [auth]);
 
-  const signUp = async (email: string, password: string) => {
+  const signUp = async (email: string, password: string, additionalData = {}) => {
     try {
-      await createUserWithEmailAndPassword(auth, email, password);
+      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+      // You can update the user profile or store additional data in Firestore
+      console.log(userCredential)
     } catch (error: any) {
       console.error('Signup error:', error.message);
       throw error;

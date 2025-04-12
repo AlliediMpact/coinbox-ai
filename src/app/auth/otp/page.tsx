@@ -4,33 +4,26 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { useAuth } from '@/components/AuthProvider';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 
-export default function SignInPage() {
+export default function OTPPage() {
   const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const { signIn } = useAuth();
+  const [otp, setOTP] = useState('');
   const router = useRouter();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    try {
-      await signIn(email, password);
-      router.push('/dashboard'); // Redirect to dashboard after successful sign in
-    } catch (error: any) {
-      // Handle sign-in errors (e.g., display error message)
-      console.error("Failed to sign in:", error.message);
-      alert(`Sign-in failed: ${error.message}`);
-    }
+    // Implement OTP verification logic here
+    console.log("Email:", email, "OTP:", otp);
+    router.push('/dashboard'); // Redirect to dashboard after successful verification
   };
 
   return (
     <div className="flex items-center justify-center h-screen bg-background">
       <Card className="w-[450px]">
         <CardHeader className="space-y-2">
-          <CardTitle className="text-2xl">Sign In</CardTitle>
-          <CardDescription>Enter your email and password to sign in</CardDescription>
+          <CardTitle className="text-2xl">Sign In with OTP</CardTitle>
+          <CardDescription>Enter your email and OTP to sign in</CardDescription>
         </CardHeader>
         <CardContent className="grid gap-4">
           <form onSubmit={handleSubmit} className="grid gap-2">
@@ -42,13 +35,13 @@ export default function SignInPage() {
               required
             />
             <Input
-              type="password"
-              placeholder="Password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
+              type="text"
+              placeholder="OTP"
+              value={otp}
+              onChange={(e) => setOTP(e.target.value)}
               required
             />
-            <Button type="submit">Sign In</Button>
+            <Button type="submit">Verify OTP</Button>
           </form>
         </CardContent>
       </Card>

@@ -16,8 +16,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: 'CoinBox Connect',
-  description: 'Peer-to-Peer Financial Solution',
+  title: 'Allied iMpact Coin Box',
+  description: 'Your Secure Peer-to-Peer Financial Platform',
 };
 
 export default function RootLayout({
@@ -38,4 +38,3 @@ export default function RootLayout({
     </html>
   );
 }
-
