@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { useState } from 'react';
-import { Mail, Key, Google, Facebook } from 'lucide-react'; // Import icons
+import { Mail, Key, LogIn, Facebook } from 'lucide-react'; // Import icons
 import { cn } from "@/lib/utils";
 
 export default function AuthPage() {
@@ -129,7 +129,7 @@ export default function AuthPage() {
               </Button>
               <div className="flex justify-center gap-4 mt-4">
                 <Button variant="secondary" onClick={handleGoogleSignIn}>
-                  <Google className="mr-2 h-4 w-4" />
+                  <LogIn className="mr-2 h-4 w-4" />
                   Sign In with Google
                 </Button>
                 <Button variant="secondary" onClick={handleFacebookSignIn}>
