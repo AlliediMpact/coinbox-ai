@@ -3,14 +3,9 @@
 import { useAuth } from '@/components/AuthProvider';
 import { Sidebar, SidebarContent, SidebarTrigger, SidebarMenu, SidebarMenuItem, SidebarMenuButton } from '@/components/ui/sidebar';
 import SummaryComponent from "@/components/SummaryComponent";
-import MembershipManagement from "@/components/MembershipManagement";
-import CoinTrading from "@/components/CoinTrading";
-import WalletManagement from "@/components/WalletManagement";
-import RiskAssessmentTool from "@/components/RiskAssessmentTool";
-import ReferralTracking from "@/components/ReferralTracking";
-import AdminDashboard from "@/components/AdminDashboard";
 import { Home as HomeIcon, Users, Coins, Wallet, Shield, Share2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import AdminDashboard from "@/components/AdminDashboard";
 
 export default function Home() {
   const { user } = useAuth();
@@ -71,15 +66,60 @@ export default function Home() {
         ) : (
           // Default dashboard for a regular user
           <div className="grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
-            <MembershipManagement />
-            <CoinTrading />
-            <WalletManagement />
-            <RiskAssessmentTool userId={user?.uid || 'default'} />
-            <ReferralTracking />
+            <MembershipComponent />
+            <CoinTradingComponent />
+            <WalletComponent />
+            <RiskAssessmentComponent userId={user?.uid || 'default'} />
+            <ReferralTrackingComponent />
           </div>
         )}
         <SummaryComponent />
       </main>
+    </div>
+  );
+}
+
+// Create separate component files for each of these components
+function MembershipComponent() {
+  return (
+    <div>
+      <h1 className="text-2xl font-bold mb-4">Membership Management</h1>
+    </div>
+  );
+}
+
+function CoinTradingComponent() {
+  return (
+    <div>
+      <h1 className="text-2xl font-bold mb-4">Coin Trading</h1>
+    </div>
+  );
+}
+
+function WalletComponent() {
+  return (
+    <div>
+      <h1 className="text-2xl font-bold mb-4">Wallet Management</h1>
+    </div>
+  );
+}
+
+interface RiskAssessmentComponentProps {
+  userId: string;
+}
+
+function RiskAssessmentComponent({ userId }: RiskAssessmentComponentProps) {
+  return (
+    <div>
+      <h1 className="text-2xl font-bold mb-4">Risk Assessment Tool</h1>
+    </div>
+  );
+}
+
+function ReferralTrackingComponent() {
+  return (
+    <div>
+      <h1 className="text-2xl font-bold mb-4">Referral Tracking</h1>
     </div>
   );
 }

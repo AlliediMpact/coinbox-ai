@@ -6,6 +6,13 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useAuth } from '@/components/AuthProvider';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 export default function SignUpPage() {
   const [fullName, setFullName] = useState('');
@@ -13,6 +20,7 @@ export default function SignUpPage() {
   const [phone, setPhone] = useState('');
   const [referralCode, setReferralCode] = useState('');
   const [password, setPassword] = useState('');
+  const [membershipTier, setMembershipTier] = useState('Basic'); // Default value
   const { signUp } = useAuth();
   const router = useRouter();
 
@@ -20,7 +28,7 @@ export default function SignUpPage() {
     e.preventDefault();
     try {
       // Include additional user data during sign-up
-      await signUp(email, password, { fullName, phone, referralCode });
+      await signUp(email, password, { fullName, phone, referralCode, membershipTier });
       router.push('/dashboard'); // Redirect to dashboard after successful sign up
     } catch (error: any) {
       // Handle sign-up errors (e.g., display error message)
@@ -72,6 +80,16 @@ export default function SignUpPage() {
               onChange={(e) => setPassword(e.target.value)}
               required
             />
+            <Select onValueChange={(value) => setMembershipTier(value)}>
+              <SelectTrigger>
+                <SelectValue placeholder="Select Membership Tier" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="Basic">Basic</SelectItem>
+                <SelectItem value="Ambassador">Ambassador</SelectItem>
+                <SelectItem value="Business">Business</SelectItem>
+              </SelectContent>
+            </Select>
             <Button type="submit">Sign Up</Button>
           </form>
         </CardContent>
