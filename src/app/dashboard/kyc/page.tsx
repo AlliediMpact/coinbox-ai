@@ -4,10 +4,11 @@ import KycVerification from "@/components/KycVerification";
 
 export default function KycPage() {
   return (
-    <div>
+    <div className="kyc">
       <h1 className="text-2xl font-bold mb-4">KYC Verification</h1>
       <KycVerification />
     </div>
   );
 }
+
 

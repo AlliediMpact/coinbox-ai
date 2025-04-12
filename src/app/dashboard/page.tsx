@@ -39,7 +39,7 @@ export default function Dashboard() {
   }
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen p-4">
+    <div className="flex flex-col items-center justify-center min-h-screen p-4 dashboard">
       <h1 className="text-3xl font-bold mb-6">Dashboard</h1>
       <p className="text-lg mb-4">Welcome, {user.email}!</p>
 

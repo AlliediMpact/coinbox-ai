@@ -7,9 +7,10 @@ export default function RiskPage() {
   const { user } = useAuth();
 
   return (
-    <div>
+    <div className="risk">
       <h1 className="text-2xl font-bold mb-4">Risk Assessment Tool</h1>
       <RiskAssessmentTool userId={user?.uid || 'default'} />
     </div>
   );
 }
+

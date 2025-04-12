@@ -87,38 +87,39 @@ body {
   }
 }
 /* Add the gradient background */
-.auth-page {
+.auth-page, .dashboard, .trading, .wallet, .referral, .support, .kyc, .commissions, .membership, .risk, .admin {
   background: linear-gradient(to right, #193281, #5e17eb);
   color: white;
 }
 /* Adjust card styles for better integration */
-.auth-page .card {
+.auth-page .card, .dashboard .card, .trading .card, .wallet .card, .referral .card, .support .card, .kyc .card, .commissions .card, .membership .card, .risk .card, .admin .card {
   background-color: rgba(255, 255, 255, 0.1); /* Semi-transparent white */
   border: none; /* Remove the border */
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* Add a subtle shadow */
 }
 /* Style the card header */
-.auth-page .card-header {
+.auth-page .card-header, .dashboard .card-header, .trading .card-header, .wallet .card-header, .referral .card-header, .support .card-header, .kyc .card-header, .commissions .card-header, .membership .card-header, .risk .card-header, .admin .card-header {
   color: white;
 }
 /* Style input fields */
-.auth-page .input {
+.auth-page .input, .dashboard .input, .trading .input, .wallet .input, .referral .input, .support .input, .kyc .input, .commissions .input, .membership .input, .risk .input, .admin .input {
   border: 1px solid rgba(255, 255, 255, 0.3);
   color: white;
   background-color: transparent;
 }
 /* Style the labels */
-.auth-page .label {
+.auth-page .label, .dashboard .label, .trading .label, .wallet .label, .referral .label, .support .label, .kyc .label, .commissions .label, .membership .label, .risk .label, .admin .label {
   color: rgba(255, 255, 255, 0.8);
 }
 /* Style the buttons */
-.auth-page .button {
+.auth-page .button, .dashboard .button, .trading .button, .wallet .button, .referral .button, .support .button, .kyc .button, .commissions .button, .membership .button, .risk .button, .admin .button {
   background-color: #5e17eb;
   color: white;
 }
 /* Style the links */
-.auth-page .button-link {
+.auth-page .button-link, .dashboard .button-link, .trading .button-link, .wallet .button-link, .referral .button-link, .support .button-link, .kyc .button-link, .commissions .button-link, .membership .button-link, .risk .button-link, .admin .button-link {
   color: rgba(255, 255, 255, 0.8);
 }
+
 
 

@@ -4,9 +4,10 @@ import SupportComponent from "@/components/SupportComponent";
 
 export default function SupportPage() {
   return (
-    <div>
+    <div className="support">
       <h1 className="text-2xl font-bold mb-4">Contact Support</h1>
       <SupportComponent />
     </div>
   );
 }
+

@@ -37,6 +37,7 @@ export default function ReferralPage() {
     };
 
     return (
+        <div className="referral">
         <Card className="shadow-md hover:shadow-lg transition-shadow duration-300">
             <CardHeader>
                 <CardTitle className="text-lg font-semibold">Referral Tracking</CardTitle>
@@ -81,5 +82,7 @@ export default function ReferralPage() {
                 )}
             </CardContent>
         </Card>
+        </div>
     );
 }
+

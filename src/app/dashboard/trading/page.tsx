@@ -11,10 +11,11 @@ export default function TradingPage() {
     }, []);
 
     return (
-        <div>
+        <div className="trading">
             <h1 className="text-2xl font-bold mb-4">Coin Trading</h1>
             {isClient && <CoinTrading />}
         </div>
     );
 }
+
 
