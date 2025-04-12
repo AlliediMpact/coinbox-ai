@@ -45,10 +45,12 @@ const RiskAssessmentOutputSchema = z.object({
 });
 export type RiskAssessmentOutput = z.infer<typeof RiskAssessmentOutputSchema>;
 
+// Exported function to get the risk assessment
 export async function getRiskAssessment(input: RiskAssessmentInput): Promise<RiskAssessmentOutput> {
   return riskAssessmentFlow(input);
 }
 
+// Define a tool to retrieve the user's credit score
 const getUserCreditScore = ai.defineTool({
   name: 'getUserCreditScore',
   description: 'Retrieves the credit score of a user using their user ID from an external credit bureau.',
@@ -69,6 +71,7 @@ const getUserCreditScore = ai.defineTool({
   });
 });
 
+// Define the prompt for the risk assessment
 const prompt = ai.definePrompt({
   name: 'riskAssessmentPrompt',
   input: {
@@ -156,6 +159,7 @@ const prompt = ai.definePrompt({
     tools: [getUserCreditScore],
 });
 
+// Define the Genkit flow for risk assessment
 const riskAssessmentFlow = ai.defineFlow<
   typeof RiskAssessmentInputSchema,
   typeof RiskAssessmentOutputSchema

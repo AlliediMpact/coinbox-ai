@@ -21,6 +21,9 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
+import { useAuth } from '@/components/AuthProvider';
+import { doc, setDoc, getFirestore } from "firebase/firestore";
+import { app } from '@/lib/firebase';
 
 interface KycFormValues {
     fullName: string;
@@ -41,6 +44,8 @@ export default function KycVerification() {
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [formValues, setFormValues] = useState<KycFormValues>(initialFormValues);
 	const [open, setOpen] = useState(false);
+    const { user } = useAuth();
+    const db = getFirestore(app); // Initialize Firestore
 
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
         const { name, value } = e.target;
@@ -71,6 +76,16 @@ export default function KycVerification() {
                 setIsSubmitting(false);
                 setOpen(false);
                 setFormValues(initialFormValues);
+
+                // Update KYC status in Firestore
+                if (user) {
+                    const userDocRef = doc(db, "users", user.uid);
+                    setDoc(userDocRef, { kycStatus: 'Verified' }, { merge: true })
+                        .then(() => console.log("KYC status updated in Firestore"))
+                        .catch(error => console.error("Error updating KYC status:", error));
+                }
+
+
             }, 3000); // Simulate the duration of verification process
         }, 1000); // Simulate delay before starting verification
     };

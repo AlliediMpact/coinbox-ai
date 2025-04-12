@@ -22,10 +22,13 @@ export default function RiskAssessmentTool({ userId }: RiskAssessmentToolProps) 
       setLoading(true);
       setError(null);
       try {
+        // Attempt to fetch the risk assessment using the provided userId
         const assessment = await getRiskAssessment({ userId: userId });
+        // If the assessment is successful, update the state with the results
         setRiskScore(assessment.riskScore);
         setExplanation(assessment.explanation);
       } catch (e: any) {
+        // If there's an error during the assessment, log the error and update the state
         setError(e.message || "Failed to fetch risk assessment.");
         toast({
           title: "Error",
@@ -33,10 +36,12 @@ export default function RiskAssessmentTool({ userId }: RiskAssessmentToolProps) 
           variant: "destructive", // Use the "destructive" variant for error messages
         });
       } finally {
+        // After the assessment attempt (whether successful or not), set loading to false
         setLoading(false);
       }
     };
 
+    // Call the fetchRiskAssessment function when the component mounts or the userId changes
     fetchRiskAssessment();
   }, [userId, toast]);
 

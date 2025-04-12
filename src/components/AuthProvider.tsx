@@ -11,6 +11,7 @@ import {
   updateProfile,
 } from 'firebase/auth';
 import { app } from '@/lib/firebase';
+import { doc, setDoc, getFirestore } from "firebase/firestore";
 
 interface AuthContextProps {
   user: User | null;
@@ -38,6 +39,7 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const auth = getAuth(app);
+    const db = getFirestore(app); // Initialize Firestore
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
@@ -59,12 +61,17 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
                 // You can add more profile properties here if needed
             });
 
-            // You can store additional user data in Firestore or Realtime Database here
-            // For example, you might want to store:
-            // - fullName
-            // - phone
-            // - referralCode
-            // - membershipTier
+            // Store additional user data in Firestore
+            const userDocRef = doc(db, "users", user.uid);
+            await setDoc(userDocRef, {
+                fullName: additionalData.fullName || null,
+                phone: additionalData.phone || null,
+                referralCode: additionalData.referralCode || null,
+                membershipTier: additionalData.membershipTier || 'Basic', // Default value
+                email: email,
+                // Add any other relevant information
+            });
+
 
             console.log("Sign up successful:", user);
         } catch (error: any) {

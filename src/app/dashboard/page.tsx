@@ -2,13 +2,12 @@
 
 import { useAuth } from '@/components/AuthProvider';
 import { useRouter } from 'next/navigation';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Coins, Home as HomeIcon, ReferralCode, Share2, Shield, Users, Wallet } from 'lucide-react';
 import RiskAssessmentTool from "@/components/RiskAssessmentTool";
 import SummaryComponent from "@/components/SummaryComponent";
-import { useState } from 'react';
 import {
   Tooltip,
   TooltipContent,
@@ -26,6 +25,8 @@ export default function Dashboard() {
   const { user, signOutUser } = useAuth();
   const router = useRouter();
   const [isMounted, setIsMounted] = useState(false); // Use state to track mounting
+    const [walletBalance, setWalletBalance] = useState<number | null>(null);
+    const [commissionBalance, setCommissionBalance] = useState<number | null>(null);
 
   useEffect(() => {
     setIsMounted(true); // Set to true after the component mounts
@@ -33,6 +34,22 @@ export default function Dashboard() {
       router.push('/auth');
     }
   }, [user, router]);
+
+    // Fetch user-specific data (replace with your actual data fetching logic)
+    useEffect(() => {
+        if (user) {
+            // Simulate fetching wallet balance and commission balance from a database
+            const fetchBalances = async () => {
+                // Replace these with actual database calls using Firebase or your preferred backend
+                const wallet = await getWalletBalance(user.uid);
+                const commission = await getCommissionBalance(user.uid);
+
+                setWalletBalance(wallet);
+                setCommissionBalance(commission);
+            };
+            fetchBalances();
+        }
+    }, [user]);
 
   if (!user || !isMounted) {
     return <div>Redirecting to Authentication...</div>;
@@ -52,7 +69,9 @@ export default function Dashboard() {
             <CardDescription className="text-gray-500">Your current coin holdings</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">Total Balance: R1,800</div>
+            <div className="text-2xl font-bold">
+                Total Balance: {walletBalance !== null ? `R${walletBalance}` : "Loading..."}
+            </div>
           </CardContent>
         </Card>
 
@@ -194,4 +213,26 @@ export default function Dashboard() {
       </button>
     </div>
   );
+}
+
+// Simulated function to fetch wallet balance from a database
+async function getWalletBalance(userId: string): Promise<number> {
+    // Replace with your actual database call using Firebase or your preferred backend
+    // This is just a placeholder to simulate fetching data
+    return new Promise((resolve) => {
+        setTimeout(() => {
+            resolve(Math.floor(Math.random() * 2000)); // Simulating a balance
+        }, 500);
+    });
+}
+
+// Simulated function to fetch commission balance from a database
+async function getCommissionBalance(userId: string): Promise<number> {
+    // Replace with your actual database call using Firebase or your preferred backend
+    // This is just a placeholder to simulate fetching data
+    return new Promise((resolve) => {
+        setTimeout(() => {
+            resolve(Math.floor(Math.random() * 500)); // Simulating a balance
+        }, 500);
+    });
 }
