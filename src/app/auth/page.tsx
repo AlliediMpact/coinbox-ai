@@ -21,6 +21,16 @@ export default function AuthPage() {
     router.push('/auth/signup'); // Redirect to sign-up page
   };
 
+  const handleGoogleSignIn = async () => {
+    // Implement Google Sign-In logic here
+    console.log("Signing in with Google");
+  };
+
+  const handleFacebookSignIn = async () => {
+    // Implement Facebook Sign-In logic here
+    console.log("Signing in with Facebook");
+  };
+
   return (
     <div className="flex items-center justify-center h-screen bg-background">
       <Card className="w-[450px]">
@@ -48,6 +58,15 @@ export default function AuthPage() {
           </form>
           <Button variant="outline" onClick={() => router.push('/auth/otp')}>Sign In with OTP</Button>
           <Button onClick={handleSignUp}>Create Account</Button>
+
+          <div className="flex justify-center gap-4 mt-4">
+            <Button variant="secondary" onClick={handleGoogleSignIn}>
+              Sign In with Google
+            </Button>
+            <Button variant="secondary" onClick={handleFacebookSignIn}>
+              Sign In with Facebook
+            </Button>
+          </div>
         </CardContent>
       </Card>
     </div>

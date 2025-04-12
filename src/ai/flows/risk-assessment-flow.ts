@@ -12,6 +12,15 @@ import {z} from 'genkit';
 
 const RiskAssessmentInputSchema = z.object({
   userId: z.string().describe('The ID of the user for whom to assess risk.'),
+  transactionHistory: z.array(z.object({
+    type: z.string().describe('The type of transaction (e.g., Deposit, Withdrawal, Loan).'),
+    amount: z.number().describe('The amount of the transaction.'),
+    date: z.string().describe('The date of the transaction (YYYY-MM-DD).'),
+  })).optional().describe('The transaction history of the user.'),
+  profileData: z.object({
+    membership: z.string().describe('The membership tier of the user (e.g., Basic, Ambassador).'),
+    kycStatus: z.string().describe('The KYC status of the user (e.g., Verified, Pending).'),
+  }).optional().describe('The profile data of the user.')
 });
 export type RiskAssessmentInput = z.infer<typeof RiskAssessmentInputSchema>;
 
@@ -70,15 +79,10 @@ const getUserProfile = ai.defineTool({
 const prompt = ai.definePrompt({
   name: 'riskAssessmentPrompt',
   input: {
-    schema: z.object({
-      userId: z.string().describe('The ID of the user for whom to assess risk.'),
-    }),
+    schema: RiskAssessmentInputSchema,
   },
   output: {
-    schema: z.object({
-      riskScore: z.number().describe('The risk score based on the transaction history and user profile (0-100).'),
-      explanation: z.string().describe('A detailed explanation of the risk score, including the factors that influenced it.'),
-    }),
+    schema: RiskAssessmentOutputSchema,
   },
   prompt: `You are an AI assistant that assesses financial risk based on user transaction history and profile.
   Given the transaction history and profile, generate a risk score between 0 and 100.
