@@ -14,6 +14,11 @@ This is a NextJS starter in Firebase Studio for Allied iMpact Coin Box, a peer-t
 -   **Security:** Data encryption at rest and transit, KYC, GDPR and CCPA compliance.
 - **Text Summarization** Leverages AI to create summaries
 -   **Admin dashboard:** Comprehensive user management, transaction monitoring and system configuration, reporting and analytics, KYC & Compliance.
+   -   **User Management:** Verify accounts, enable/disable users.
+    -   **Transaction Monitoring:** Review transactions, approve withdrawals.
+    -   **Membership Management:** Adjust fees, upgrade/downgrade plans.
+    -   **Referral System Management:** Monitor commission payouts.
+    -   **KYC & Compliance:** Review ID verifications, manage disputes.
 
 ## UI/UX Improvements
 
@@ -24,6 +29,7 @@ This is a NextJS starter in Firebase Studio for Allied iMpact Coin Box, a peer-t
 
 - Implemented multi-factor authentication (MFA) to provide an additional layer of security.
 - Enhanced data encryption techniques.
+- KYC verification to ensure user identity.
 
 ## Implemented Automated Systems
 
@@ -35,3 +41,4 @@ This is a NextJS starter in Firebase Studio for Allied iMpact Coin Box, a peer-t
 -Tier-based commission program
 
 To get started, take a look at src/app/page.tsx.
+

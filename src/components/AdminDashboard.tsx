@@ -2,10 +2,12 @@
 
 import {Card, CardContent, CardDescription, CardHeader, CardTitle} from "@/components/ui/card";
 import {Table, TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRow} from "@/components/ui/table";
+import {Button} from "@/components/ui/button";
+import {useState} from "react";
 
 const users = [
-  {id: 1, name: "John Doe", email: "john.doe@example.com", status: "Active"},
-  {id: 2, name: "Jane Smith", email: "jane.smith@example.com", status: "Inactive"},
+  {id: 1, name: "John Doe", email: "john.doe@example.com", status: "Active", verified: true},
+  {id: 2, name: "Jane Smith", email: "jane.smith@example.com", status: "Inactive", verified: false},
 ];
 
 const transactions = [
@@ -14,6 +16,20 @@ const transactions = [
 ];
 
 export default function AdminDashboard() {
+  const [userList, setUserList] = useState(users);
+
+  const handleVerifyUser = (id: number) => {
+    setUserList(userList.map(user => user.id === id ? {...user, verified: true} : user));
+  };
+
+  const handleEnableUser = (id: number) => {
+    setUserList(userList.map(user => user.id === id ? {...user, status: "Active"} : user));
+  };
+
+  const handleDisableUser = (id: number) => {
+    setUserList(userList.map(user => user.id === id ? {...user, status: "Inactive"} : user));
+  };
+
   return (
     <div className="container mx-auto py-10">
       <h1 className="text-3xl font-bold mb-5">Admin Dashboard</h1>
@@ -32,15 +48,34 @@ export default function AdminDashboard() {
                   <TableHead>Name</TableHead>
                   <TableHead>Email</TableHead>
                   <TableHead>Status</TableHead>
+                  <TableHead>Verified</TableHead>
+                  <TableHead>Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {users.map((user) => (
+                {userList.map((user) => (
                   <TableRow key={user.id}>
                     <TableCell>{user.id}</TableCell>
                     <TableCell>{user.name}</TableCell>
                     <TableCell>{user.email}</TableCell>
                     <TableCell>{user.status}</TableCell>
+                    <TableCell>{user.verified ? "Yes" : "No"}</TableCell>
+                    <TableCell>
+                      {!user.verified && (
+                        <Button variant="secondary" size="sm" onClick={() => handleVerifyUser(user.id)}>
+                          Verify
+                        </Button>
+                      )}
+                      {user.status === "Inactive" ? (
+                        <Button variant="ghost" size="sm" onClick={() => handleEnableUser(user.id)}>
+                          Enable
+                        </Button>
+                      ) : (
+                        <Button variant="ghost" size="sm" onClick={() => handleDisableUser(user.id)}>
+                          Disable
+                        </Button>
+                      )}
+                    </TableCell>
                   </TableRow>
                 ))}
               </TableBody>
@@ -62,6 +97,7 @@ export default function AdminDashboard() {
                   <TableHead>Type</TableHead>
                   <TableHead>Amount</TableHead>
                   <TableHead>Date</TableHead>
+                  <TableHead>Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -72,6 +108,11 @@ export default function AdminDashboard() {
                     <TableCell>{transaction.type}</TableCell>
                     <TableCell>{transaction.amount}</TableCell>
                     <TableCell>{transaction.date}</TableCell>
+                    <TableCell>
+                      <Button variant="outline" size="sm">
+                        Review
+                      </Button>
+                    </TableCell>
                   </TableRow>
                 ))}
               </TableBody>
