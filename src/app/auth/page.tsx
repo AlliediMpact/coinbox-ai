@@ -20,6 +20,14 @@ import {
     DialogTitle,
     DialogTrigger,
 } from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from "@/components/ui/select";
 
 
 export default function AuthPage() {
@@ -183,6 +191,9 @@ export default function AuthPage() {
                     setOpen(true); // Open the dialog
                 }} className="button-link">
                     Forgot your password?
+                </Button>
+                <Button variant="link" onClick={toggleForm} className="button-link">
+                    Create an account? Sign Up
                 </Button>
             </form>
           ) : showForgotPassword ? (
