@@ -2,7 +2,7 @@
 
 import {Card, CardContent, CardDescription, CardHeader, CardTitle} from "@/components/ui/card";
 import {Button} from "@/components/ui/button";
-import {useState} from "react";
+import {useState, useEffect} from "react";
 import {Dialog, DialogClose, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger} from "@/components/ui/dialog";
 import {Textarea} from "@/components/ui/textarea";
 import {
@@ -20,6 +20,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip"
+import { useAuth } from '@/components/AuthProvider';
 
 export default function CoinTrading() {
   const [tickets, setTickets] = useState([
@@ -35,7 +36,17 @@ export default function CoinTrading() {
 	const [loanAmount, setLoanAmount] = useState('');
 	const [investmentAmount, setInvestmentAmount] = useState('');
 	const [selectedAmount, setSelectedAmount] = useState('');
-  const { toast } = useToast(); // Initialize the useToast hook
+	const { toast } = useToast(); // Initialize the useToast hook
+    const { user } = useAuth();
+    const [walletBalance, setWalletBalance] = useState(1800); // Mock Balance
+
+    useEffect(() => {
+        // Load wallet balance from local storage on component mount
+        const storedBalance = localStorage.getItem('walletBalance');
+        if (storedBalance) {
+            setWalletBalance(parseFloat(storedBalance));
+        }
+    }, []);
 
   const handleCreateTicket = () => {
     setTickets([...tickets, {
@@ -51,6 +62,62 @@ export default function CoinTrading() {
     });
   };
 
+    const canAffordInvestment = (amount: number) => {
+        return walletBalance >= amount;
+    };
+
+
+    const handleInvestCoins = () => {
+        const amount = parseFloat(investmentAmount);
+
+        if (isNaN(amount) || amount <= 0) {
+            toast({
+                title: "Error",
+                description: "Please enter a valid investment amount.",
+                variant: "destructive",
+            });
+            return;
+        }
+
+        if (!canAffordInvestment(amount)) {
+            toast({
+                title: "Error",
+                description: "Insufficient funds in your wallet.",
+                variant: "destructive",
+            });
+            return;
+        }
+
+        // Lock funds and set maturity in real implementation
+
+        // Update wallet balance and trade offers locally
+        setWalletBalance(prevBalance => prevBalance - amount);
+        localStorage.setItem('walletBalance', (walletBalance - amount).toString());
+        setTradeOffers(prevOffers => [
+            ...prevOffers,
+            {
+                id: prevOffers.length + 1,
+                type: "Invest",
+                amount: amount.toString(),
+                interest: "20", // fixed 20% return
+                status: "Locked",
+            },
+        ]);
+
+        toast({
+            title: "Investment Successful",
+            description: `Investing ${amount} coins with a fixed 20% return per month. Funds will be locked until maturity.`,
+        });
+    };
+
+    const handleBorrowCoins = () => {
+        // Implement borrow coin logic here
+        toast({
+            title: "Loan Initiated",
+            description: `Borrowing ${loanAmount} coins with a 20% repayment fee. Please agree to the terms and conditions.`,
+        });
+    };
+
   // Mock function to simulate automated matching
   const findMatchingTrades = (ticket: any) => {
     const matchedTrade = tradeOffers.find(offer => offer.type !== ticket.type && offer.status === "Pending");
@@ -62,51 +129,32 @@ export default function CoinTrading() {
     return type === "Borrow" ? 10 + Math.random() * 5 : 5 + Math.random() * 5; // Example rates
   };
 
-  const handleMatchTrade = (ticket: any) => {
-    const match = findMatchingTrades(ticket);
-    if (match) {
-      // Set the matched trade's status to "Matched" and update interest
-      const interestRate = determineInterestRate(parseFloat(match.amount), match.type);
-      setTradeOffers(tradeOffers.map(offer =>
-        offer.id === match.id ? { ...offer, status: "Matched", interest: interestRate.toFixed(2) } : offer
-      ));
-      setTickets(tickets.map(t => t.id === ticket.id ? { ...t, status: "Matched" } : t));
-      toast({
-        title: "Trade Matched",
-        description: `Trade matched with offer ID: ${match.id} at ${interestRate.toFixed(2)}% interest.`,
-      });
-    } else {
-      // If no match is found, create a trade offer
-      const interestRate = determineInterestRate(parseFloat(ticket.amount), ticket.type);
-      setTradeOffers([...tradeOffers, {
-        id: tradeOffers.length + 1,
-        type: ticket.type,
-        amount: ticket.amount,
-        interest: interestRate.toFixed(2), // Interest rate is now dynamically determined
-        status: "Pending",
-      }]);
-      toast({
-        title: "No Match Found",
-        description: "Creating trade offer...",
-      });
-    }
-  };
+    const handleMatchTrade = (ticket: any) => {
+        // Find a matching trade offer
+        const match = tradeOffers.find(offer => offer.type !== ticket.type && offer.status === "Pending");
 
-	const handleInvestCoins = () => {
-    // Implement invest coin logic here
-    toast({
-      title: "Investment Successful",
-      description: `Investing ${investmentAmount} coins with a fixed 20% return per month. Funds will be locked until maturity.`,
-    });
-  };
+        if (match) {
+            // Update status of matched ticket
+            setTickets(tickets.map(t =>
+                t.id === ticket.id ? { ...t, status: "Matched" } : t
+            ));
 
-  const handleBorrowCoins = () => {
-    // Implement borrow coin logic here
-    toast({
-      title: "Loan Initiated",
-      description: `Borrowing ${loanAmount} coins with a 20% repayment fee. Please agree to the terms and conditions.`,
-    });
-  };
+            // Update the status of matched trade offer
+            setTradeOffers(tradeOffers.map(offer =>
+                offer.id === match.id ? { ...offer, status: "Matched" } : offer
+            ));
+
+            toast({
+                title: "Trade Matched",
+                description: `Trade matched with offer ID: ${match.id}.`,
+            });
+        } else {
+            toast({
+                title: "No Match Found",
+                description: "No matching trade offers found.",
+            });
+        }
+    };
 
   return (
     <Card>
@@ -136,7 +184,7 @@ export default function CoinTrading() {
                     <TooltipProvider>
                       <Tooltip>
                         <TooltipTrigger asChild>
-                            <Button variant="secondary" size="sm" onClick={handleInvestCoins}>
+                            <Button variant="secondary" size="sm" onClick={handleInvestCoins} disabled={!investmentAmount}>
                                 Invest Coins
                             </Button>
                          </TooltipTrigger>
