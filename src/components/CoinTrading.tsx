@@ -14,6 +14,12 @@ import {
 } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast"; // Import the useToast hook
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip"
 
 export default function CoinTrading() {
   const [tickets, setTickets] = useState([
@@ -127,9 +133,18 @@ export default function CoinTrading() {
 						  <SelectItem value="5000">5000 Coins</SelectItem>
 					  </SelectContent>
 				  </Select>
-				  <Button variant="secondary" size="sm" onClick={handleInvestCoins}>
-					  Invest Coins
-				  </Button>
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                            <Button variant="secondary" size="sm" onClick={handleInvestCoins}>
+                                Invest Coins
+                            </Button>
+                         </TooltipTrigger>
+                        <TooltipContent>
+                          Click to invest coins
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
 			  </div>
 		  </div>
 		  <div>
@@ -143,9 +158,18 @@ export default function CoinTrading() {
 					  value={loanAmount}
 					  onChange={(e) => setLoanAmount(e.target.value)}
 				  />
-				  <Button variant="secondary" size="sm" onClick={handleBorrowCoins}>
-					  Borrow Coins
-				  </Button>
+                     <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                             <Button variant="secondary" size="sm" onClick={handleBorrowCoins}>
+                                  Borrow Coins
+                              </Button>
+                         </TooltipTrigger>
+                        <TooltipContent>
+                          Click to borrow coins
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
 			  </div>
 		  </div>
         <div>
@@ -157,9 +181,18 @@ export default function CoinTrading() {
                   {ticket.type} - {ticket.amount} - Status: {ticket.status}
                 </span>
                 {ticket.status === "Open" && (
-                  <Button variant="secondary" size="sm" onClick={() => handleMatchTrade(ticket)}>
-                    Find Match
-                  </Button>
+                     <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                            <Button variant="secondary" size="sm" onClick={() => handleMatchTrade(ticket)}>
+                                Find Match
+                            </Button>
+                         </TooltipTrigger>
+                        <TooltipContent>
+                          Click to find a match
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
                 )}
               </li>
             ))}
@@ -179,7 +212,16 @@ export default function CoinTrading() {
         </div>
         <Dialog open={open} onOpenChange={setOpen}>
           <DialogTrigger asChild>
-            <Button variant="outline">Create Ticket</Button>
+               <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                        <Button variant="outline">Create Ticket</Button>
+                     </TooltipTrigger>
+                    <TooltipContent>
+                      Click to create a new ticket
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
           </DialogTrigger>
           <DialogContent>
             <DialogHeader>
@@ -235,4 +277,3 @@ export default function CoinTrading() {
     </Card>
   );
 }
-
