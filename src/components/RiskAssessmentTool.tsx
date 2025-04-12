@@ -48,7 +48,12 @@ export default function RiskAssessmentTool({ userId }: RiskAssessmentToolProps) 
       </CardHeader>
       <CardContent className="grid gap-4">
         {loading ? (
-          <div>Loading risk assessment...</div>
+            <div className="flex items-center space-x-2">
+                <div className="w-full">
+                    <Progress value={50} className="mb-2" />
+                    Fetching risk assessment...
+                </div>
+            </div>
         ) : error ? (
           <div className="text-red-500">Error: {error}</div>
         ) : riskScore !== null && explanation !== null ? (

@@ -63,12 +63,46 @@ export default function Dashboard() {
             <CardDescription className="text-gray-500">Access key features quickly</CardDescription>
           </CardHeader>
           <CardContent className="flex flex-col sm:flex-row gap-3">
-            <Button onClick={() => router.push('/dashboard/trading')}>Invest</Button>
-            <Button onClick={() => router.push('/dashboard/trading')}>Borrow</Button>
-            <Button onClick={() => router.push('/dashboard/wallet')}>Transactions</Button>
-            <Button onClick={() => router.push('/dashboard/referral')}>
-              Refer a Friend
-            </Button>
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                   <Button onClick={() => router.push('/dashboard/trading')}>Invest</Button>
+                </TooltipTrigger>
+                <TooltipContent>
+                    Invest coins
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                   <Button onClick={() => router.push('/dashboard/trading')}>Borrow</Button>
+                </TooltipTrigger>
+                <TooltipContent>
+                    Borrow Coins
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+           <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                     <Button onClick={() => router.push('/dashboard/wallet')}>Transactions</Button>
+                </TooltipTrigger>
+                <TooltipContent>
+                    Manage Transactions
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+             <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                      <Button onClick={() => router.push('/dashboard/referral')}>Refer a Friend</Button>
+                </TooltipTrigger>
+                <TooltipContent>
+                    Invite Friends
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
           </CardContent>
         </Card>
 

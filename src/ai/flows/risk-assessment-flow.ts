@@ -32,7 +32,10 @@ const RiskAssessmentInputSchema = z.object({
   userProfile: z.object({
     membership: z.string().describe('The membership tier of the user (e.g., Basic, Ambassador).'),
     kycStatus: z.string().describe('The KYC status of the user (e.g., Verified, Pending).'),
-  }).optional().describe('The profile data of the user.')
+  }).optional().describe('The profile data of the user.'),
+  creditScore: z.number().optional().describe('The user\'s credit score (if available).'),
+  income: z.number().optional().describe('The user\'s monthly income (if available).'),
+  employmentHistory: z.string().optional().describe('The user\'s employment history (if available).'),
 });
 export type RiskAssessmentInput = z.infer<typeof RiskAssessmentInputSchema>;
 
@@ -45,6 +48,26 @@ export type RiskAssessmentOutput = z.infer<typeof RiskAssessmentOutputSchema>;
 export async function getRiskAssessment(input: RiskAssessmentInput): Promise<RiskAssessmentOutput> {
   return riskAssessmentFlow(input);
 }
+
+const getUserCreditScore = ai.defineTool({
+  name: 'getUserCreditScore',
+  description: 'Retrieves the credit score of a user using their user ID from an external credit bureau.',
+  inputSchema: z.object({
+    userId: z.string().describe('The ID of the user to retrieve the credit score for.'),
+  }),
+  outputSchema: z.number().describe('The credit score of the user.')
+}, async (input) => {
+  // Placeholder implementation - replace with actual credit bureau API call
+  console.log(`Calling external credit bureau for user ${input.userId}...`);
+  // Simulate fetching credit score from an external API
+  return new Promise((resolve) => {
+    setTimeout(() => {
+      const score = Math.floor(Math.random() * (850 - 300 + 1)) + 300; // Simulate a score between 300 and 850
+      console.log(`Simulated credit score for user ${input.userId}: ${score}`);
+      resolve(score);
+    }, 1000); // Simulate API call delay
+  });
+});
 
 const prompt = ai.definePrompt({
   name: 'riskAssessmentPrompt',
@@ -108,9 +131,29 @@ const prompt = ai.definePrompt({
     - No user profile available.
   {{/if}}
 
+  {{#if creditScore}}
+  Credit Score: {{creditScore}}
+  {{else}}
+  {{#tool_call getUserCreditScore userId=userId}}
+  No credit score provided, but I am using the getUserCreditScore tool to retrieve it.
+  {{/if}}
+  {{/if}}
+  
+  {{#if income}}
+  Income: {{income}}
+  {{else}}
+    - No income information provided.
+  {{/if}}
+
+  {{#if employmentHistory}}
+  Employment History: {{employmentHistory}}
+  {{else}}
+    - No employment history provided.
+  {{/if}}
+
   Based on the available user data, determine a risk score and explain your reasoning.
   Provide the risk score as a number and the explanation as a string.`,
-  tools: [],
+    tools: [getUserCreditScore],
 });
 
 const riskAssessmentFlow = ai.defineFlow<
@@ -123,7 +166,18 @@ const riskAssessmentFlow = ai.defineFlow<
     outputSchema: RiskAssessmentOutputSchema,
   },
   async input => {
-    const {output} = await prompt(input);
+    let creditScore: number | undefined = input.creditScore;
+    if (!creditScore) {
+      const creditScoreResult = await getUserCreditScore({ userId: input.userId });
+      creditScore = creditScoreResult;
+    }
+
+    const augmentedInput = {
+      ...input,
+      creditScore,
+    };
+
+    const {output} = await prompt(augmentedInput);
     // Basic validation to ensure the output is within the expected range
     let riskScore = 50;
       if (output?.riskScore) {
