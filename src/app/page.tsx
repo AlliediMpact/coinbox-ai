@@ -7,6 +7,12 @@ import { Home as HomeIcon, Users, Coins, Wallet, Shield, Share2 } from 'lucide-r
 import { useRouter } from 'next/navigation';
 import AdminDashboard from "@/components/AdminDashboard";
 import Image from 'next/image';
+import MembershipComponent from "@/components/MembershipComponent";
+import CoinTradingComponent from "@/components/CoinTradingComponent";
+import WalletComponent from "@/components/WalletComponent";
+import RiskAssessmentComponent from "@/components/RiskAssessmentComponent";
+import ReferralTrackingComponent from "@/components/ReferralTrackingComponent";
+import SupportComponent from "@/components/SupportComponent";
 
 export default function Home() {
   const { user } = useAuth();
@@ -88,56 +94,3 @@ export default function Home() {
     </div>
   );
 }
-
-// Create separate component files for each of these components
-function MembershipComponent() {
-  return (
-    <div>
-      <h1 className="text-2xl font-bold mb-4">Membership Management</h1>
-    </div>
-  );
-}
-
-function CoinTradingComponent() {
-  return (
-    <div>
-      <h1 className="text-2xl font-bold mb-4">Coin Trading</h1>
-    </div>
-  );
-}
-
-function WalletComponent() {
-  return (
-    <div>
-      <h1 className="text-2xl font-bold mb-4">Wallet Management</h1>
-    </div>
-  );
-}
-
-interface RiskAssessmentComponentProps {
-  userId: string;
-}
-
-function RiskAssessmentComponent({ userId }: RiskAssessmentComponentProps) {
-  return (
-    <div>
-      <h1 className="text-2xl font-bold mb-4">Risk Assessment Tool</h1>
-    </div>
-  );
-}
-
-function ReferralTrackingComponent() {
-  return (
-    <div>
-      <h1 className="text-2xl font-bold mb-4">Referral Tracking</h1>
-    </div>
-  );
-}
-function SupportComponent() {
-  return (
-    <div>
-      <h1 className="text-2xl font-bold mb-4">Support</h1>
-    </div>
-  );
-}
-

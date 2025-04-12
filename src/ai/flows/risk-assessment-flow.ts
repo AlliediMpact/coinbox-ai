@@ -12,6 +12,18 @@ import {z} from 'genkit';
 
 const RiskAssessmentInputSchema = z.object({
   userId: z.string().describe('The ID of the user for whom to assess risk.'),
+  loanHistory: z.array(z.object({
+    amount: z.number().describe('The amount of each loan.'),
+    status: z.string().describe('The status of the loan (e.g., active, repaid, defaulted).'),
+  })).optional().describe('The loan history of the user.'),
+  activeInvestments: z.array(z.object({
+    amount: z.number().describe('The amount of each active investment.'),
+    maturityDate: z.string().describe('The maturity date of the investment (YYYY-MM-DD).'),
+  })).optional().describe('The active investments of the user.'),
+  paymentBehaviour: z.object({
+    ontimePayments: z.number().describe('The number of on-time payments made by the user.'),
+    missedPayments: z.number().describe('The number of missed payments by the user.'),
+  }).optional().describe('The payment behavior of the user.'),
 });
 export type RiskAssessmentInput = z.infer<typeof RiskAssessmentInputSchema>;
 
@@ -76,7 +88,7 @@ const prompt = ai.definePrompt({
     schema: RiskAssessmentOutputSchema,
   },
   prompt: `You are an AI assistant that assesses financial risk based on user transaction history and profile.
-  Given the transaction history and profile, generate a risk score between 0 and 100.
+  Given the transaction history, loan history, active investments, payment behavior, and profile, generate a risk score between 0 and 100.
   A lower score indicates lower risk, while a higher score indicates higher risk.
   Provide a detailed explanation of the risk score, including the factors that influenced it.
 
@@ -94,7 +106,27 @@ const prompt = ai.definePrompt({
   - Membership: {{(await getUserProfile userId=userId).membership}}
   - KYC Status: {{(await getUserProfile userId=userId).kycStatus}}
 
-  Based on the transaction history and user profile, determine a risk score and explain your reasoning.
+  {% if loanHistory %}
+  Loan History:
+  {{#each loanHistory}}
+  - Amount: {{this.amount}}, Status: {{this.status}}
+  {{/each}}
+  {% endif %}
+
+  {% if activeInvestments %}
+  Active Investments:
+  {{#each activeInvestments}}
+  - Amount: {{this.amount}}, Maturity Date: {{this.maturityDate}}
+  {{/each}}
+  {% endif %}
+
+  {% if paymentBehaviour %}
+  Payment Behavior:
+  - On-time Payments: {{paymentBehaviour.ontimePayments}}
+  - Missed Payments: {{paymentBehaviour.missedPayments}}
+  {% endif %}
+
+  Based on the transaction history, user profile, loan history, active investments, and payment behavior, determine a risk score and explain your reasoning.
   Provide the risk score as a number and the explanation as a string.`,
   tools: [getUserTransactionHistory, getUserProfile],
 });
