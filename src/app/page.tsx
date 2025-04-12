@@ -3,7 +3,7 @@
 import { useAuth } from '@/components/AuthProvider';
 import { Sidebar, SidebarContent, SidebarTrigger, SidebarMenu, SidebarMenuItem, SidebarMenuButton } from '@/components/ui/sidebar';
 import SummaryComponent from "@/components/SummaryComponent";
-import { Home as HomeIcon, Users, Coins, Wallet, Shield, Share2 } from 'lucide-react';
+import { Home as HomeIcon, Users, Coins, Wallet, Shield, Share2, HelpCircle } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import AdminDashboard from "@/components/AdminDashboard";
 import Image from 'next/image';
@@ -13,6 +13,8 @@ import WalletComponent from "@/components/WalletComponent";
 import RiskAssessmentComponent from "@/components/RiskAssessmentComponent";
 import ReferralTrackingComponent from "@/components/ReferralTrackingComponent";
 import SupportComponent from "@/components/SupportComponent";
+import KycVerification from "@/components/KycVerification";
+import CommissionTracking from "@/components/CommissionTracking";
 
 export default function Home() {
   const { user } = useAuth();
@@ -72,6 +74,12 @@ export default function Home() {
                 <span>Referral Tracking</span>
               </SidebarMenuButton>
             </SidebarMenuItem>
+             <SidebarMenuItem>
+              <SidebarMenuButton onClick={() => handleNavigation('/dashboard/support')} tooltip="Support">
+                <HelpCircle className="mr-2 h-4 w-4" />
+                <span>Support</span>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
           </SidebarMenu>
         </SidebarContent>
       </Sidebar>
@@ -87,6 +95,8 @@ export default function Home() {
             <RiskAssessmentComponent userId={user?.uid || 'default'} />
             <ReferralTrackingComponent />
              <SupportComponent />
+             <KycVerification/>
+             <CommissionTracking/>
           </div>
         )}
         <SummaryComponent />
@@ -94,4 +104,3 @@ export default function Home() {
     </div>
   );
 }
-
