@@ -4,6 +4,7 @@ import {Card, CardContent, CardDescription, CardHeader, CardTitle} from "@/compo
 import {useEffect, useState} from "react";
 import {getRiskAssessment} from "@/ai/flows/risk-assessment-flow";
 import { useToast } from "@/hooks/use-toast"; // Import the useToast hook
+import { Progress } from "@/components/ui/progress";
 
 interface RiskAssessmentToolProps {
   userId: string;
@@ -53,7 +54,11 @@ export default function RiskAssessmentTool({ userId }: RiskAssessmentToolProps) 
         ) : riskScore !== null && explanation !== null ? (
           <>
             <div>
-              <strong>Risk Score:</strong> {riskScore}
+                <strong>Risk Score:</strong>
+                <div className="mt-2">
+                    <Progress value={riskScore} />
+                </div>
+                <div className="text-center mt-1">{riskScore}%</div>
             </div>
             <div>
               <strong>Explanation:</strong> {explanation}
