@@ -348,18 +348,19 @@ export default function AuthPage() {
   );
 }
 
-const Label = React.forwardRef<HTMLLabelElement, React.HTMLAttributes<HTMLLabelElement>>(
-  ({ className, ...props }, ref) => {
-    return (
-      <label
-        className={cn(
-          "text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 label",
-          className
-        )}
-        ref={ref}
-        {...props}
-      />
-    )
-  }
-)
-Label.displayName = "Label"
+//const Label = React.forwardRef<HTMLLabelElement, React.HTMLAttributes<HTMLLabelElement>>(
+//  ({ className, ...props }, ref) => {
+//    return (
+//      <label
+//        className={cn(
+//          "text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 label",
+//          className
+//        )}
+//        ref={ref}
+//        {...props}
+//      />
+//    )
+//  }
+//)
+//Label.displayName = "Label"
+
