@@ -12,21 +12,24 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Input } from "@/components/ui/input";
 
 export default function CoinTrading() {
   const [tickets, setTickets] = useState([
-    {id: 1, type: "Borrow", amount: "R200", status: "Open"},
-    {id: 2, type: "Invest", amount: "R500", status: "Closed"},
+    {id: 1, type: "Borrow", amount: "200", status: "Open"},
+    {id: 2, type: "Invest", amount: "500", status: "Closed"},
   ]);
   const [open, setOpen] = useState(false);
   const [newTicket, setNewTicket] = useState({type: "Borrow", amount: "", description: ""});
   const [tradeOffers, setTradeOffers] = useState([
-    {id: 1, type: "Borrow", amount: "R300", interest: "15%", status: "Pending"},
-    {id: 2, type: "Invest", amount: "R1000", interest: "10%", status: "Active"},
+    {id: 1, type: "Borrow", amount: "300", interest: "15", status: "Pending"},
+    {id: 2, type: "Invest", amount: "1000", interest: "10", status: "Active"},
   ]);
+	const [loanAmount, setLoanAmount] = useState('');
+	const [investmentAmount, setInvestmentAmount] = useState('');
+	const [selectedAmount, setSelectedAmount] = useState('');
 
   const handleCreateTicket = () => {
-    // Implement ticket creation logic here
     setTickets([...tickets, {
       id: tickets.length + 1,
       type: newTicket.type,
@@ -38,9 +41,6 @@ export default function CoinTrading() {
 
   // Mock function to simulate automated matching
   const findMatchingTrades = (ticket: any) => {
-    // This function would ideally connect to a backend service
-    // to find matching investment/borrow requests.
-    // For now, let's simulate a match.
     const matchedTrade = tradeOffers.find(offer => offer.type !== ticket.type && offer.status === "Pending");
     return matchedTrade || null;
   };
@@ -48,7 +48,6 @@ export default function CoinTrading() {
   const handleMatchTrade = (ticket: any) => {
     const match = findMatchingTrades(ticket);
     if (match) {
-      // Update the state to reflect the matched trade
       setTradeOffers(tradeOffers.map(offer => offer.id === match.id ? {...offer, status: "Matched"} : offer));
       setTickets(tickets.map(t => t.id === ticket.id ? {...t, status: "Matched"} : t));
       alert(`Trade matched with offer ID: ${match.id}`);
@@ -64,6 +63,16 @@ export default function CoinTrading() {
     }
   };
 
+	const handleInvestCoins = () => {
+    // Implement invest coin logic here
+    alert(`Investing ${investmentAmount} coins with a fixed 20% return per month. Funds will be locked until maturity.`);
+  };
+
+  const handleBorrowCoins = () => {
+    // Implement borrow coin logic here
+    alert(`Borrowing ${loanAmount} coins with a 20% repayment fee. Please agree to the terms and conditions.`);
+  };
+
   return (
     <Card>
       <CardHeader>
@@ -71,6 +80,45 @@ export default function CoinTrading() {
         <CardDescription>Engage in peer-to-peer coin trading.</CardDescription>
       </CardHeader>
       <CardContent className="grid gap-4">
+		  <div>
+			  <strong>Invest Coins:</strong>
+			  <div className="grid gap-2">
+				  <label htmlFor="investmentAmount">Select Investment Amount</label>
+				  <Select onValueChange={(value) => {
+					  setInvestmentAmount(value);
+					  setSelectedAmount(value);
+				  }}>
+					  <SelectTrigger id="investmentAmount">
+						  <SelectValue placeholder={selectedAmount || "Select Amount"} />
+					  </SelectTrigger>
+					  <SelectContent>
+						  <SelectItem value="100">100 Coins</SelectItem>
+						  <SelectItem value="500">500 Coins</SelectItem>
+						  <SelectItem value="1000">1000 Coins</SelectItem>
+						  <SelectItem value="5000">5000 Coins</SelectItem>
+					  </SelectContent>
+				  </Select>
+				  <Button variant="secondary" size="sm" onClick={handleInvestCoins}>
+					  Invest Coins
+				  </Button>
+			  </div>
+		  </div>
+		  <div>
+			  <strong>Borrow Coins:</strong>
+			  <div className="grid gap-2">
+				  <label htmlFor="loanAmount">Enter Loan Amount</label>
+				  <Input
+					  type="number"
+					  id="loanAmount"
+					  placeholder="Loan Amount"
+					  value={loanAmount}
+					  onChange={(e) => setLoanAmount(e.target.value)}
+				  />
+				  <Button variant="secondary" size="sm" onClick={handleBorrowCoins}>
+					  Borrow Coins
+				  </Button>
+			  </div>
+		  </div>
         <div>
           <strong>Your Tickets:</strong>
           <ul>

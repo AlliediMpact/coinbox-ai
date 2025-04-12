@@ -29,6 +29,10 @@ Our mission is to provide an innovative, user-friendly, and secure digital marke
     -   **Membership Management:** Adjust fees, upgrade/downgrade plans.
     -   **Referral System Management:** Monitor commission payouts.
     -   **KYC & Compliance:** Review ID verifications, manage disputes.
+	-	**Reporting and analytics**: Generate reports on platform usage, transaction volume, and revenue.
+        -   **Membership Management**: adjust fees, upgrade/downgrade plans.
+        -   **KYC & Compliance**: Review ID verifications, Manage Disputes
+        -   **Referral System Management**: Monitor Commission Payouts.
 
 ## UI/UX Improvements
 
@@ -51,3 +55,4 @@ Our mission is to provide an innovative, user-friendly, and secure digital marke
 -Tier-based commission program
 
 To get started, take a look at src/app/page.tsx.
+
