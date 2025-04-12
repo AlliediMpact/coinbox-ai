@@ -41,7 +41,7 @@ export default function SupportComponent() {
                             <Button onClick={handleCreateTicket}>Create Ticket</Button>
                          </TooltipTrigger>
                         <TooltipContent>
-                          Click to request assistance
+                          Click to create a support ticket
                         </TooltipContent>
                       </Tooltip>
                     </TooltipProvider>
@@ -56,3 +56,4 @@ export default function SupportComponent() {
         </Card>
     );
 }
+

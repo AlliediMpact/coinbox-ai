@@ -88,12 +88,18 @@ export default function CoinTrading() {
 
 	const handleInvestCoins = () => {
     // Implement invest coin logic here
-    alert(`Investing ${investmentAmount} coins with a fixed 20% return per month. Funds will be locked until maturity.`);
+    toast({
+      title: "Investment Successful",
+      description: `Investing ${investmentAmount} coins with a fixed 20% return per month. Funds will be locked until maturity.`,
+    });
   };
 
   const handleBorrowCoins = () => {
     // Implement borrow coin logic here
-    alert(`Borrowing ${loanAmount} coins with a 20% repayment fee. Please agree to the terms and conditions.`);
+    toast({
+      title: "Loan Initiated",
+      description: `Borrowing ${loanAmount} coins with a 20% repayment fee. Please agree to the terms and conditions.`,
+    });
   };
 
   return (
@@ -195,7 +201,7 @@ export default function CoinTrading() {
               </div>
               <div className="grid gap-2">
                 <label htmlFor="amount">Amount</label>
-                <input
+				  <Input
                   type="number"
                   id="amount"
                   className="border rounded px-2 py-1"
@@ -229,3 +235,4 @@ export default function CoinTrading() {
     </Card>
   );
 }
+
