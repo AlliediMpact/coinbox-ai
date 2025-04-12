@@ -4,8 +4,13 @@ import {Card, CardContent, CardDescription, CardHeader, CardTitle} from "@/compo
 import {useEffect, useState} from "react";
 import {getRiskAssessment} from "@/ai/flows/risk-assessment-flow";
 
-export default function RiskAssessmentTool() {
+interface RiskAssessmentToolProps {
+  userId: string;
+}
+
+export default function RiskAssessmentTool({ userId }: RiskAssessmentToolProps) {
   const [riskScore, setRiskScore] = useState<number | null>(null);
+  const [explanation, setExplanation] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -14,8 +19,9 @@ export default function RiskAssessmentTool() {
       setLoading(true);
       setError(null);
       try {
-        const assessment = await getRiskAssessment({transactionHistory: "simulated"});
+        const assessment = await getRiskAssessment({ userId: userId });
         setRiskScore(assessment.riskScore);
+        setExplanation(assessment.explanation);
       } catch (e: any) {
         setError(e.message || "Failed to fetch risk assessment.");
       } finally {
@@ -24,7 +30,7 @@ export default function RiskAssessmentTool() {
     };
 
     fetchRiskAssessment();
-  }, []);
+  }, [userId]);
 
   return (
     <Card>
@@ -38,9 +44,14 @@ export default function RiskAssessmentTool() {
         ) : error ? (
           <div className="text-red-500">Error: {error}</div>
         ) : riskScore !== null ? (
-          <div>
-            <strong>Risk Score:</strong> {riskScore}
-          </div>
+          <>
+            <div>
+              <strong>Risk Score:</strong> {riskScore}
+            </div>
+            <div>
+              <strong>Explanation:</strong> {explanation}
+            </div>
+          </>
         ) : (
           <div>No risk assessment available.</div>
         )}
