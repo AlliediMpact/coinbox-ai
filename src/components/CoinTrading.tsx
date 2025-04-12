@@ -13,6 +13,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
+import { useToast } from "@/hooks/use-toast"; // Import the useToast hook
 
 export default function CoinTrading() {
   const [tickets, setTickets] = useState([
@@ -28,6 +29,7 @@ export default function CoinTrading() {
 	const [loanAmount, setLoanAmount] = useState('');
 	const [investmentAmount, setInvestmentAmount] = useState('');
 	const [selectedAmount, setSelectedAmount] = useState('');
+  const { toast } = useToast(); // Initialize the useToast hook
 
   const handleCreateTicket = () => {
     setTickets([...tickets, {
@@ -37,6 +39,10 @@ export default function CoinTrading() {
       status: "Open",
     }]);
     setOpen(false);
+    toast({
+      title: "Ticket Created",
+      description: "Your ticket has been created and is awaiting matching.",
+    });
   };
 
   // Mock function to simulate automated matching
@@ -45,21 +51,38 @@ export default function CoinTrading() {
     return matchedTrade || null;
   };
 
+  const determineInterestRate = (amount: number, type: string) => {
+    // Implement more complex logic here based on user tier, market conditions, etc.
+    return type === "Borrow" ? 10 + Math.random() * 5 : 5 + Math.random() * 5; // Example rates
+  };
+
   const handleMatchTrade = (ticket: any) => {
     const match = findMatchingTrades(ticket);
     if (match) {
-      setTradeOffers(tradeOffers.map(offer => offer.id === match.id ? {...offer, status: "Matched"} : offer));
-      setTickets(tickets.map(t => t.id === ticket.id ? {...t, status: "Matched"} : t));
-      alert(`Trade matched with offer ID: ${match.id}`);
+      // Set the matched trade's status to "Matched" and update interest
+      const interestRate = determineInterestRate(parseFloat(match.amount), match.type);
+      setTradeOffers(tradeOffers.map(offer =>
+        offer.id === match.id ? { ...offer, status: "Matched", interest: interestRate.toFixed(2) } : offer
+      ));
+      setTickets(tickets.map(t => t.id === ticket.id ? { ...t, status: "Matched" } : t));
+      toast({
+        title: "Trade Matched",
+        description: `Trade matched with offer ID: ${match.id} at ${interestRate.toFixed(2)}% interest.`,
+      });
     } else {
-      alert("No matching trades found. Creating trade offer...");
+      // If no match is found, create a trade offer
+      const interestRate = determineInterestRate(parseFloat(ticket.amount), ticket.type);
       setTradeOffers([...tradeOffers, {
         id: tradeOffers.length + 1,
         type: ticket.type,
         amount: ticket.amount,
-        interest: "N/A", // Interest would be determined by the offer
+        interest: interestRate.toFixed(2), // Interest rate is now dynamically determined
         status: "Pending",
       }]);
+      toast({
+        title: "No Match Found",
+        description: "Creating trade offer...",
+      });
     }
   };
 

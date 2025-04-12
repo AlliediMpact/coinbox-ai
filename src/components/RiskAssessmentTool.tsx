@@ -3,6 +3,7 @@
 import {Card, CardContent, CardDescription, CardHeader, CardTitle} from "@/components/ui/card";
 import {useEffect, useState} from "react";
 import {getRiskAssessment} from "@/ai/flows/risk-assessment-flow";
+import { useToast } from "@/hooks/use-toast"; // Import the useToast hook
 
 interface RiskAssessmentToolProps {
   userId: string;
@@ -13,6 +14,7 @@ export default function RiskAssessmentTool({ userId }: RiskAssessmentToolProps) 
   const [explanation, setExplanation] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const { toast } = useToast(); // Initialize the useToast hook
 
   useEffect(() => {
     const fetchRiskAssessment = async () => {
@@ -24,13 +26,18 @@ export default function RiskAssessmentTool({ userId }: RiskAssessmentToolProps) 
         setExplanation(assessment.explanation);
       } catch (e: any) {
         setError(e.message || "Failed to fetch risk assessment.");
+        toast({
+          title: "Error",
+          description: e.message || "Failed to fetch risk assessment.",
+          variant: "destructive", // Use the "destructive" variant for error messages
+        });
       } finally {
         setLoading(false);
       }
     };
 
     fetchRiskAssessment();
-  }, [userId]);
+  }, [userId, toast]);
 
   return (
     <Card>

@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { useState } from 'react';
+import { Mail, Key, Google, Facebook } from 'lucide-react'; // Import icons
 
 export default function AuthPage() {
   const router = useRouter();
@@ -40,30 +41,46 @@ export default function AuthPage() {
         </CardHeader>
         <CardContent className="grid gap-4">
           <form onSubmit={handleSignIn} className="grid gap-2">
-            <Input
-              type="email"
-              placeholder="Email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-            />
-            <Input
-              type="password"
-              placeholder="Password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-            />
-            <Button type="submit">Sign In with Email/Password</Button>
+            <div className="grid gap-2">
+              <Label htmlFor="email">Email</Label>
+              <Input
+                id="email"
+                type="email"
+                placeholder="Email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+              />
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="password">Password</Label>
+              <Input
+                id="password"
+                type="password"
+                placeholder="Password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+              />
+            </div>
+            <Button type="submit" className="bg-primary text-primary-foreground hover:bg-primary/80">
+              <Mail className="mr-2 h-4 w-4" />
+              Sign In with Email/Password
+            </Button>
           </form>
-          <Button variant="outline" onClick={() => router.push('/auth/otp')}>Sign In with OTP</Button>
+          <Button variant="outline" onClick={() => router.push('/auth/otp')}>
+            <Key className="mr-2 h-4 w-4" />
+            Sign In with OTP
+          </Button>
           <Button onClick={handleSignUp}>Create Account</Button>
 
           <div className="flex justify-center gap-4 mt-4">
             <Button variant="secondary" onClick={handleGoogleSignIn}>
+              <Google className="mr-2 h-4 w-4" />
               Sign In with Google
             </Button>
             <Button variant="secondary" onClick={handleFacebookSignIn}>
+              <Facebook className="mr-2 h-4 w-4" />
               Sign In with Facebook
             </Button>
           </div>
@@ -72,3 +89,19 @@ export default function AuthPage() {
     </div>
   );
 }
+
+const Label = React.forwardRef<HTMLLabelElement, React.HTMLAttributes<HTMLLabelElement>>(
+  ({ className, ...props }, ref) => {
+    return (
+      <label
+        className={cn(
+          "text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70",
+          className
+        )}
+        ref={ref}
+        {...props}
+      />
+    )
+  }
+)
+Label.displayName = "Label"
