@@ -9,6 +9,10 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip"
+import { useAuth } from '@/components/AuthProvider';
+import { doc, getDoc, getFirestore, updateDoc } from "firebase/firestore";
+import { app } from '@/lib/firebase';
+import { useToast } from "@/hooks/use-toast"; // Import the useToast hook
 
 // Mock referral data
 const referralData = [
@@ -39,6 +43,12 @@ const commissionTiers = {
 export default function ReferralTracking() {
   const [referrerTier, setReferrerTier] = useState("Basic"); // Assume default tier
   const [totalCommission, setTotalCommission] = useState(0);
+    const { user } = useAuth();
+    const [isPayoutRequested, setIsPayoutRequested] = useState(false);
+    const db = getFirestore(app);
+    const { toast } = useToast();
+    const [userReferrals, setUserReferrals] = useState([]);
+    const [totalReferredCommission, setTotalReferredCommission] = useState(0); // Track earnings
 
   // Calculate total commission based on referral and commission tiers
   useEffect(() => {
@@ -50,12 +60,54 @@ export default function ReferralTracking() {
     setTotalCommission(commission);
   }, [referrerTier]);
 
-  // Function to calculate commission based on rate (mock calculation)
+    // Fetch referral data from Firestore
+    useEffect(() => {
+        const fetchReferrals = async () => {
+            if (user) {
+                try {
+                    const userDoc = await getDoc(doc(db, "users", user.uid));
+                    if (userDoc.exists()) {
+                        const userData = userDoc.data();
+                        const referralList = userData.referrals || [];
+                        setUserReferrals(referralList);
+
+                        // Calculate the total commission earned from referrals
+                        let totalCommission = 0;
+                        referralList.forEach(referral => {
+                            totalCommission += calculateCommission(
+                                commissionTiers[referrerTier as keyof typeof commissionTiers][referral.referredTier as keyof typeof commissionTiers["Basic"]]
+                            );
+                        });
+                        setTotalReferredCommission(totalCommission);
+                    } else {
+                        console.log("No such document!");
+                    }
+                } catch (error) {
+                    console.error("Error fetching referrals:", error);
+                }
+            }
+        };
+
+        fetchReferrals();
+    }, [user, referrerTier, db]);
+
+
+
+    // Function to calculate commission based on rate (mock calculation)
   const calculateCommission = (rate: string) => {
     const baseValue = 100; // Mock base value for calculation
     const percentage = parseFloat(rate);
     return baseValue * (percentage / 100);
   };
+
+    const handleRequestPayout = async () => {
+        setIsPayoutRequested(true);
+        // Simulate payout process - in a real app, this would trigger a backend process
+        setTimeout(() => {
+            alert('Payout processed successfully!');
+            setIsPayoutRequested(false);
+        }, 3000); // Simulate a 3 second payout processing time
+    };
 
   return (
     <Card className="shadow-md hover:shadow-lg transition-shadow duration-300">
@@ -67,9 +119,9 @@ export default function ReferralTracking() {
         <div>
           <strong>Total Referrals:</strong> {referralData.length}
         </div>
-        <div>
-          <strong>Total Commission:</strong> R{totalCommission.toFixed(2)}
-        </div>
+          <div>
+              <strong>Total Commission:</strong> R{totalReferredCommission.toFixed(2)}
+          </div>
         <div>
           <strong>Commission Payout Status:</strong> Automated - Next payout on 2024-08-01
         </div>
@@ -94,6 +146,20 @@ export default function ReferralTracking() {
             <option value="VIP">VIP</option>
           </select>
         </div>
+          {!isPayoutRequested ? (
+              <TooltipProvider>
+                  <Tooltip>
+                      <TooltipTrigger asChild>
+                          <Button onClick={handleRequestPayout}>Withdraw Earnings</Button>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                          Click to withdraw your referral earnings
+                      </TooltipContent>
+                  </Tooltip>
+              </TooltipProvider>
+          ) : (
+              <p>Processing payout...</p>
+          )}
       </CardContent>
     </Card>
   );
