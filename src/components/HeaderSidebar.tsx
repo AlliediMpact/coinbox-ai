@@ -52,7 +52,7 @@ const Header: React.FC<HeaderProps> = ({ walletBalance, commissionBalance, searc
         <header className="bg-primary text-primary-foreground py-3 px-4 flex items-center justify-between shadow-md">
             <div className="flex items-center">
                 <Image
-                    src="/CoinBoxLogo01.png"
+                    src="/assets/CoinBoxLogo01.png"
                     alt="App Logo"
                     width={50}
                     height={50}
@@ -60,7 +60,7 @@ const Header: React.FC<HeaderProps> = ({ walletBalance, commissionBalance, searc
                     onClick={() => router.push('/')}
                 />
                 {/*<Image
-                    src="/allied_impact_logo_placeholder.png"
+                    src="/assets/allied_impact_logo_placeholder.png"
                     alt="Allied iMpact Cup Final"
                     width={30}
                     height={30}
@@ -174,7 +174,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isCollapsed, toggleCollapse }) => {
         )}>
             <div className="flex items-center justify-between p-4">
                 <Image
-                    src="/CoinBoxLogo02.png"
+                    src="/assets/CoinBoxLogo02.png"
                     alt="Sidebar Logo"
                     width={40}
                     height={40}
