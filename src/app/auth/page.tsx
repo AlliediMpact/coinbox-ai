@@ -28,6 +28,31 @@ import {
     SelectTrigger,
     SelectValue,
 } from "@/components/ui/select";
+import { useForm, Controller } from 'react-hook-form';
+import { zodResolver } from "@hookform/resolvers/zod"
+import * as z from "zod"
+import { Checkbox } from "@/components/ui/checkbox"
+
+// Define the Zod schema for form validation
+const formSchema = z.object({
+    fullName: z.string().min(2, {
+        message: "Full Name must be at least 2 characters.",
+    }),
+    email: z.string().email({
+        message: "Please enter a valid email address.",
+    }),
+    phone: z.string().min(10, {
+        message: "Phone number must be at least 10 digits.",
+    }),
+    referralCode: z.string().optional(),
+    password: z.string().min(8, {
+        message: "Password must be at least 8 characters.",
+    }),
+    membershipTier: z.enum(['Basic', 'Ambassador', 'Business']).default('Basic'),
+    terms: z.boolean().refine((value) => value === true, {
+        message: "You must accept the terms and conditions.",
+    }),
+})
 
 
 export default function AuthPage() {
@@ -44,6 +69,21 @@ export default function AuthPage() {
     const { signUp, signIn } = useAuth();
     const { toast } = useToast(); // Initialize the useToast hook
     const [open, setOpen] = useState(false); // Dialog for password reset
+    const [isSubmitting, setIsSubmitting] = useState(false); // Loading state for signup/signin
+
+    const form = useForm<z.infer<typeof formSchema>>({
+        resolver: zodResolver(formSchema),
+        defaultValues: {
+            fullName: "",
+            email: "",
+            phone: "",
+            referralCode: "",
+            password: "",
+            membershipTier: "Basic",
+            terms: false,
+        },
+    })
+
 
     useEffect(() => {
         // Animation code using the cardRef
@@ -85,6 +125,7 @@ export default function AuthPage() {
 
     const handleSignIn = async (e: React.FormEvent) => {
         e.preventDefault();
+        setIsSubmitting(true);
         try {
             await signIn(email, password);
             router.push('/dashboard'); // Redirect to dashboard after successful sign in
@@ -99,13 +140,20 @@ export default function AuthPage() {
                 description: error.message,
                 variant: "destructive",
             });
+        } finally {
+            setIsSubmitting(false);
         }
     };
 
-    const handleSignUp = async (e: React.FormEvent) => {
-        e.preventDefault();
+    const handleSignUp = async (values: z.infer<typeof formSchema>) => {
+        setIsSubmitting(true);
         try {
-            await signUp(email, password, { fullName, phone, referralCode, membershipTier });
+            await signUp(values.email, values.password, {
+                fullName: values.fullName,
+                phone: values.phone,
+                referralCode: values.referralCode,
+                membershipTier: values.membershipTier,
+            });
             router.push('/dashboard'); // Redirect to dashboard after successful sign up
             toast({
                 title: "Sign Up Successful",
@@ -118,6 +166,8 @@ export default function AuthPage() {
                 description: error.message,
                 variant: "destructive",
             });
+        } finally {
+            setIsSubmitting(false);
         }
     };
 
@@ -172,9 +222,12 @@ export default function AuthPage() {
                                     required
                                 />
                             </div>
-                            <Button type="submit" className="bg-primary text-primary-foreground hover:bg-primary/80">
-                                <Mail className="mr-2 h-4 w-4" />
-                                Sign In with Email/Password
+                            <Button
+                                type="submit"
+                                className="bg-primary text-primary-foreground hover:bg-primary/80"
+                                disabled={isSubmitting}
+                            >
+                                {isSubmitting ? "Signing In..." : "Sign In with Email/Password"}
                             </Button>
                             <Button variant="link" onClick={() => {
                                 toggleForgotPassword();
@@ -207,17 +260,19 @@ export default function AuthPage() {
                             </Button>
                         </form>
                     ) : (
-                        <form onSubmit={handleSignUp} className="grid gap-2">
+                        <form onSubmit={form.handleSubmit(handleSignUp)} className="grid gap-2">
                             <div className="grid gap-2">
                                 <Label htmlFor="fullName">Full Name</Label>
                                 <Input
                                     type="text"
                                     id="fullName"
                                     placeholder="Full Name"
-                                    value={fullName}
-                                    onChange={(e) => setFullName(e.target.value)}
+                                    {...form.register("fullName")}
                                     required
                                 />
+                                {form.formState.errors.fullName && (
+                                    <p className="text-sm text-red-500">{form.formState.errors.fullName.message}</p>
+                                )}
                             </div>
                             <div className="grid gap-2">
                                 <Label htmlFor="email">Email</Label>
@@ -225,10 +280,12 @@ export default function AuthPage() {
                                     id="email"
                                     type="email"
                                     placeholder="Email"
-                                    value={email}
-                                    onChange={(e) => setEmail(e.target.value)}
+                                    {...form.register("email")}
                                     required
                                 />
+                                {form.formState.errors.email && (
+                                    <p className="text-sm text-red-500">{form.formState.errors.email.message}</p>
+                                )}
                             </div>
                             <div className="grid gap-2">
                                 <Label htmlFor="phone">Phone Number</Label>
@@ -236,10 +293,12 @@ export default function AuthPage() {
                                     type="tel"
                                     id="phone"
                                     placeholder="Phone Number"
-                                    value={phone}
-                                    onChange={(e) => setPhone(e.target.value)}
+                                    {...form.register("phone")}
                                     required
                                 />
+                                {form.formState.errors.phone && (
+                                    <p className="text-sm text-red-500">{form.formState.errors.phone.message}</p>
+                                )}
                             </div>
                             <div className="grid gap-2">
                                 <Label htmlFor="referralCode">Referral Code (Optional)</Label>
@@ -247,8 +306,7 @@ export default function AuthPage() {
                                     type="text"
                                     id="referralCode"
                                     placeholder="Referral Code (Optional)"
-                                    value={referralCode}
-                                    onChange={(e) => setReferralCode(e.target.value)}
+                                    {...form.register("referralCode")}
                                 />
                             </div>
                             <div className="grid gap-2">
@@ -257,13 +315,15 @@ export default function AuthPage() {
                                     type="password"
                                     id="password"
                                     placeholder="Password"
-                                    value={password}
-                                    onChange={(e) => setPassword(e.target.value)}
+                                    {...form.register("password")}
                                     required
                                 />
+                                {form.formState.errors.password && (
+                                    <p className="text-sm text-red-500">{form.formState.errors.password.message}</p>
+                                )}
                             </div>
                             {/* Membership Tier Selection */}
-                            <Select onValueChange={(value) => setMembershipTier(value)}>
+                            <Select onValueChange={form.setValue("membershipTier")}>
                                 <SelectTrigger>
                                     <SelectValue placeholder="Select Membership Tier" />
                                 </SelectTrigger>
@@ -273,8 +333,24 @@ export default function AuthPage() {
                                     <SelectItem value="Business">Business</SelectItem>
                                 </SelectContent>
                             </Select>
-                            <Button type="submit" className="bg-primary text-primary-foreground hover:bg-primary/80">
-                                Create Account
+                            <div className="grid gap-2">
+                                <Label htmlFor="terms" className="flex items-center space-x-2">
+                                    <Checkbox
+                                        id="terms"
+                                        {...form.register("terms")}
+                                    />
+                                    <span>I agree to the <a href="#" className="underline">Terms of Service</a> and <a href="#" className="underline">Privacy Policy</a></span>
+                                </Label>
+                                {form.formState.errors.terms && (
+                                    <p className="text-sm text-red-500">{form.formState.errors.terms.message}</p>
+                                )}
+                            </div>
+                            <Button
+                                type="submit"
+                                className="bg-primary text-primary-foreground hover:bg-primary/80"
+                                disabled={isSubmitting}
+                            >
+                                {isSubmitting ? "Creating Account..." : "Create Account"}
                             </Button>
                             <Button variant="link" onClick={toggleForm} className="button-link">
                                 Already have an account? Sign In
@@ -327,4 +403,3 @@ export default function AuthPage() {
         </div>
     );
 }
-
