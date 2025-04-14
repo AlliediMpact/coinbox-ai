@@ -422,7 +422,7 @@ function ReportingSection({transactionList}:any) {
     const reportData = [
         { month: 'Jan', deposits: transactionList.filter(t => t.type === 'Deposit').length, withdrawals: transactionList.filter(t => t.type === 'Withdrawal').length, loans: transactionList.filter(t => t.type === 'Loan').length },
         { month: 'Feb', deposits: 120, withdrawals: 60, loans: 30 },
-        { month: 'Mar', deposits: 150, withdrawals: 75, loans: 40 },
+        { month: 'Mar', verified: 70, pending: 5 },
     ];
 
     return (
