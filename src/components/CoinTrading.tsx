@@ -22,6 +22,14 @@ import {
 } from "@/components/ui/tooltip"
 import { useAuth } from '@/components/AuthProvider';
 import {getRiskAssessment} from "@/ai/flows/risk-assessment-flow";
+import {
+    doc,
+    getDoc,
+    setDoc,
+    getFirestore,
+    updateDoc,
+} from "firebase/firestore";
+import {app} from "@/lib/firebase";
 
 // Mock function to simulate fetching loan limit based on membership tier
 const getLoanLimitForUser = (membershipTier: string) => {
@@ -58,6 +66,7 @@ export default function CoinTrading() {
     const [disputeOpen, setDisputeOpen] = useState(false);
     const [disputeDetails, setDisputeDetails] = useState({ tradeId: null, reason: "" });
     const [escrowBalance, setEscrowBalance] = useState(0);
+    const db = getFirestore(app); // Initialize Firestore
 
     useEffect(() => {
         // Load wallet balance from local storage on component mount
@@ -67,26 +76,26 @@ export default function CoinTrading() {
         }
     }, []);
 
-  const handleCreateTicket = () => {
-    setTickets([...tickets, {
-      id: tickets.length + 1,
-      type: newTicket.type,
-      amount: newTicket.amount,
-      status: "Open",
-        interest: "10"
-    }]);
-    setOpen(false);
-    toast({
-      title: "Ticket Created",
-      description: "Your ticket has been created and is awaiting matching.",
-    });
-  };
+    const handleCreateTicket = () => {
+        setTickets([...tickets, {
+            id: tickets.length + 1,
+            type: newTicket.type,
+            amount: newTicket.amount,
+            status: "Open",
+            interest: "10"
+        }]);
+        setOpen(false);
+        toast({
+            title: "Ticket Created",
+            description: "Your ticket has been created and is awaiting matching.",
+        });
+    };
 
     const canAffordInvestment = (amount: number) => {
         return walletBalance >= amount;
     };
 
-    const handleInvestCoins = () => {
+    const handleInvestCoins = async () => {
         const amount = parseFloat(investmentAmount);
 
         if (isNaN(amount) || amount <= 0) {
@@ -107,33 +116,39 @@ export default function CoinTrading() {
             return;
         }
 
-        // Lock funds and set maturity in real implementation
+        try {
+            // Update wallet balance and trade offers locally
+            const newWalletBalance = walletBalance - amount;
+            setWalletBalance(newWalletBalance);
+            localStorage.setItem('walletBalance', newWalletBalance.toString());
 
-        // Update wallet balance and trade offers locally
-        setWalletBalance(prevBalance => prevBalance - amount);
-        localStorage.setItem('walletBalance', (walletBalance - amount).toString());
-        setTradeOffers(prevOffers => [
-            ...prevOffers,
-            {
-                id: prevOffers.length + 1,
+            // Add new investment to trade offers - adapt to Firestore as needed
+            const newInvestment = {
+                id: tradeOffers.length + 1,
                 type: "Invest",
                 amount: amount.toString(),
                 interest: "20", // fixed 20% return
                 status: "Locked",
-            },
-        ]);
+            };
+            setTradeOffers(prevOffers => [...prevOffers, newInvestment]);
 
-        toast({
-            title: "Investment Successful",
-            description: `Investing ${amount} coins with a fixed 20% return per month. Funds will be locked until maturity.`,
-        });
+            toast({
+                title: "Investment Successful",
+                description: `Investing ${amount} coins with a fixed 20% return per month. Funds will be locked until maturity.`,
+            });
+        } catch (error) {
+            console.error("Investment failed:", error);
+            toast({
+                title: "Investment Error",
+                description: "Failed to invest coins. Please try again.",
+                variant: "destructive",
+            });
+        }
     };
 
-    const handleBorrowCoins = () => {
+
+    const handleBorrowCoins = async () => {
         const amount = parseFloat(loanAmount);
-        const membershipTier = "Basic"; // Replace with user's actual membership tier
-        const loanLimit = getLoanLimitForUser(membershipTier);
-        console.log(loanLimit)
         if (isNaN(amount) || amount <= 0) {
             toast({
                 title: "Error",
@@ -142,82 +157,118 @@ export default function CoinTrading() {
             });
             return;
         }
-        if (amount > loanLimit) {
-            toast({
-                title: "Error",
-                description: `You cannot borrow more than your loan limit: ${loanLimit}.`,
-                variant: "destructive",
-            });
-            return;
-        }
+
         if (borrowing) {
             return;
         }
 
-        // Implement borrow coin logic here
         setBorrowing(true); // Start borrowing process
-        setTimeout(() => {
+
+        try {
+            const userDoc = await getDoc(doc(db, "users", user.uid));
+            if (!userDoc.exists()) {
+                throw new Error("User profile not found.");
+            }
+
+            const userData = userDoc.data();
+            const membershipTier = userData.membershipTier || "Basic"; // Get membership tier from Firestore
+            const loanLimit = getLoanLimitForUser(membershipTier);
+
+            if (amount > loanLimit) {
+                throw new Error(`You cannot borrow more than your loan limit: ${loanLimit}.`);
+            }
+
             // Simulate successful borrowing
-            setWalletBalance(prevBalance => prevBalance + amount);
-            localStorage.setItem('walletBalance', (walletBalance + amount).toString());
-            setTradeOffers(prevOffers => [
-                ...prevOffers,
-                {
-                    id: prevOffers.length + 1,
-                    type: "Borrow",
-                    amount: amount.toString(),
-                    interest: "20", // fixed 20% repayment fee
-                    status: "Active",
-                },
-            ]);
+            const newWalletBalance = walletBalance + amount;
+            setWalletBalance(newWalletBalance);
+            localStorage.setItem('walletBalance', newWalletBalance.toString());
+
+            const newBorrowOffer = {
+                id: tradeOffers.length + 1,
+                type: "Borrow",
+                amount: amount.toString(),
+                interest: "20", // fixed 20% repayment fee
+                status: "Active",
+            };
+            setTradeOffers(prevOffers => [...prevOffers, newBorrowOffer]);
+
             toast({
                 title: "Loan Initiated",
                 description: `Borrowing ${loanAmount} coins with a 20% repayment fee.`,
             });
             setLoanAmount("");
+
+        } catch (error: any) {
+            console.error("Borrowing failed:", error.message);
+            toast({
+                title: "Borrow Error",
+                description: error.message,
+                variant: "destructive",
+            });
+        } finally {
             setBorrowing(false); // End borrowing process
-        }, 2000);
-    };
-
-    // Function to simulate automated matching with risk assessment and membership tier
-    const findMatchingTrades = async (ticket: any) => {
-      // Fetch user profile to get membership tier
-      // Mock implementation - replace with actual Firestore data retrieval
-      const userProfile = { membership: "Basic" }; // Replace with actual user profile retrieval
-      const { membership } = userProfile;
-
-      // Placeholder for more sophisticated matching logic, including risk assessment
-      const potentialMatch = tradeOffers.find(offer =>
-          offer.type !== ticket.type && offer.status === "Pending"
-      );
-
-      if (potentialMatch) {
-        // Simulate risk assessment - replace with actual risk assessment logic
-        try {
-          const riskAssessment = await getRiskAssessment({ userId: user?.uid || 'default' });
-          const riskScore = riskAssessment?.riskScore || 50; // Use a default risk score if retrieval fails
-
-          if (riskScore < 70) { // Define a threshold for acceptable risk
-            // Additional check: Match based on membership tier
-            // Implement logic to determine if the trade is suitable for the user's tier
-
-            return potentialMatch;
-          } else {
-            console.log("Risk assessment failed for potential match.");
-            return null;
-          }
-        } catch (error) {
-          console.error("Failed to retrieve risk assessment:", error);
-          return null; // Do not match if risk assessment fails
         }
-      }
-
-      return null;
     };
 
-    const handleMatchTrade = (ticket: any) => {
-        // Find a matching trade offer
-        const match = findMatchingTrades(ticket);
+
+
+    const findMatchingTrades = async (ticket: any) => {
+        // Retrieve user profile and membership tier from Firestore
+        const userDoc = await getDoc(doc(db, "users", user?.uid || 'default'));
+        if (!userDoc.exists()) {
+            console.error("User document not found");
+            return null;
+        }
+        const userData = userDoc.data();
+        const { membership } = userData;
+
+        const potentialMatch = tradeOffers.find(offer =>
+            offer.type !== ticket.type && offer.status === "Pending"
+        );
+
+        if (potentialMatch) {
+            try {
+                const riskAssessment = await getRiskAssessment({ userId: user?.uid || 'default' });
+                const riskScore = riskAssessment?.riskScore || 50; // Default risk score
+
+                if (riskScore < 70) {
+                    // Check based on membership tier
+                    if (isTradeSuitableForTier(membership, potentialMatch)) {
+                        return potentialMatch;
+                    } else {
+                        console.log("Trade is not suitable for the user's membership tier.");
+                        return null;
+                    }
+                } else {
+                    console.log("Risk assessment failed for potential match.");
+                    return null;
+                }
+            } catch (error) {
+                console.error("Failed to retrieve risk assessment:", error);
+                return null; // Do not match if risk assessment fails
+            }
+        }
+
+        return null;
+    };
+
+    // Function to determine if a trade is suitable for a membership tier
+    const isTradeSuitableForTier = (membership: string, trade: any) => {
+        // Define rules based on membership (example rules)
+        switch (membership) {
+            case "Basic":
+                return parseFloat(trade.amount) <= 200; // Basic members trade less than 200 coins
+            case "Ambassador":
+                return parseFloat(trade.amount) <= 500; // Ambassador members trade less than 500 coins
+            case "Business":
+                return true; // Business members can invest in any trade
+            default:
+                return false;
+        }
+    };
+
+    const handleMatchTrade = async (ticket: any) => {
+        const match = await findMatchingTrades(ticket);
 
         if (match) {
             // Calculate escrow amount (including interest)
@@ -246,8 +297,9 @@ export default function CoinTrading() {
         }
     };
 
+
     const handleConfirmTrade = (ticket: any) => {
-        // In real implementation, this would trigger fund transfer and finalize the trade
+        // Simulate fund transfer and finalize the trade
         setTickets(tickets.map(t =>
             t.id === ticket.id ? { ...t, status: "Completed" } : t
         ));
@@ -270,7 +322,7 @@ export default function CoinTrading() {
     };
 
     const handleFileDispute = () => {
-        // In real implementation, this would submit the dispute details to admin
+        // Simulate submitting the dispute details to admin - replace with actual Firebase function call
         toast({
             title: "Dispute Filed",
             description: `Dispute for trade ID: ${disputeDetails.tradeId} has been filed. Our team will review it shortly.`,
@@ -510,3 +562,4 @@ export default function CoinTrading() {
     </Card>
   );
 }
+
