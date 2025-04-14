@@ -189,7 +189,7 @@ export default function AdminDashboard() {
                          <TooltipProvider>
                             <Tooltip>
                               <TooltipTrigger asChild>
-                                  <Button variant="ghost" size="sm" onClick={()={() => handleEnableUser(user.id)}>
+                                  <Button variant="ghost" size="sm" onClick={() => handleEnableUser(user.id)}>
                                     Enable
                                   </Button>
                                 </TooltipTrigger>
