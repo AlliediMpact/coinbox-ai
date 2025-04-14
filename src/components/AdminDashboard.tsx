@@ -51,6 +51,7 @@ import { format } from "date-fns"
 import {CalendarIcon} from "@radix-ui/react-icons";
 import {Popover, PopoverContent, PopoverTrigger} from "@/components/ui/popover";
 import {useToast} from "@/hooks/use-toast";
+import React from "react";
 
 const users = [
   {id: 1, name: "John Doe", email: "john.doe@example.com", status: "Active", verified: true, membership: "Basic"},
@@ -401,7 +402,7 @@ export default function AdminDashboard() {
 			</DialogContent>
 		</Dialog>
      <ReportingSection transactionList={transactionList}/>
-  
+    
   );
 }
 
@@ -471,8 +472,7 @@ function KYCComplianceSection() {
 }
 
 // Example usage in the main component:
-//   return (
-//     
+//   
 //       <h1 className="text-3xl font-bold mb-5">Admin Dashboard</h1>
 //
 //       <div className="grid gap-4 grid-cols-1 md:grid-cols-2">
