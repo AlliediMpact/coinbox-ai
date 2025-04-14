@@ -34,6 +34,21 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import HeaderSidebarLayout from "@/components/HeaderSidebar";
 
+const HomePageContent = () => {
+    const router = useRouter();
+
+    return (
+        <div className="flex flex-col items-center justify-center h-screen">
+            <h1 className="text-4xl font-bold text-white mb-4">Welcome to CoinBox Connect</h1>
+            <p className="text-lg text-gray-300 mb-8">Your ultimate peer-to-peer financial solution.</p>
+            <div className="space-x-4">
+                <Button onClick={() => router.push('/auth')}>Sign In</Button>
+                <Button variant="outline" onClick={() => router.push('/auth')}>Sign Up</Button>
+            </div>
+        </div>
+    );
+};
+
 export default function Home() {
     const { user, signOutUser } = useAuth();
     const router = useRouter();
@@ -55,9 +70,9 @@ export default function Home() {
         setSearchTerm(event.target.value);
         // Mock data for search results
         const mockResults = [
-            { id: 1, title: "Trading Guide", link: "/trading/guide" },
-            { id: 2, title: "Wallet FAQs", link: "/wallet/faq" },
-            { id: 3, title: "Referral Program Details", link: "/referral/details" },
+            { id: 1, title: "Trading Guide", link: "/dashboard/trading" },
+            { id: 2, title: "Wallet FAQs", link: "/dashboard/wallet" },
+            { id: 3, title: "Referral Program Details", link: "/dashboard/referral" },
         ];
 
         // Filter mock results based on search term
@@ -89,14 +104,7 @@ export default function Home() {
                 )
             ) : (
                 // Landing page content for non-logged-in users
-                <div className="flex flex-col items-center justify-center h-screen">
-                    <h1 className="text-4xl font-bold text-white mb-4">Welcome to CoinBox Connect</h1>
-                    <p className="text-lg text-gray-300 mb-8">Your ultimate peer-to-peer financial solution.</p>
-                    <div className="space-x-4">
-                        <Button onClick={() => router.push('/auth')}>Sign In</Button>
-                        <Button variant="outline" onClick={() => router.push('/auth')}>Sign Up</Button>
-                    </div>
-                </div>
+                 <HomePageContent />
             )}
             <SummaryComponent />
          </HeaderSidebarLayout>
