@@ -37,10 +37,10 @@ const getLoanLimitForUser = (membershipTier: string) => {
 };
 
 export default function CoinTrading() {
-  const [tickets, setTickets] = useState([
-    {id: 1, type: "Borrow", amount: "200", status: "Open"},
-    {id: 2, type: "Invest", amount: "500", status: "Closed"},
-  ]);
+    const [tickets, setTickets] = useState([
+        { id: 1, type: "Borrow", amount: "200", status: "Open", interest: "15" },
+        { id: 2, type: "Invest", amount: "500", status: "Closed", interest: "10" },
+    ]);
   const [open, setOpen] = useState(false);
   const [newTicket, setNewTicket] = useState({type: "Borrow", amount: "", description: ""});
   const [tradeOffers, setTradeOffers] = useState([
@@ -54,6 +54,9 @@ export default function CoinTrading() {
     const { user } = useAuth();
     const [walletBalance, setWalletBalance] = useState(1800); // Mock Balance
     const [borrowing, setBorrowing] = useState(false); // Track if borrowing flow is active
+    const [disputeOpen, setDisputeOpen] = useState(false);
+    const [disputeDetails, setDisputeDetails] = useState({ tradeId: null, reason: "" });
+    const [escrowBalance, setEscrowBalance] = useState(0);
 
     useEffect(() => {
         // Load wallet balance from local storage on component mount
@@ -69,6 +72,7 @@ export default function CoinTrading() {
       type: newTicket.type,
       amount: newTicket.amount,
       status: "Open",
+        interest: "10"
     }]);
     setOpen(false);
     toast({
@@ -174,35 +178,49 @@ export default function CoinTrading() {
         }, 2000);
     };
 
-  // Mock function to simulate automated matching
-  const findMatchingTrades = (ticket: any) => {
-    const matchedTrade = tradeOffers.find(offer => offer.type !== ticket.type && offer.status === "Pending");
-    return matchedTrade || null;
-  };
+    // Function to simulate automated matching with risk assessment
+    const findMatchingTrades = (ticket: any) => {
+        // Placeholder for more sophisticated matching logic, including risk assessment
+        const potentialMatch = tradeOffers.find(offer =>
+            offer.type !== ticket.type && offer.status === "Pending"
+        );
 
-  const determineInterestRate = (amount: number, type: string) => {
-    // Implement more complex logic here based on user tier, market conditions, etc.
-    return type === "Borrow" ? 10 + Math.random() * 5 : 5 + Math.random() * 5; // Example rates
-  };
+        if (potentialMatch) {
+            // Simulate risk assessment - replace with actual risk assessment logic
+            const riskScore = Math.random() * 100; // Generate a random risk score for demonstration
+            if (riskScore < 70) { // Define a threshold for acceptable risk
+                return potentialMatch;
+            } else {
+                console.log("Risk assessment failed for potential match.");
+                return null;
+            }
+        }
+
+        return null;
+    };
 
     const handleMatchTrade = (ticket: any) => {
         // Find a matching trade offer
-        const match = tradeOffers.find(offer => offer.type !== ticket.type && offer.status === "Pending");
+        const match = findMatchingTrades(ticket);
 
         if (match) {
-            // Update status of matched ticket
+            // Calculate escrow amount (including interest)
+            const escrowAmount = parseFloat(ticket.amount) + (parseFloat(ticket.amount) * (parseFloat(ticket.interest) / 100));
+
+            // Update status of matched ticket and trade offer
             setTickets(tickets.map(t =>
-                t.id === ticket.id ? { ...t, status: "Matched" } : t
+                t.id === ticket.id ? { ...t, status: "Escrow", escrowAmount: escrowAmount } : t
+            ));
+            setTradeOffers(tradeOffers.map(offer =>
+                offer.id === match.id ? { ...offer, status: "Escrow", escrowAmount: escrowAmount } : offer
             ));
 
-            // Update the status of matched trade offer
-            setTradeOffers(tradeOffers.map(offer =>
-                offer.id === match.id ? { ...offer, status: "Matched" } : offer
-            ));
+            // Update escrow balance
+            setEscrowBalance(prevBalance => prevBalance + escrowAmount);
 
             toast({
                 title: "Trade Matched",
-                description: `Trade matched with offer ID: ${match.id}.`,
+                description: `Trade matched with offer ID: ${match.id}. Funds are now in escrow.`,
             });
         } else {
             toast({
@@ -210,6 +228,38 @@ export default function CoinTrading() {
                 description: "No matching trade offers found.",
             });
         }
+    };
+
+    const handleConfirmTrade = (ticket: any) => {
+        // In real implementation, this would trigger fund transfer and finalize the trade
+        setTickets(tickets.map(t =>
+            t.id === ticket.id ? { ...t, status: "Completed" } : t
+        ));
+        setTradeOffers(tradeOffers.map(offer =>
+            offer.id === ticket.id ? { ...offer, status: "Completed" } : offer
+        ));
+
+        // Update escrow balance
+        setEscrowBalance(prevBalance => prevBalance - parseFloat(ticket.amount));
+
+        toast({
+            title: "Trade Completed",
+            description: `Trade completed successfully. Funds have been transferred.`,
+        });
+    };
+
+    const handleOpenDispute = (tradeId: any) => {
+        setDisputeOpen(true);
+        setDisputeDetails({ ...disputeDetails, tradeId: tradeId });
+    };
+
+    const handleFileDispute = () => {
+        // In real implementation, this would submit the dispute details to admin
+        toast({
+            title: "Dispute Filed",
+            description: `Dispute for trade ID: ${disputeDetails.tradeId} has been filed. Our team will review it shortly.`,
+        });
+        setDisputeOpen(false);
     };
 
   return (
@@ -277,6 +327,9 @@ export default function CoinTrading() {
                     </TooltipProvider>
 			  </div>
 		  </div>
+          <div>
+              <strong>Escrow Balance:</strong> R{escrowBalance}
+          </div>
         <div>
           <strong>Your Tickets:</strong>
           <ul>
@@ -299,6 +352,34 @@ export default function CoinTrading() {
                       </Tooltip>
                     </TooltipProvider>
                 )}
+                  {ticket.status === "Escrow" && (
+                      <>
+                          <TooltipProvider>
+                              <Tooltip>
+                                  <TooltipTrigger asChild>
+                                      <Button variant="secondary" size="sm" onClick={() => handleConfirmTrade(ticket)}>
+                                          Confirm Trade
+                                      </Button>
+                                  </TooltipTrigger>
+                                  <TooltipContent>
+                                      Click to confirm trade and release funds
+                                  </TooltipContent>
+                              </Tooltip>
+                          </TooltipProvider>
+                          <TooltipProvider>
+                              <Tooltip>
+                                  <TooltipTrigger asChild>
+                                      <Button variant="destructive" size="sm" onClick={() => handleOpenDispute(ticket.id)}>
+                                          File Dispute
+                                      </Button>
+                                  </TooltipTrigger>
+                                  <TooltipContent>
+                                      Click to file a dispute
+                                  </TooltipContent>
+                              </Tooltip>
+                          </TooltipProvider>
+                      </>
+                  )}
               </li>
             ))}
           </ul>
@@ -378,6 +459,37 @@ export default function CoinTrading() {
             </div>
           </DialogContent>
         </Dialog>
+          <Dialog open={disputeOpen} onOpenChange={setDisputeOpen}>
+              <DialogContent>
+                  <DialogHeader>
+                      <DialogTitle>File Dispute</DialogTitle>
+                      <DialogDescription>
+                          Explain why you are filing a dispute for this trade.
+                      </DialogDescription>
+                  </DialogHeader>
+                  <div className="grid gap-4 py-4">
+                      <div className="grid gap-2">
+                          <label htmlFor="reason">Reason for Dispute</label>
+                          <Textarea
+                              id="reason"
+                              placeholder="Describe the issue"
+                              value={disputeDetails.reason}
+                              onChange={(e) => setDisputeDetails({ ...disputeDetails, reason: e.target.value })}
+                          />
+                      </div>
+                  </div>
+                  <div className="flex justify-end space-x-2">
+                      <DialogClose asChild>
+                          <Button type="button" variant="secondary">
+                              Cancel
+                          </Button>
+                      </DialogClose>
+                      <Button type="button" onClick={handleFileDispute}>
+                          File Dispute
+                      </Button>
+                  </div>
+              </DialogContent>
+          </Dialog>
       </CardContent>
     </Card>
   );
