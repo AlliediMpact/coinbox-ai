@@ -71,19 +71,31 @@ export default function Home() {
     return (
         
            <HeaderSidebarLayout>
-            {user?.email === 'admin@example.com' ? (
-                <AdminDashboard />
+            {user ? (
+                user.email === 'admin@example.com' ? (
+                    <AdminDashboard />
+                ) : (
+                    // Default dashboard for a regular user
+                    <div className="grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
+                        <MembershipComponent />
+                        <CoinTradingComponent />
+                        <WalletComponent />
+                        <RiskAssessmentComponent userId={user?.uid || 'default'} />
+                        <ReferralTrackingComponent />
+                        <SupportComponent />
+                        <KycVerification />
+                        <CommissionTracking />
+                    </div>
+                )
             ) : (
-                // Default dashboard for a regular user
-                <div className="grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
-                    <MembershipComponent />
-                    <CoinTradingComponent />
-                    <WalletComponent />
-                    <RiskAssessmentComponent userId={user?.uid || 'default'} />
-                    <ReferralTrackingComponent />
-                    <SupportComponent />
-                    <KycVerification />
-                    <CommissionTracking />
+                // Landing page content for non-logged-in users
+                <div className="flex flex-col items-center justify-center h-screen">
+                    <h1 className="text-4xl font-bold text-white mb-4">Welcome to CoinBox Connect</h1>
+                    <p className="text-lg text-gray-300 mb-8">Your ultimate peer-to-peer financial solution.</p>
+                    <div className="space-x-4">
+                        <Button onClick={() => router.push('/auth')}>Sign In</Button>
+                        <Button variant="outline" onClick={() => router.push('/auth')}>Sign Up</Button>
+                    </div>
                 </div>
             )}
             <SummaryComponent />

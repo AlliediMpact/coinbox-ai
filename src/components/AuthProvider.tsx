@@ -14,6 +14,7 @@ import {
 import { app } from '@/lib/firebase';
 import { doc, setDoc, getFirestore } from "firebase/firestore";
 import { useToast } from "@/hooks/use-toast";
+import { useRouter } from 'next/navigation'; // Import useRouter
 
 interface AuthContextProps {
   user: User | null;
@@ -43,6 +44,8 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
   const auth = getAuth(app);
     const db = getFirestore(app); // Initialize Firestore
     const { toast } = useToast();
+    const router = useRouter(); // Initialize useRouter
+
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
@@ -84,6 +87,7 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
                 title: "Verification Email Sent",
                 description: "Please check your inbox to verify your email.",
             });
+            router.push('/dashboard'); // Redirect to dashboard after successful sign up
 
             console.log("Sign up successful:", user);
         } catch (error: any) {
@@ -96,6 +100,7 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
   const signIn = async (email: string, password: string) => {
     try {
       await signInWithEmailAndPassword(auth, email, password);
+        router.push('/dashboard'); // Redirect to dashboard after successful sign in
     } catch (error: any) {
       console.error('Signin error:', error.message);
       throw error;
@@ -125,4 +130,3 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
     </AuthContext.Provider>
   );
 };
-
