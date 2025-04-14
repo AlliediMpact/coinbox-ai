@@ -404,5 +404,84 @@ export default function AdminDashboard() {
   );
 }
 
-'
+// Enhanced Reporting Section (Example - Expand as needed)
+function ReportingSection() {
+    // Dummy data for demonstration
+    const reportData = [
+        { month: 'Jan', deposits: 100, withdrawals: 50, loans: 25 },
+        { month: 'Feb', deposits: 120, withdrawals: 60, loans: 30 },
+        { month: 'Mar', deposits: 150, withdrawals: 75, loans: 40 },
+    ];
 
+    return (
+        <Card>
+            <CardHeader>
+                <CardTitle>Monthly Activity</CardTitle>
+                <CardDescription>Overview of deposits, withdrawals, and loans.</CardDescription>
+            </CardHeader>
+            <CardContent>
+                <ResponsiveContainer width="100%" height={300}>
+                    <BarChart data={reportData}>
+                        <CartesianGrid strokeDasharray="3 3" />
+                        <XAxis dataKey="month" />
+                        <YAxis />
+                        <ChartTooltip />
+                        <Legend />
+                        <Bar dataKey="deposits" fill="#82ca9d" />
+                        <Bar dataKey="withdrawals" fill="#8884d8" />
+                        <Bar dataKey="loans" fill="#ffc658" />
+                    </BarChart>
+                </ResponsiveContainer>
+            </CardContent>
+        </Card>
+    );
+}
+
+// Enhanced KYC and Compliance Section (Example - Expand as needed)
+function KYCComplianceSection() {
+    // Dummy data for demonstration
+    const kycData = [
+        { month: 'Jan', verified: 50, pending: 10 },
+        { month: 'Feb', verified: 60, pending: 8 },
+        { month: 'Mar', verified: 70, pending: 5 },
+    ];
+
+    return (
+        <Card>
+            <CardHeader>
+                <CardTitle>KYC Verification Status</CardTitle>
+                <CardDescription>Overview of user verification status over time.</CardDescription>
+            </CardHeader>
+            <CardContent>
+                <ResponsiveContainer width="100%" height={300}>
+                    <BarChart data={kycData}>
+                        <CartesianGrid strokeDasharray="3 3" />
+                        <XAxis dataKey="month" />
+                        <YAxis />
+                        <ChartTooltip />
+                        <Legend />
+                        <Bar dataKey="verified" fill="#82ca9d" />
+                        <Bar dataKey="pending" fill="#ffc658" />
+                    </BarChart>
+                </ResponsiveContainer>
+            </CardContent>
+        </Card>
+    );
+}
+
+// Example usage in the main component:
+//   return (
+//     
+//       <h1 className="text-3xl font-bold mb-5">Admin Dashboard</h1>
+//
+//       <div className="grid gap-4 grid-cols-1 md:grid-cols-2">
+//         ...Existing Cards...
+//       </div>
+//       <div className="grid gap-4 grid-cols-1 md:grid-cols-2 mt-4">
+//         <ReportingSection /> {/* Add the reporting section */}
+//         <KYCComplianceSection /> {/* Add the KYC Compliance Section */}
+//       </div>
+//       ...Transaction Dialog...
+//     
+//   );
+// }
