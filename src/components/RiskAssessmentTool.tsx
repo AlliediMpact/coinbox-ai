@@ -71,7 +71,7 @@ export default function RiskAssessmentTool({ userId }: RiskAssessmentToolProps) 
                 <div className="text-center mt-1">{riskScore}%</div>
             </div>
             <div>
-              <strong>Explanation:</strong> {explanation}
+              <strong>Explanation:</strong> {explanation ? explanation : 'No explanation available.'}
             </div>
           </>
         ) : (
