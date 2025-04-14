@@ -1,4 +1,3 @@
-
 import {Card, CardContent, CardDescription, CardHeader, CardTitle} from "@/components/ui/card";
 import {Table, TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRow} from "@/components/ui/table";
 import {Button} from "@/components/ui/button";
@@ -430,23 +429,22 @@ function ReportingSection({transactionList}:any) {
         
             
                 
-                    <CardHeader>
+                    
                         <CardTitle>Monthly Activity</CardTitle>
                         <CardDescription>Overview of deposits, withdrawals, and loans.</CardDescription>
-                    </CardHeader>
+                    
                 
                 
                     
                         
-                            
-                                <XAxis dataKey="month" />
-                                <YAxis />
-                                
-                                
-                                <Bar dataKey="deposits" name="Deposits" fill="#82ca9d" />
-                                <Bar dataKey="withdrawals" name="Withdrawals" fill="#8884d8" />
-                                <Bar dataKey="loans" name="Loans" fill="#ffc658" />
-                            
+                            <XAxis dataKey="month" />
+                            <YAxis />
+                            <CartesianGrid strokeDasharray="3 3" />
+                            <ChartTooltip />
+                            <Legend />
+                            <Bar dataKey="deposits" name="Deposits" fill="#82ca9d" />
+                            <Bar dataKey="withdrawals" name="Withdrawals" fill="#8884d8" />
+                            <Bar dataKey="loans" name="Loans" fill="#ffc658" />
                         
                       
                     
@@ -470,22 +468,21 @@ function KYCComplianceSection() {
         
             
                 
-                    <CardHeader>
+                    
                         <CardTitle>KYC Verification Status</CardTitle>
                         <CardDescription>Overview of user verification status over time.</CardDescription>
-                    </CardHeader>
+                    
                 
                 
                     
                         
-                            
-                                <XAxis dataKey="month" />
-                                <YAxis />
-                                
-                                
-                                <Bar dataKey="verified" name="Verified" fill="#82ca9d" />
-                                <Bar dataKey="pending" name="Pending" fill="#ff7300" />
-                            
+                            <XAxis dataKey="month" />
+                            <YAxis />
+                            <CartesianGrid strokeDasharray="3 3" />
+                            <ChartTooltip />
+                            <Legend />
+                            <Bar dataKey="verified" name="Verified" fill="#82ca9d" />
+                            <Bar dataKey="pending" name="Pending" fill="#ff7300" />
                         
                       
                     
