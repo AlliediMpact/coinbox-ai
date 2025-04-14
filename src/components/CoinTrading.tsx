@@ -21,6 +21,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip"
 import { useAuth } from '@/components/AuthProvider';
+import {getRiskAssessment} from "@/ai/flows/risk-assessment-flow";
 
 // Mock function to simulate fetching loan limit based on membership tier
 const getLoanLimitForUser = (membershipTier: string) => {
@@ -178,25 +179,40 @@ export default function CoinTrading() {
         }, 2000);
     };
 
-    // Function to simulate automated matching with risk assessment
-    const findMatchingTrades = (ticket: any) => {
-        // Placeholder for more sophisticated matching logic, including risk assessment
-        const potentialMatch = tradeOffers.find(offer =>
-            offer.type !== ticket.type && offer.status === "Pending"
-        );
+    // Function to simulate automated matching with risk assessment and membership tier
+    const findMatchingTrades = async (ticket: any) => {
+      // Fetch user profile to get membership tier
+      // Mock implementation - replace with actual Firestore data retrieval
+      const userProfile = { membership: "Basic" }; // Replace with actual user profile retrieval
+      const { membership } = userProfile;
 
-        if (potentialMatch) {
-            // Simulate risk assessment - replace with actual risk assessment logic
-            const riskScore = Math.random() * 100; // Generate a random risk score for demonstration
-            if (riskScore < 70) { // Define a threshold for acceptable risk
-                return potentialMatch;
-            } else {
-                console.log("Risk assessment failed for potential match.");
-                return null;
-            }
+      // Placeholder for more sophisticated matching logic, including risk assessment
+      const potentialMatch = tradeOffers.find(offer =>
+          offer.type !== ticket.type && offer.status === "Pending"
+      );
+
+      if (potentialMatch) {
+        // Simulate risk assessment - replace with actual risk assessment logic
+        try {
+          const riskAssessment = await getRiskAssessment({ userId: user?.uid || 'default' });
+          const riskScore = riskAssessment?.riskScore || 50; // Use a default risk score if retrieval fails
+
+          if (riskScore < 70) { // Define a threshold for acceptable risk
+            // Additional check: Match based on membership tier
+            // Implement logic to determine if the trade is suitable for the user's tier
+
+            return potentialMatch;
+          } else {
+            console.log("Risk assessment failed for potential match.");
+            return null;
+          }
+        } catch (error) {
+          console.error("Failed to retrieve risk assessment:", error);
+          return null; // Do not match if risk assessment fails
         }
+      }
 
-        return null;
+      return null;
     };
 
     const handleMatchTrade = (ticket: any) => {
