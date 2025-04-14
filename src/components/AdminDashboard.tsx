@@ -1,6 +1,4 @@
 
-'use client';
-
 import {Card, CardContent, CardDescription, CardHeader, CardTitle} from "@/components/ui/card";
 import {Table, TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRow} from "@/components/ui/table";
 import {Button} from "@/components/ui/button";
@@ -415,7 +413,7 @@ export default function AdminDashboard() {
 				</DialogContent>
 			</Dialog>
      </div>
-    
+
   );
 }
 
@@ -432,17 +430,22 @@ function ReportingSection({transactionList}:any) {
         
             
                 
-                    Monthly Activity
-                    Overview of deposits, withdrawals, and loans.
+                    <CardHeader>
+                        <CardTitle>Monthly Activity</CardTitle>
+                        <CardDescription>Overview of deposits, withdrawals, and loans.</CardDescription>
+                    </CardHeader>
                 
                 
                     
                         
                             
+                                <XAxis dataKey="month" />
+                                <YAxis />
                                 
                                 
-                                
-                                
+                                <Bar dataKey="deposits" name="Deposits" fill="#82ca9d" />
+                                <Bar dataKey="withdrawals" name="Withdrawals" fill="#8884d8" />
+                                <Bar dataKey="loans" name="Loans" fill="#ffc658" />
                             
                         
                       
@@ -467,17 +470,21 @@ function KYCComplianceSection() {
         
             
                 
-                    KYC Verification Status
-                    Overview of user verification status over time.
+                    <CardHeader>
+                        <CardTitle>KYC Verification Status</CardTitle>
+                        <CardDescription>Overview of user verification status over time.</CardDescription>
+                    </CardHeader>
                 
                 
                     
                         
                             
+                                <XAxis dataKey="month" />
+                                <YAxis />
                                 
                                 
-                                
-                                
+                                <Bar dataKey="verified" name="Verified" fill="#82ca9d" />
+                                <Bar dataKey="pending" name="Pending" fill="#ff7300" />
                             
                         
                       
