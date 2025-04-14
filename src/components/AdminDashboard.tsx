@@ -400,15 +400,16 @@ export default function AdminDashboard() {
 				</div>
 			</DialogContent>
 		</Dialog>
-    
+     <ReportingSection transactionList={transactionList}/>
+  
   );
 }
 
 // Enhanced Reporting Section (Example - Expand as needed)
-function ReportingSection() {
+function ReportingSection({transactionList}:any) {
     // Dummy data for demonstration
     const reportData = [
-        { month: 'Jan', deposits: 100, withdrawals: 50, loans: 25 },
+        { month: 'Jan', deposits: transactionList.filter(t => t.type === 'Deposit').length, withdrawals: transactionList.filter(t => t.type === 'Withdrawal').length, loans: transactionList.filter(t => t.type === 'Loan').length },
         { month: 'Feb', deposits: 120, withdrawals: 60, loans: 30 },
         { month: 'Mar', deposits: 150, withdrawals: 75, loans: 40 },
     ];
@@ -485,3 +486,4 @@ function KYCComplianceSection() {
 //     
 //   );
 // }
+
