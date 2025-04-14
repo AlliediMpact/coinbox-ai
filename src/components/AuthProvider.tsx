@@ -9,9 +9,11 @@ import {
   onAuthStateChanged,
   User,
   updateProfile,
+  sendEmailVerification,
 } from 'firebase/auth';
 import { app } from '@/lib/firebase';
 import { doc, setDoc, getFirestore } from "firebase/firestore";
+import { useToast } from "@/hooks/use-toast";
 
 interface AuthContextProps {
   user: User | null;
@@ -40,6 +42,7 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
   const [loading, setLoading] = useState(true);
   const auth = getAuth(app);
     const db = getFirestore(app); // Initialize Firestore
+    const { toast } = useToast();
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
@@ -55,6 +58,9 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
             const userCredential = await createUserWithEmailAndPassword(auth, email, password);
             const { user } = userCredential;
 
+            // Send email verification
+            await sendEmailVerification(user);
+
             // Update user profile with additional data
             await updateProfile(user, {
                 displayName: additionalData.fullName || null,
@@ -69,9 +75,15 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
                 referralCode: additionalData.referralCode || null,
                 membershipTier: additionalData.membershipTier || 'Basic', // Default value
                 email: email,
+                emailVerified: false, // Initial state
                 // Add any other relevant information
             });
 
+            // Show toast message for email verification
+            toast({
+                title: "Verification Email Sent",
+                description: "Please check your inbox to verify your email.",
+            });
 
             console.log("Sign up successful:", user);
         } catch (error: any) {
@@ -113,3 +125,4 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
     </AuthContext.Provider>
   );
 };
+
