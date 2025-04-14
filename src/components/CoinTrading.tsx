@@ -28,8 +28,15 @@ import {
     setDoc,
     getFirestore,
     updateDoc,
+    collection,
+    query,
+    where,
+    getDocs,
 } from "firebase/firestore";
 import {app} from "@/lib/firebase";
+import * as z from "zod"
+import { useForm, Controller } from 'react-hook-form';
+import { zodResolver } from "@hookform/resolvers/zod"
 
 // Mock function to simulate fetching loan limit based on membership tier
 const getLoanLimitForUser = (membershipTier: string) => {
@@ -44,6 +51,12 @@ const getLoanLimitForUser = (membershipTier: string) => {
             return 0;
     }
 };
+
+// Zod schema for dispute form validation
+const disputeFormSchema = z.object({
+    reason: z.string().min(10, { message: "Reason must be at least 10 characters." }),
+    evidence: z.string().optional(), // Add file upload later
+});
 
 export default function CoinTrading() {
     const [tickets, setTickets] = useState([
@@ -67,6 +80,14 @@ export default function CoinTrading() {
     const [disputeDetails, setDisputeDetails] = useState({ tradeId: null, reason: "" });
     const [escrowBalance, setEscrowBalance] = useState(0);
     const db = getFirestore(app); // Initialize Firestore
+
+    const form = useForm<z.infer<typeof disputeFormSchema>>({
+        resolver: zodResolver(disputeFormSchema),
+        defaultValues: {
+            reason: "",
+            evidence: "",
+        },
+    });
 
     useEffect(() => {
         // Load wallet balance from local storage on component mount
@@ -213,59 +234,53 @@ export default function CoinTrading() {
 
 
     const findMatchingTrades = async (ticket: any) => {
-        // Retrieve user profile and membership tier from Firestore
-        const userDoc = await getDoc(doc(db, "users", user?.uid || 'default'));
+        if (!user?.uid) {
+            console.error("User ID is not available");
+            return null;
+        }
+
+        const userDoc = await getDoc(doc(db, "users", user.uid));
         if (!userDoc.exists()) {
             console.error("User document not found");
             return null;
         }
         const userData = userDoc.data();
-        const { membership } = userData;
+        const membershipTier = userData.membershipTier;
 
-        const potentialMatch = tradeOffers.find(offer =>
-            offer.type !== ticket.type && offer.status === "Pending"
+        // Fetch trade offers from Firestore that match the ticket and user's membership tier
+        const tradeOffersRef = collection(db, 'tradeOffers');
+        const q = query(tradeOffersRef,
+            where('type', '!=', ticket.type),
+            where('status', '==', 'Pending'),
+            where('membershipTier', '==', membershipTier), // Ensure only trades suitable for user's tier are matched
         );
 
-        if (potentialMatch) {
+        const querySnapshot = await getDocs(q);
+
+        if (!querySnapshot.empty) {
+            // Get the first matching trade offer
+            const potentialMatch = querySnapshot.docs[0].data();
+
             try {
-                const riskAssessment = await getRiskAssessment({ userId: user?.uid || 'default' });
+                const riskAssessment = await getRiskAssessment({userId: user.uid});
                 const riskScore = riskAssessment?.riskScore || 50; // Default risk score
 
                 if (riskScore < 70) {
-                    // Check based on membership tier
-                    if (isTradeSuitableForTier(membership, potentialMatch)) {
-                        return potentialMatch;
-                    } else {
-                        console.log("Trade is not suitable for the user's membership tier.");
-                        return null;
-                    }
+                    return potentialMatch;
                 } else {
                     console.log("Risk assessment failed for potential match.");
-                    return null;
+                    return null; // Do not match if risk assessment fails
                 }
             } catch (error) {
                 console.error("Failed to retrieve risk assessment:", error);
                 return null; // Do not match if risk assessment fails
             }
-        }
-
-        return null;
-    };
-
-    // Function to determine if a trade is suitable for a membership tier
-    const isTradeSuitableForTier = (membership: string, trade: any) => {
-        // Define rules based on membership (example rules)
-        switch (membership) {
-            case "Basic":
-                return parseFloat(trade.amount) <= 200; // Basic members trade less than 200 coins
-            case "Ambassador":
-                return parseFloat(trade.amount) <= 500; // Ambassador members trade less than 500 coins
-            case "Business":
-                return true; // Business members can invest in any trade
-            default:
-                return false;
+        } else {
+            console.log("No matching trade offers found.");
+            return null; // No matching trade offers found
         }
     };
+
 
     const handleMatchTrade = async (ticket: any) => {
         const match = await findMatchingTrades(ticket);
@@ -321,14 +336,40 @@ export default function CoinTrading() {
         setDisputeDetails({ ...disputeDetails, tradeId: tradeId });
     };
 
-    const handleFileDispute = () => {
-        // Simulate submitting the dispute details to admin - replace with actual Firebase function call
-        toast({
-            title: "Dispute Filed",
-            description: `Dispute for trade ID: ${disputeDetails.tradeId} has been filed. Our team will review it shortly.`,
-        });
-        setDisputeOpen(false);
+    const handleFileDispute = async (values: z.infer<typeof disputeFormSchema>) => {
+        if (!disputeDetails.tradeId) {
+            toast({
+                title: "Error",
+                description: "Trade ID is missing.",
+                variant: "destructive",
+            });
+            return;
+        }
+
+        try {
+            // Here, you would typically save the dispute details to your database
+            // along with any uploaded evidence.
+            console.log("Dispute details submitted:", {
+                tradeId: disputeDetails.tradeId,
+                reason: values.reason,
+                evidence: values.evidence,
+            });
+
+            toast({
+                title: "Dispute Filed",
+                description: `Dispute for trade ID: ${disputeDetails.tradeId} has been filed. Our team will review it shortly.`,
+            });
+            setDisputeOpen(false);
+        } catch (error: any) {
+            console.error("Failed to file dispute:", error.message);
+            toast({
+                title: "Filing Dispute Error",
+                description: error.message,
+                variant: "destructive",
+            });
+        }
     };
+
 
   return (
     <Card>
@@ -535,27 +576,38 @@ export default function CoinTrading() {
                           Explain why you are filing a dispute for this trade.
                       </DialogDescription>
                   </DialogHeader>
-                  <div className="grid gap-4 py-4">
+                  <form onSubmit={form.handleSubmit(handleFileDispute)} className="grid gap-4">
                       <div className="grid gap-2">
-                          <label htmlFor="reason">Reason for Dispute</label>
-                          <Textarea
+                          <Label htmlFor="reason">Reason for Dispute</Label>
+                          <Input
                               id="reason"
                               placeholder="Describe the issue"
-                              value={disputeDetails.reason}
-                              onChange={(e) => setDisputeDetails({ ...disputeDetails, reason: e.target.value })}
+                              {...form.register("reason")}
+                              required
+                          />
+                          {form.formState.errors.reason && (
+                              <p className="text-sm text-red-500">{form.formState.errors.reason?.message}</p>
+                          )}
+                      </div>
+                      <div className="grid gap-2">
+                          <Label htmlFor="evidence">Supporting Evidence (Optional)</Label>
+                          <Textarea
+                              id="evidence"
+                              placeholder="Add links or additional details to support your claim"
+                              {...form.register("evidence")}
                           />
                       </div>
-                  </div>
-                  <div className="flex justify-end space-x-2">
-                      <DialogClose asChild>
-                          <Button type="button" variant="secondary">
-                              Cancel
+                      <div className="flex justify-end space-x-2">
+                          <DialogClose asChild>
+                              <Button type="button" variant="secondary">
+                                  Cancel
+                              </Button>
+                          </DialogClose>
+                          <Button type="submit">
+                              File Dispute
                           </Button>
-                      </DialogClose>
-                      <Button type="button" onClick={handleFileDispute}>
-                          File Dispute
-                      </Button>
-                  </div>
+                      </div>
+                  </form>
               </DialogContent>
           </Dialog>
       </CardContent>
