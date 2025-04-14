@@ -486,4 +486,3 @@ function KYCComplianceSection() {
 //     
 //   );
 // }
-
