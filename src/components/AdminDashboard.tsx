@@ -1,3 +1,4 @@
+
 'use client';
 
 import {Card, CardContent, CardDescription, CardHeader, CardTitle} from "@/components/ui/card";
@@ -140,7 +141,7 @@ export default function AdminDashboard() {
   };
 
   return (
-    
+    <div>
       <h1 className="text-3xl font-bold mb-5">Admin Dashboard</h1>
 
       <div className="grid gap-4 grid-cols-1 md:grid-cols-2">
@@ -158,7 +159,7 @@ export default function AdminDashboard() {
                   <TableHead>Email</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead>Verified</TableHead>
-				          <TableHead>Membership</TableHead>
+				  <TableHead>Membership</TableHead>
                   <TableHead>Actions</TableHead>
                 </TableRow>
               </TableHeader>
@@ -170,16 +171,16 @@ export default function AdminDashboard() {
                     <TableCell>{user.email}</TableCell>
                     <TableCell>{user.status}</TableCell>
                     <TableCell>{user.verified ? "Yes" : "No"}</TableCell>
-					          <TableCell>{user.membership}</TableCell>
+					<TableCell>{user.membership}</TableCell>
                     <TableCell>
                       {!user.verified && (
-                           <TooltipProvider>
+                        <TooltipProvider>
                             <Tooltip>
                               <TooltipTrigger asChild>
-                                  <Button variant="secondary" size="sm" onClick={() => handleVerifyUser(user.id)}>
+                                <Button variant="secondary" size="sm" onClick={() => handleVerifyUser(user.id)}>
                                     Verify
-                                  </Button>
-                                </TooltipTrigger>
+                                </Button>
+                              </TooltipTrigger>
                               <TooltipContent>
                                 Verify this user
                               </TooltipContent>
@@ -187,26 +188,26 @@ export default function AdminDashboard() {
                           </TooltipProvider>
                       )}
                       {user.status === "Inactive" ? (
-                         <TooltipProvider>
+                        <TooltipProvider>
                             <Tooltip>
                               <TooltipTrigger asChild>
-                                  <Button variant="ghost" size="sm" onClick={() => handleEnableUser(user.id)}>
+                                <Button variant="secondary" size="sm" onClick={() => handleEnableUser(user.id)}>
                                     Enable
-                                  </Button>
-                                </TooltipTrigger>
+                                </Button>
+                              </TooltipTrigger>
                               <TooltipContent>
                                 Enable this user
                               </TooltipContent>
                             </Tooltip>
                           </TooltipProvider>
                       ) : (
-                         <TooltipProvider>
+                        <TooltipProvider>
                             <Tooltip>
                               <TooltipTrigger asChild>
-                                  <Button variant="ghost" size="sm" onClick={() => handleDisableUser(user.id)}>
+                                <Button variant="secondary" size="sm" onClick={() => handleDisableUser(user.id)}>
                                     Disable
-                                  </Button>
-                                </TooltipTrigger>
+                                </Button>
+                              </TooltipTrigger>
                               <TooltipContent>
                                 Disable this user
                               </TooltipContent>
@@ -227,52 +228,63 @@ export default function AdminDashboard() {
             <CardDescription>Review and monitor transactions for fraud prevention.</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="flex items-center space-x-2 mb-4">
-              <Select onValueChange={setFilter} defaultValue={filter}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Filter by Type" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All</SelectItem>
-                  <SelectItem value="Deposit">Deposit</SelectItem>
-                  <SelectItem value="Withdrawal">Withdrawal</SelectItem>
-                  <SelectItem value="Loan">Loan</SelectItem>
-                </SelectContent>
-              </Select>
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button
-                    variant={"outline"}
-                    className={cn(
-                      "w-[300px] justify-start text-left font-normal",
-                      !date && "text-muted-foreground"
-                    )}
-                  >
-                    <CalendarIcon className="mr-2 h-4 w-4" />
-                    {date ? format(date, "PPP") : <span>Pick a date</span>}
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0" align="start">
-                  <Calendar
-                    mode="single"
-                    selected={date}
-                    onSelect={setDate}
-                    disabled={ (d) => d > new Date() || d < new Date('2024-01-01')}
-                    initialFocus
-                  />
-                </PopoverContent>
-              </Popover>
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Button variant="ghost" size="sm" onClick={handleResetFilters}>
-                      Reset Filters
+            <div className="flex flex-wrap gap-4 mb-4">
+              <div>
+                <label htmlFor="filterType" className="block text-sm font-medium text-gray-700">Filter by Type</label>
+                <Select onValueChange={(value) => setFilter(value)}>
+                  <SelectTrigger id="filterType">
+                    <SelectValue placeholder={filter} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All</SelectItem>
+                    <SelectItem value="Deposit">Deposit</SelectItem>
+                    <SelectItem value="Withdrawal">Withdrawal</SelectItem>
+                    <SelectItem value="Loan">Loan</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <label htmlFor="datePicker" className="block text-sm font-medium text-gray-700">Filter by Date</label>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant={"outline"}
+                      className={cn(
+                        "w-[300px] justify-start text-left font-normal",
+                        !date && "text-muted-foreground"
+                      )}
+                    >
+                      <CalendarIcon className="mr-2 h-4 w-4" />
+                      {date ? format(date, "PPP") : <span>Pick a date</span>}
                     </Button>
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    Click to reset all filters
-                  </TooltipContent>
-                </Tooltip>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="center" sideOffset={5}>
+                    <Calendar
+                      mode="single"
+                      selected={date}
+                      onSelect={setDate}
+                      disabled={(date) =>
+                        date > new Date() || date < new Date("2020-01-01")
+                      }
+                      initialFocus
+                    />
+                  </PopoverContent>
+                </Popover>
+              </div>
+               <div>
+                  <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button variant="ghost" size="sm" onClick={handleResetFilters}>
+                            Reset Filters
+                          </Button>
+                         </TooltipTrigger>
+                        <TooltipContent>
+                          Click to reset all filters
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+                </div>
             </div>
             <Table>
               <TableHeader>
@@ -296,18 +308,18 @@ export default function AdminDashboard() {
                     <TableCell>{transaction.date}</TableCell>
                     <TableCell>{transaction.status}</TableCell>
                     <TableCell>
-                       <TooltipProvider>
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                                <Button variant="outline" size="sm" onClick={() => handleOpenTransactionDetails(transaction)}>
-                                  Review
+                      <TooltipProvider>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <Button variant="secondary" size="sm" onClick={() => handleOpenTransactionDetails(transaction)}>
+                                    Review
                                 </Button>
                               </TooltipTrigger>
-                            <TooltipContent>
-                              Review this transaction
-                            </TooltipContent>
-                          </Tooltip>
-                        </TooltipProvider>
+                              <TooltipContent>
+                                Review this transaction
+                              </TooltipContent>
+                            </Tooltip>
+                          </TooltipProvider>
                     </TableCell>
                   </TableRow>
                 ))}
@@ -316,14 +328,13 @@ export default function AdminDashboard() {
           </CardContent>
         </Card>
       </div>
-      <div className="grid gap-4 grid-cols-1 md:grid-cols-2 mt-4">
+      <div className="grid gap-4 grid-cols-1 md:grid-cols-2">
         <Card>
           <CardHeader>
             <CardTitle>Transaction Statistics</CardTitle>
             <CardDescription>Statistics of transactions in the last 7 days.</CardDescription>
           </CardHeader>
           <CardContent>
-            {/* Bar chart to display transaction statistics */}
             <ResponsiveContainer width="100%" height={300}>
               <BarChart data={chartData}>
                 <CartesianGrid strokeDasharray="3 3" />
@@ -342,66 +353,68 @@ export default function AdminDashboard() {
             <CardDescription>Information related to user compliance and activity.</CardDescription>
           </CardHeader>
           <CardContent>
-            <p>Total KYC Verified Users: {userList.filter(user => user.verified).length}</p>
-            <p>Total Active Users: {userList.filter(user => user.status === 'Active').length}</p>
-            <p>Last login: {new Date().toLocaleDateString()}</p>
+            <ul>
+              <li>Total KYC Verified Users: {userList.filter(user => user.verified).length}</li>
+              <li>Total Active Users: {userList.filter(user => user.status === 'Active').length}</li>
+              <li>Last login: {new Date().toLocaleDateString()}</li>
+            </ul>
           </CardContent>
         </Card>
-      </div>
-		<Dialog open={open} onOpenChange={setOpen}>
-			<DialogContent>
-				<DialogHeader>
-					<DialogTitle>Transaction Details</DialogTitle>
-					<DialogDescription>
-						Review and update transaction status.
-					</DialogDescription>
-				</DialogHeader>
-				<div className="grid gap-4 py-4">
-					<div className="grid gap-2">
-						<label htmlFor="transactionId">Transaction ID</label>
-						<Input id="transactionId" value={transactionDetails.id || ''} readOnly />
+		</div>
+			<Dialog open={open} onOpenChange={setOpen}>
+				<DialogContent>
+					<DialogHeader>
+						<DialogTitle>Transaction Details</DialogTitle>
+						<DialogDescription>
+							Review and update transaction status.
+						</DialogDescription>
+					</DialogHeader>
+					<div className="grid gap-4 py-4">
+						<div className="grid gap-2">
+							<label htmlFor="transactionId">Transaction ID</label>
+							<Input id="transactionId" value={transactionDetails.id || ''} disabled />
+						</div>
+						<div className="grid gap-2">
+							<label htmlFor="userId">User ID</label>
+							<Input id="userId" value={transactionDetails.userId || ''} disabled />
+						</div>
+						<div className="grid gap-2">
+							<label htmlFor="type">Type</label>
+							<Input id="type" value={transactionDetails.type || ''} disabled />
+						</div>
+						<div className="grid gap-2">
+							<label htmlFor="amount">Amount</label>
+							<Input id="amount" value={transactionDetails.amount || ''} disabled />
+						</div>
+						<div className="grid gap-2">
+							<label htmlFor="date">Date</label>
+							<Input id="date" value={transactionDetails.date || ''} disabled />
+						</div>
+						<div className="grid gap-2">
+							<label htmlFor="status">Status</label>
+								<Select onValueChange={(value) => handleUpdateTransactionStatus(value)}>
+									<SelectTrigger>
+										<SelectValue placeholder={transactionDetails.status || "Select Status"} />
+									</SelectTrigger>
+									<SelectContent>
+										<SelectItem value="Pending">Pending</SelectItem>
+										<SelectItem value="Completed">Completed</SelectItem>
+										<SelectItem value="Failed">Failed</SelectItem>
+										<SelectItem value="Refunded">Refunded</SelectItem>
+									</SelectContent>
+								</Select>
+						</div>
 					</div>
-					<div className="grid gap-2">
-						<label htmlFor="userId">User ID</label>
-						<Input id="userId" value={transactionDetails.userId || ''} readOnly />
+					<div className="flex justify-end space-x-2">
+						<DialogClose asChild>
+							<Button type="button" variant="secondary">
+								Cancel
+							</Button>
+						</DialogClose>
 					</div>
-					<div className="grid gap-2">
-						<label htmlFor="type">Type</label>
-						<Input id="type" value={transactionDetails.type || ''} readOnly />
-					</div>
-					<div className="grid gap-2">
-						<label htmlFor="amount">Amount</label>
-						<Input id="amount" value={transactionDetails.amount || ''} readOnly />
-					</div>
-					<div className="grid gap-2">
-						<label htmlFor="date">Date</label>
-						<Input id="date" value={transactionDetails.date || ''} readOnly />
-					</div>
-					<div className="grid gap-2">
-						<label htmlFor="status">Status</label>
-						<Select onValueChange={handleUpdateTransactionStatus} defaultValue={transactionDetails.status}>
-							<SelectTrigger id="status">
-								<SelectValue placeholder={transactionDetails.status || "Select Status"} />
-							</SelectTrigger>
-							<SelectContent>
-								<SelectItem value="Pending">Pending</SelectItem>
-								<SelectItem value="Completed">Completed</SelectItem>
-								<SelectItem value="Failed">Failed</SelectItem>
-								<SelectItem value="Refunded">Refunded</SelectItem>
-							</SelectContent>
-						</Select>
-					</div>
-				</div>
-				<div className="flex justify-end space-x-2">
-					<DialogClose asChild>
-						<Button type="button" variant="secondary">
-							Cancel
-						</Button>
-					</DialogClose>
-				</div>
-			</DialogContent>
-		</Dialog>
-     <ReportingSection transactionList={transactionList}/>
+				</DialogContent>
+			</Dialog>
+     </div>
     
   );
 }
@@ -416,26 +429,28 @@ function ReportingSection({transactionList}:any) {
     ];
 
     return (
-        <Card>
-            <CardHeader>
-                <CardTitle>Monthly Activity</CardTitle>
-                <CardDescription>Overview of deposits, withdrawals, and loans.</CardDescription>
-            </CardHeader>
-            <CardContent>
-                <ResponsiveContainer width="100%" height={300}>
-                    <BarChart data={reportData}>
-                        <CartesianGrid strokeDasharray="3 3" />
-                        <XAxis dataKey="month" />
-                        <YAxis />
-                        <ChartTooltip />
-                        <Legend />
-                        <Bar dataKey="deposits" fill="#82ca9d" />
-                        <Bar dataKey="withdrawals" fill="#8884d8" />
-                        <Bar dataKey="loans" fill="#ffc658" />
-                    </BarChart>
-                </ResponsiveContainer>
-            </CardContent>
-        </Card>
+        
+            
+                
+                    Monthly Activity
+                    Overview of deposits, withdrawals, and loans.
+                
+                
+                    
+                        
+                            
+                                
+                                
+                                
+                                
+                            
+                        
+                      
+                    
+                  
+                
+            
+        
     );
 }
 
@@ -449,39 +464,44 @@ function KYCComplianceSection() {
     ];
 
     return (
-        <Card>
-            <CardHeader>
-                <CardTitle>KYC Verification Status</CardTitle>
-                <CardDescription>Overview of user verification status over time.</CardDescription>
-            </CardHeader>
-            <CardContent>
-                <ResponsiveContainer width="100%" height={300}>
-                    <BarChart data={kycData}>
-                        <CartesianGrid strokeDasharray="3 3" />
-                        <XAxis dataKey="month" />
-                        <YAxis />
-                        <ChartTooltip />
-                        <Legend />
-                        <Bar dataKey="verified" fill="#82ca9d" />
-                        <Bar dataKey="pending" fill="#ffc658" />
-                    </BarChart>
-                </ResponsiveContainer>
-            </CardContent>
-        </Card>
+        
+            
+                
+                    KYC Verification Status
+                    Overview of user verification status over time.
+                
+                
+                    
+                        
+                            
+                                
+                                
+                                
+                                
+                            
+                        
+                      
+                    
+                  
+                
+            
+        
     );
 }
 
 // Example usage in the main component:
 //   
-//       <h1 className="text-3xl font-bold mb-5">Admin Dashboard</h1>
+//       
 //
-//       <div className="grid gap-4 grid-cols-1 md:grid-cols-2">
+//       
 //         ...Existing Cards...
-//       </div>
-//       <div className="grid gap-4 grid-cols-1 md:grid-cols-2 mt-4">
-//         <ReportingSection /> {/* Add the reporting section */}
-//         <KYCComplianceSection /> {/* Add the KYC Compliance Section */}
-//       </div>
+//       
+//       
+//         
+//          {/* Add the reporting section */}
+//          {/* Add the KYC Compliance Section */}
+//         
+//       
 //       ...Transaction Dialog...
 //     
 //   );
