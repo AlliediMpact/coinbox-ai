@@ -38,12 +38,35 @@ const HomePageContent = () => {
     const router = useRouter();
 
     return (
-        <div className="flex flex-col items-center justify-center h-screen">
+        <div className="flex flex-col items-center justify-center min-h-screen py-12">
+            {/* Hero Image */}
+            <Image
+                src="/assets/hero-image.jpg" // Replace with your actual image path
+                alt="CoinBox Connect Hero"
+                width={1200}
+                height={600}
+                className="rounded-lg shadow-xl mb-8"
+            />
+
             <h1 className="text-4xl font-bold text-white mb-4">Welcome to CoinBox Connect</h1>
             <p className="text-lg text-gray-300 mb-8">Your ultimate peer-to-peer financial solution.</p>
+
+            {/* Key Benefits */}
+            <ul className="text-white text-lg list-disc list-inside mb-8">
+                <li>Secure Peer-to-Peer Trading</li>
+                <li>Instant Loan Access</li>
+                <li>Earn Referral Commissions</li>
+                <li>Transparent Coin-Based Marketplace</li>
+            </ul>
+
+            {/* Authentication Buttons */}
             <div className="space-x-4">
-                <Button onClick={() => router.push('/auth')}>Sign In</Button>
-                <Button variant="outline" onClick={() => router.push('/auth')}>Sign Up</Button>
+                <Button onClick={() => router.push('/auth')} className="transition-transform hover:scale-105">
+                    Sign In
+                </Button>
+                <Button variant="outline" onClick={() => router.push('/auth')} className="transition-transform hover:scale-105">
+                    Sign Up
+                </Button>
             </div>
         </div>
     );
