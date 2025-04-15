@@ -50,6 +50,29 @@ import {CalendarIcon} from "@radix-ui/react-icons"; // Corrected import
 import {Popover, PopoverContent, PopoverTrigger} from "@/components/ui/popover";
 import {useToast} from "@/hooks/use-toast";
 import React from "react";
+import { LucideIcon } from 'lucide-react';
+import {
+    Home,
+    LayoutDashboard,
+    Users,
+    Coins,
+    Wallet,
+    Shield,
+    Share2,
+    HelpCircle,
+    Menu,
+    Search,
+    Bell,
+    Cog,
+    LogOut,
+    User as UserIcon,
+    PackagePlus,
+    CreditCard,
+    Settings,
+    TrendingUp,
+    AlertCircle,
+} from 'lucide-react';
+
 
 const users = [
     {id: 1, name: "John Doe", email: "john.doe@example.com", status: "Active", verified: true, membership: "Basic"},
@@ -70,6 +93,20 @@ const initialTransactionDetails = {
     status: ''
 };
 
+// Define a type for action logs
+type ActionLogItem = {
+    id: number;
+    timestamp: string;
+    action: string;
+    details: string;
+}
+
+const sampleActionLogs: ActionLogItem[] = [
+    { id: 1, timestamp: "2024-08-01 10:00", action: "User Verified", details: "Verified user John Doe" },
+    { id: 2, timestamp: "2024-08-01 10:15", action: "Transaction Reviewed", details: "Reviewed transaction ID 12345" },
+];
+
+
 export default function AdminDashboard() {
     const [userList, setUserList] = useState(users);
     const [transactionList, setTransactionList] = useState(transactions);
@@ -78,17 +115,42 @@ export default function AdminDashboard() {
     const [filter, setFilter] = useState('all');
     const [date, setDate] = useState<Date | undefined>(new Date());
     const {toast} = useToast();
+    const [actionLogs, setActionLogs] = useState<ActionLogItem[]>(sampleActionLogs);
 
     const handleVerifyUser = (id: number) => {
-        setUserList(userList.map(user => user.id === id ? {...user, verified: true} : user));
+        const updatedUserList = userList.map(user => {
+            if (user.id === id) {
+                // Log the action
+                logAdminAction("User Verified", `Verified user ${user.name}`);
+                return {...user, verified: true};
+            }
+            return user;
+        });
+        setUserList(updatedUserList);
     };
 
     const handleEnableUser = (id: number) => {
-        setUserList(userList.map(user => user.id === id ? {...user, status: "Active"} : user));
+        const updatedUserList = userList.map(user => {
+            if (user.id === id) {
+                // Log the action
+                logAdminAction("User Enabled", `Enabled user ${user.name}`);
+                return {...user, status: "Active"};
+            }
+            return user;
+        });
+        setUserList(updatedUserList);
     };
 
     const handleDisableUser = (id: number) => {
-        setUserList(userList.map(user => user.id === id ? {...user, status: "Inactive"} : user));
+        const updatedUserList = userList.map(user => {
+            if (user.id === id) {
+                // Log the action
+                logAdminAction("User Disabled", `Disabled user ${user.name}`);
+                return {...user, status: "Inactive"};
+            }
+            return user;
+        });
+        setUserList(updatedUserList);
     };
 
     const handleOpenTransactionDetails = (transaction: any) => {
@@ -109,6 +171,7 @@ export default function AdminDashboard() {
         ));
         setTransactionDetails({...transactionDetails, status: status});
         setOpen(false);
+        logAdminAction("Transaction Updated", `Updated transaction ${transactionDetails.id} to ${status}`); // Log the action
     };
 
     const filteredTransactions = filter === 'all' ? transactionList : transactionList.filter(transaction => transaction.type === filter);
@@ -135,6 +198,17 @@ export default function AdminDashboard() {
             title: "Filters Reset",
             description: "Transaction filters have been reset.",
         });
+    };
+
+    // Function to log admin actions
+    const logAdminAction = (action: string, details: string) => {
+        const newLog: ActionLogItem = {
+            id: actionLogs.length + 1,
+            timestamp: new Date().toLocaleString(),
+            action: action,
+            details: details,
+        };
+        setActionLogs(prevLogs => [newLog, ...prevLogs]); // Add new log at the beginning
     };
 
     return (
@@ -360,6 +434,7 @@ export default function AdminDashboard() {
                             <li>Total KYC Verified Users: {userList.filter(user => user.verified).length}</li>
                             <li>Total Active Users: {userList.filter(user => user.status === 'Active').length}</li>
                             <li>Last login: {new Date().toLocaleDateString()}</li>
+                            <li>Date: {new Date().toLocaleDateString()}</li>
                         </ul>
                     </CardContent>
                 </Card>
@@ -428,7 +503,7 @@ export default function AdminDashboard() {
                         <ResponsiveContainer width="100%" height={300}>
                             <BarChart data={chartData}>
                                 <CartesianGrid strokeDasharray="3 3"/>
-                                <XAxis dataKey="month"/>
+                                <XAxis dataKey="name"/>
                                 <YAxis/>
                                 <ChartTooltip/>
                                 <Legend/>
@@ -463,6 +538,32 @@ export default function AdminDashboard() {
                     </CardContent>
                 </Card>
             </div>
+               <Card>
+                <CardHeader>
+                    <CardTitle>Admin Action Log</CardTitle>
+                    <CardDescription>Log of admin actions for auditing and monitoring.</CardDescription>
+                </CardHeader>
+                <CardContent>
+                    <Table>
+                        <TableHeader>
+                            <TableRow>
+                                <TableHead>Timestamp</TableHead>
+                                <TableHead>Action</TableHead>
+                                <TableHead>Details</TableHead>
+                            </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                            {actionLogs.map((log) => (
+                                <TableRow key={log.id}>
+                                    <TableCell>{log.timestamp}</TableCell>
+                                    <TableCell>{log.action}</TableCell>
+                                    <TableCell>{log.details}</TableCell>
+                                </TableRow>
+                            ))}
+                        </TableBody>
+                    </Table>
+                </CardContent>
+            </Card>
         </div>
     );
 }
