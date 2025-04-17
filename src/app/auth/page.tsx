@@ -59,17 +59,13 @@ export default function AuthPage() {
     const router = useRouter();
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
-    const [fullName, setFullName] = useState('');
-    const [phone, setPhone] = useState('');
-    const [referralCode, setReferralCode] = useState('');
     const [showSignIn, setShowSignIn] = useState(true);
     const [showForgotPassword, setShowForgotPassword] = useState(false); // State for forgot password
     const cardRef = useRef<HTMLDivElement>(null); // Ref for the card element
-    const [membershipTier, setMembershipTier] = useState('Basic'); // Default value
+    const [isSubmitting, setIsSubmitting] = useState(false); // Loading state for signup/signin
     const { signUp, signIn } = useAuth();
     const { toast } = useToast(); // Initialize the useToast hook
     const [open, setOpen] = useState(false); // Dialog for password reset
-    const [isSubmitting, setIsSubmitting] = useState(false); // Loading state for signup/signin
 
     const form = useForm<z.infer<typeof formSchema>>({
         resolver: zodResolver(formSchema),
@@ -235,7 +231,7 @@ export default function AuthPage() {
                             }} className="button-link">
                                 Forgot your password?
                             </Button>
-                            <Button variant="link" onClick={toggleForm} className="button-link">
+                             <Button variant="link" onClick={toggleForm} className="button-link">
                                 Create an account? Sign Up
                             </Button>
                         </form>
@@ -352,18 +348,17 @@ export default function AuthPage() {
                             >
                                 {isSubmitting ? "Creating Account..." : "Create Account"}
                             </Button>
-                            <Button variant="link" onClick={toggleForm} className="button-link">
+                             <Button variant="link" onClick={toggleForm} className="button-link">
                                 Already have an account? Sign In
                             </Button>
                         </form>
                     )}
                     {!showForgotPassword && (
-                        <>
-                            <Button variant="outline" onClick={() => router.push('/auth/otp')} className="button">
-                                <Key className="mr-2 h-4 w-4" />
+                        
+                            <Button variant="outline" onClick={() => router.push('/auth/otp')} className="button-link">
                                 Sign In with OTP
                             </Button>
-                        </>
+                        
                     )}
                 </CardContent>
             </Card>

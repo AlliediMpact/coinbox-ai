@@ -15,11 +15,11 @@ import { app } from '@/lib/firebase';
 import { useToast } from "@/hooks/use-toast"; // Import the useToast hook
 
 // Mock referral data
-const referralData = [
-  {id: 1, name: "John Doe", referredTier: "Basic"},
-  {id: 2, name: "Jane Smith", referredTier: "Ambassador"},
-  {id: 3, name: "Alice Johnson", referredTier: "VIP"},
-];
+//const referralData = [
+//  {id: 1, name: "John Doe", referredTier: "Basic"},
+//  {id: 2, name: "Jane Smith", referredTier: "Ambassador"},
+//  {id: 3, name: "Alice Johnson", referredTier: "VIP"},
+//];
 
 // Commission tiers based on referrer's tier
 const commissionTiers = {
@@ -47,18 +47,23 @@ export default function ReferralTracking() {
     const [isPayoutRequested, setIsPayoutRequested] = useState(false);
     const db = getFirestore(app);
     const { toast } = useToast();
-    const [userReferrals, setUserReferrals] = useState([]);
+    const [userReferrals, setUserReferrals] = useState<any[]>([]);
     const [totalReferredCommission, setTotalReferredCommission] = useState(0); // Track earnings
 
   // Calculate total commission based on referral and commission tiers
   useEffect(() => {
     let commission = 0;
-    referralData.forEach((referral) => {
-      const commissionRate = commissionTiers[referrerTier as keyof typeof commissionTiers][referral.referredTier as keyof typeof commissionTiers["Basic"]];
-      commission += calculateCommission(commissionRate);
+    userReferrals.forEach((referral) => {
+      if (commissionTiers[referrerTier as keyof typeof commissionTiers] &&
+        commissionTiers[referrerTier as keyof typeof commissionTiers][referral.referredTier as keyof typeof commissionTiers["Basic"]]) {
+        const commissionRate = commissionTiers[referrerTier as keyof typeof commissionTiers][referral.referredTier as keyof typeof commissionTiers["Basic"]];
+        commission += calculateCommission(commissionRate);
+      } else {
+        console.warn(`Commission rate not found for referrerTier ${referrerTier} and referredTier ${referral.referredTier}`);
+      }
     });
     setTotalCommission(commission);
-  }, [referrerTier]);
+  }, [referrerTier, userReferrals]);
 
     // Fetch referral data from Firestore
     useEffect(() => {
@@ -74,9 +79,13 @@ export default function ReferralTracking() {
                         // Calculate the total commission earned from referrals
                         let totalCommission = 0;
                         referralList.forEach(referral => {
-                            totalCommission += calculateCommission(
-                                commissionTiers[referrerTier as keyof typeof commissionTiers][referral.referredTier as keyof typeof commissionTiers["Basic"]]
-                            );
+                            if (commissionTiers[referrerTier as keyof typeof commissionTiers] &&
+                              commissionTiers[referrerTier as keyof typeof commissionTiers][referral.referredTier as keyof typeof commissionTiers["Basic"]]) {
+                              const commissionRate = commissionTiers[referrerTier as keyof typeof commissionTiers][referral.referredTier as keyof typeof commissionTiers["Basic"]];
+                              totalCommission += calculateCommission(commissionRate);
+                            } else {
+                              console.warn(`Commission rate not found for referrerTier ${referrerTier} and referredTier ${referral.referredTier}`);
+                            }
                         });
                         setTotalReferredCommission(totalCommission);
                     } else {
@@ -117,7 +126,7 @@ export default function ReferralTracking() {
       </CardHeader>
       <CardContent className="grid gap-4">
         <div>
-          <strong>Total Referrals:</strong> {referralData.length}
+          <strong>Total Referrals:</strong> {userReferrals.length}
         </div>
           <div>
               <strong>Total Commission:</strong> R{totalReferredCommission.toFixed(2)}
@@ -128,12 +137,12 @@ export default function ReferralTracking() {
         <div>
           <strong>Referral List:</strong>
           <ul>
-            {referralData.map((referral) => (
+            {userReferrals.map((referral) => (
               <li key={referral.id} className="flex justify-between items-center">
                 <span>
                   {referral.name} (Tier: {referral.referredTier})
                 </span>
-                <span>{commissionTiers[referrerTier as keyof typeof commissionTiers][referral.referredTier as keyof typeof commissionTiers["Basic"]]}</span>
+                <span>{commissionTiers[referrerTier as keyof typeof commissionTiers]?.[referral.referredTier as keyof typeof commissionTiers["Basic"]] || 'N/A'}</span>
               </li>
             ))}
           </ul>

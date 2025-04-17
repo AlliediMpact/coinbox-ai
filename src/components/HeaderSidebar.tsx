@@ -13,7 +13,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import {
     Home as HomeIcon,
-    Users,
+    User as UserIcon,
     Coins,
     Wallet,
     Shield,
@@ -24,7 +24,11 @@ import {
     Bell,
     Cog,
     LogOut,
-    User,
+    PackagePlus,
+    CreditCard,
+    Settings,
+    TrendingUp,
+    AlertCircle,
 } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
@@ -220,7 +224,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isCollapsed, toggleCollapse }) => {
                             <Tooltip>
                                 <TooltipTrigger asChild>
                                     <Button variant="ghost" className="justify-start" onClick={() => router.push('/about')}>
-                                        <User className="mr-2 h-4 w-4" />
+                                        <UserIcon className="mr-2 h-4 w-4" />
                                         <span>About Us</span>
                                     </Button>
                                 </TooltipTrigger>
