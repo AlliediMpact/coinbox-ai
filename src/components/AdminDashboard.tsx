@@ -289,10 +289,10 @@ export default function AdminDashboard() {
                     
                         
                             
-                                <CardTitle>{"User Management"}</CardTitle>
+                                User Management
                             
                             
-                                <CardDescription>{"Manage user accounts and verify identities."}</CardDescription>
+                                Manage user accounts and verify identities.
                             
                         
                         
@@ -378,11 +378,10 @@ export default function AdminDashboard() {
                 
                     
                         
+                            Transaction Monitoring
                             
-                                {"Transaction Monitoring"}
                             
-                            
-                                {"Review and monitor transactions for fraud prevention."}
+                                Review and monitor transactions for fraud prevention.
                             
                         
                         
@@ -483,10 +482,10 @@ export default function AdminDashboard() {
                 
                     
                         
-                            {"Transaction Statistics"}
+                            Transaction Statistics
                             
                             
-                                {"Statistics of transactions in the last 7 days."}
+                                Statistics of transactions in the last 7 days.
                             
                         
                     
@@ -512,12 +511,10 @@ export default function AdminDashboard() {
 
                 
                     
+                        Compliance Information
                         
-                            Compliance Information
-                            
-                            
-                                Information related to user compliance and activity.
-                            
+                        
+                            Information related to user compliance and activity.
                         
                     
                         
@@ -621,4 +618,5 @@ export default function AdminDashboard() {
         
     );
 }
-
+    
+    
