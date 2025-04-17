@@ -1,3 +1,4 @@
+
 'use client';
 
 import {Card, CardContent, CardDescription, CardHeader, CardTitle} from "@/components/ui/card";
@@ -288,23 +289,23 @@ export default function AdminDashboard() {
                     
                         
                             
-                                {`User Management`}
+                                <CardTitle>{"User Management"}</CardTitle>
                             
                             
-                                {`Manage user accounts and verify identities.`}
+                                <CardDescription>{"Manage user accounts and verify identities."}</CardDescription>
                             
                         
                         
                             
                                 
                                     
-                                        {`ID`}
-                                        {`Name`}
-                                        {`Email`}
-                                        {`Status`}
-                                        {`Verified`}
-                                        {`Membership`}
-                                        {`Actions`}
+                                        ID
+                                        Name
+                                        Email
+                                        Status
+                                        Verified
+                                        Membership
+                                        Actions
                                     
                                 
                             
@@ -321,24 +322,24 @@ export default function AdminDashboard() {
                                             
                                                 
                                                      
-                                                            {`Verify`}
+                                                            Verify
                                                         
-                                                        {`Verify this user`}
+                                                        Verify this user
                                                      
                                                 
                                                 
                                                      
-                                                            {`Enable`}
+                                                            Enable
                                                         
-                                                        {`Enable this user`}
+                                                        Enable this user
                                                      
                                                 
                                             
                                                 
                                                      
-                                                            {`Disable`}
+                                                            Disable
                                                         
-                                                        {`Disable this user`}
+                                                        Disable this user
                                                      
                                                 
                                             
@@ -377,27 +378,28 @@ export default function AdminDashboard() {
                 
                     
                         
-                            {`Transaction Monitoring`}
+                            
+                                {"Transaction Monitoring"}
                             
                             
-                                {`Review and monitor transactions for fraud prevention.`}
+                                {"Review and monitor transactions for fraud prevention."}
                             
                         
                         
                             
                                 
                                     
-                                        {`Filter by Type`}
+                                        Filter by Type
                                         
                                             
                                                 
                                                     {filter}
                                                 
                                                 
-                                                    {`All`}
-                                                    {`Deposit`}
-                                                    {`Withdrawal`}
-                                                    {`Loan`}
+                                                    All
+                                                    Deposit
+                                                    Withdrawal
+                                                    Loan
                                                 
                                             
                                         
@@ -407,7 +409,7 @@ export default function AdminDashboard() {
                             
                                 
                                     
-                                         {`Filter by Date`}
+                                         Filter by Date
                                         
                                             
                                                 
@@ -415,7 +417,7 @@ export default function AdminDashboard() {
                                                         
                                                     
                                                 
-                                                {`Pick a date`}
+                                                Pick a date
                                             
                                         
                                         
@@ -431,9 +433,9 @@ export default function AdminDashboard() {
                                 
                                     
                                          
-                                             {`Reset Filters`}
+                                             Reset Filters
                                          
-                                         {`Click to reset all filters`}
+                                         Click to reset all filters
                                         
                                     
                                 
@@ -442,13 +444,13 @@ export default function AdminDashboard() {
 
                         
                             
-                                {`ID`}
-                                {`User ID`}
-                                {`Type`}
-                                {`Amount`}
-                                {`Date`}
-                                {`Status`}
-                                {`Actions`}
+                                ID
+                                User ID
+                                Type
+                                Amount
+                                Date
+                                Status
+                                Actions
                             
                             
                                 {filteredTransactions.map((transaction) => (
@@ -463,9 +465,9 @@ export default function AdminDashboard() {
                                             
                                                 
                                                      
-                                                            {`Review`}
+                                                            Review
                                                         
-                                                        {`Review this transaction`}
+                                                        Review this transaction
                                                      
                                                 
                                             
@@ -481,10 +483,10 @@ export default function AdminDashboard() {
                 
                     
                         
-                            {`Transaction Statistics`}
+                            {"Transaction Statistics"}
                             
                             
-                                {`Statistics of transactions in the last 7 days.`}
+                                {"Statistics of transactions in the last 7 days."}
                             
                         
                     
@@ -511,18 +513,18 @@ export default function AdminDashboard() {
                 
                     
                         
-                            {`Compliance Information`}
+                            Compliance Information
                             
                             
-                                {`Information related to user compliance and activity.`}
+                                Information related to user compliance and activity.
                             
                         
                     
                         
-                            {`Total KYC Verified Users:`} {userList.filter(user => user.verified).length}
-                            {`Total Active Users:`} {userList.filter(user => user.status === 'Active').length}
-                            {`Last login:`} {new Date().toLocaleDateString()}
-                            {`Date:`} {new Date().toLocaleDateString()}
+                            Total KYC Verified Users: {userList.filter(user => user.verified).length}
+                            Total Active Users: {userList.filter(user => user.status === 'Active').length}
+                            Last login: {new Date().toLocaleDateString()}
+                            Date: {new Date().toLocaleDateString()}
                         
                     
                 
@@ -530,46 +532,47 @@ export default function AdminDashboard() {
             
                 
                     
-                        {`Transaction Details`}
+                        
+                            Transaction Details
                         
                         
-                            {`Review and update transaction status.`}
+                            Review and update transaction status.
                         
                     
                     
                         
                             
-                                {`Transaction ID`}
+                                Transaction ID
                                 
                                     {transactionDetails.id}
                                 
-                                {`User ID`}
+                                User ID
                                 
                                     {transactionDetails.userId}
                                 
-                                {`Type`}
+                                Type
                                 
                                     {transactionDetails.type}
                                 
-                                {`Amount`}
+                                Amount
                                 
                                     {transactionDetails.amount}
                                 
-                                {`Date`}
+                                Date
                                 
                                     {transactionDetails.date}
                                 
-                                {`Status`}
+                                Status
                                 
                                     
                                         
                                             {transactionDetails.status || "Select Status"}
                                         
                                         
-                                            {`Pending`}
-                                            {`Completed`}
-                                            {`Failed`}
-                                            {`Refunded`}
+                                            Pending
+                                            Completed
+                                            Failed
+                                            Refunded
                                         
                                     
                                 
@@ -577,7 +580,7 @@ export default function AdminDashboard() {
                         
                         
                             
-                                {`Cancel`}
+                                Cancel
                             
                         
                     
@@ -587,18 +590,18 @@ export default function AdminDashboard() {
             
                 
                     
-                        {`Admin Action Log`}
+                        Admin Action Log
                         
                         
-                            {`Log of admin actions for auditing and monitoring.`}
+                            Log of admin actions for auditing and monitoring.
                         
                     
                     
                         
                             
-                                {`Timestamp`}
-                                {`Action`}
-                                {`Details`}
+                                Timestamp
+                                Action
+                                Details
                             
                             
                                 {actionLogs.map((log) => (
