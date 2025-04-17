@@ -1,622 +1,380 @@
-
 'use client';
 
-import {Card, CardContent, CardDescription, CardHeader, CardTitle} from "@/components/ui/card";
-import {Table, TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRow} from "@/components/ui/table";
-import {Button} from "@/components/ui/button";
-import {useState, useEffect} from "react";
-import {
-    Dialog,
-    DialogClose,
-    DialogContent,
-    DialogDescription,
-    DialogHeader,
-    DialogTitle,
-    DialogTrigger,
-} from "@/components/ui/dialog";
-import {Input} from "@/components/ui/input";
-import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
-} from "@/components/ui/select";
-import {
-    Tooltip,
-    TooltipContent,
-    TooltipProvider,
-    TooltipTrigger,
-} from "@/components/ui/tooltip"
-import {
-    DropdownMenu,
-    DropdownMenuContent,
-    DropdownMenuItem,
-    DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
-import {
-    BarChart,
-    Bar,
-    XAxis,
-    YAxis,
-    CartesianGrid,
-    Tooltip as ChartTooltip,
-    Legend,
-    ResponsiveContainer
-} from 'recharts';
-import {
-    Calendar,
-} from "@/components/ui/calendar"
-import {cn} from "@/lib/utils"
-import {format} from "date-fns"
-import {CalendarIcon} from "@radix-ui/react-icons"; // Corrected import
-import {Popover, PopoverContent, PopoverTrigger} from "@/components/ui/popover";
-import {useToast} from "@/hooks/use-toast";
-import React from "react";
-import { LucideIcon } from 'lucide-react';
-import {
-    Home,
-    LayoutDashboard,
-    Users,
-    Coins,
-    Wallet,
-    Shield,
-    Share2,
-    HelpCircle,
-    Menu,
-    Search,
-    Bell,
-    Cog,
-    LogOut,
-    User as UserIcon,
-    PackagePlus,
-    CreditCard,
-    Settings,
-    TrendingUp,
-    AlertCircle,
-} from 'lucide-react';
-import {
-    Pagination,
-    PaginationContent,
-    PaginationEllipsis,
-    PaginationItem,
-    PaginationLink,
-    PaginationNext,
-    PaginationPrevious,
-} from "@/components/ui/pagination"
-import {
-    ArrowLeft,
-    ArrowRight,
-} from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { useAuth } from '@/components/AuthProvider';
+import { useToast } from '@/hooks/use-toast';
+import { format } from 'date-fns';
+import {
+  Card,
+  CardHeader,
+  CardTitle,
+  CardContent,
+} from '@/components/ui/card';
+import {
+  Table,
+  TableBody,
+  TableCaption,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
+import { Button } from '@/components/ui/button';
+import {
+  Dialog,
+  DialogTrigger,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogClose,
+} from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import {
+  Select,
+  SelectTrigger,
+  SelectValue,
+  SelectContent,
+  SelectItem,
+} from '@/components/ui/select';
+import {
+  Tooltip,
+  TooltipProvider,
+  TooltipTrigger,
+  TooltipContent,
+} from '@/components/ui/tooltip';
+import {
+  Pagination,
+  PaginationPrevious,
+  PaginationNext,
+  PaginationItem,
+  PaginationEllipsis,
+} from '@/components/ui/pagination';
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip as ChartTooltip,
+  ResponsiveContainer,
+} from 'recharts';
+import { Calendar } from '@/components/ui/calendar';
+import { CalendarIcon } from '@radix-ui/react-icons';
+import {
+  Users as UsersIcon,
+  Bell as BellIcon,
+  ArrowLeft,
+  ArrowRight,
+} from 'lucide-react';
 
-const users = [
-    {id: 1, name: "John Doe", email: "john.doe@example.com", status: "Active", verified: true, membership: "Basic"},
-    {id: 2, name: "Jane Smith", email: "jane.smith@example.com", status: "Inactive", verified: false, membership: "Ambassador"},
-    {id: 3, name: "Alice Johnson", email: "alice.johnson@example.com", status: "Active", verified: true, membership: "VIP"},
-    {id: 4, name: "Bob Williams", email: "bob.williams@example.com", status: "Inactive", verified: false, membership: "Basic"},
-    {id: 5, name: "Charlie Brown", email: "charlie.brown@example.com", status: "Active", verified: true, membership: "Ambassador"},
-    {id: 6, name: "Diana Miller", email: "diana.miller@example.com", status: "Inactive", verified: false, membership: "VIP"},
-    {id: 7, name: "Ethan Davis", email: "ethan.davis@example.com", status: "Active", verified: true, membership: "Basic"},
-    {id: 8, name: "Fiona Wilson", email: "fiona.wilson@example.com", status: "Inactive", verified: false, membership: "Ambassador"},
-    {id: 9, name: "George Taylor", email: "george.taylor@example.com", status: "Active", verified: true, membership: "VIP"},
-    {id: 10, name: "Hannah Moore", email: "hannah.moore@example.com", status: "Inactive", verified: false, membership: "Basic"},
-    {id: 11, name: "Isaac Clark", email: "isaac.clark@example.com", status: "Active", verified: true, membership: "Ambassador"},
-    {id: 12, name: "Julia Adams", email: "julia.adams@example.com", status: "Inactive", verified: false, membership: "VIP"},
+// Sample data
+const initialUsers = [
+  { id: 1, name: 'John Doe', email: 'john.doe@example.com', status: 'Active', verified: true, membership: 'Basic' },
+  // ... add other users
+];
+const initialTransactions = [
+  { id: 1, userId: 1, type: 'Deposit', amount: 1000, date: '2024-07-15', status: 'Completed' },
+  // ... add other transactions
 ];
 
-const transactions = [
-    {id: 1, userId: 1, type: "Deposit", amount: "R1000", date: "2024-07-15", status: "Completed"},
-    {id: 2, userId: 2, type: "Withdrawal", amount: "R200", date: "2024-07-14", status: "Pending"},
-    {id: 3, userId: 1, type: "Loan", amount: "R300", date: "2024-07-12", status: "Completed"},
-    {id: 4, userId: 3, type: "Deposit", amount: "R500", date: "2024-07-10", status: "Completed"},
-    {id: 5, userId: 4, type: "Withdrawal", amount: "R100", date: "2024-07-08", status: "Pending"},
-    {id: 6, userId: 2, type: "Loan", amount: "R400", date: "2024-07-05", status: "Completed"},
-    {id: 7, userId: 5, type: "Deposit", amount: "R1200", date: "2024-07-03", status: "Completed"},
-    {id: 8, userId: 6, type: "Withdrawal", amount: "R250", date: "2024-07-01", status: "Pending"},
-    {id: 9, userId: 3, type: "Loan", amount: "R350", date: "2024-06-28", status: "Completed"},
-    {id: 10, userId: 7, type: "Deposit", amount: "R800", date: "2024-06-26", status: "Completed"},
-    {id: 11, userId: 8, type: "Withdrawal", amount: "R180", date: "2024-06-24", status: "Pending"},
-    {id: 12, userId: 4, type: "Loan", amount: "R280", date: "2024-06-22", status: "Completed"},
-    {id: 13, userId: 9, type: "Deposit", amount: "R1500", date: "2024-06-20", status: "Completed"},
-    {id: 14, userId: 10, type: "Withdrawal", amount: "R320", date: "2024-06-18", status: "Pending"},
-    {id: 15, userId: 5, type: "Loan", amount: "R420", date: "2024-06-16", status: "Completed"}
-];
-
-const initialTransactionDetails = {
-    id: null,
-    userId: null,
-    type: '',
-    amount: '',
-    date: '',
-    status: ''
-};
-
-// Define a type for action logs
-type ActionLogItem = {
-    id: number;
-    timestamp: string;
-    action: string;
-    details: string;
-}
-
-const sampleActionLogs: ActionLogItem[] = [
-    { id: 1, timestamp: "2024-08-01 10:00", action: "User Verified", details: "Verified user John Doe" },
-    { id: 2, timestamp: "2024-08-01 10:15", action: "Transaction Reviewed", details: "Reviewed transaction ID 12345" },
-];
-
+type ActionLog = { id: number; timestamp: string; action: string; details: string };
 
 export default function AdminDashboard() {
-    const [userList, setUserList] = useState(users);
-    const [transactionList, setTransactionList] = useState(transactions);
-    const [open, setOpen] = useState(false);
-    const [transactionDetails, setTransactionDetails] = useState(initialTransactionDetails);
-    const [filter, setFilter] = useState('all');
-    const [date, setDate] = useState<Date | undefined>(new Date());
-    const {toast} = useToast();
-    const [actionLogs, setActionLogs] = useState<ActionLogItem[]>(sampleActionLogs);
-    const { user } = useAuth(); // Use the useAuth hook
-    const [isMounted, setIsMounted] = useState(false);
+  const { user, signOutUser } = useAuth();
+  const router = useRouter();
+  const { toast } = useToast();
 
-    // Pagination state
-    const [currentPage, setCurrentPage] = useState(1);
-    const usersPerPage = 5;
+  const [isMounted, setIsMounted] = useState(false);
+  const [users, setUsers] = useState(initialUsers);
+  const [transactions, setTransactions] = useState(initialTransactions);
+  const [filterType, setFilterType] = useState<'all' | 'Deposit' | 'Withdrawal' | 'Loan'>('all');
+  const [filterDate, setFilterDate] = useState<Date | undefined>();
+  const [openDialog, setOpenDialog] = useState(false);
+  const [selectedTxn, setSelectedTxn] = useState<typeof initialTransactions[0] | null>(null);
+  const [actionLogs, setActionLogs] = useState<ActionLog[]>([]);
 
-    useEffect(() => {
-        setIsMounted(true);
-    }, []);
+  // Pagination for users
+  const [currentPage, setCurrentPage] = useState(1);
+  const usersPerPage = 5;
+  const indexOfLast = currentPage * usersPerPage;
+  const indexOfFirst = indexOfLast - usersPerPage;
+  const currentUsers = users.slice(indexOfFirst, indexOfLast);
 
-    // Get current users
-    const indexOfLastUser = currentPage * usersPerPage;
-    const indexOfFirstUser = indexOfLastUser - usersPerPage;
-    const currentUsers = userList.slice(indexOfFirstUser, indexOfLastUser);
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
 
-    // Change page
-    const paginate = (pageNumber: number) => setCurrentPage(pageNumber);
+  if (!isMounted) return <div>Loading...</div>;
+  if (!user || user.email !== 'admin@example.com') return <h2>Access Denied</h2>;
 
-    const handleVerifyUser = (id: number) => {
-        const updatedUserList = userList.map(user => {
-            if (user.id === id) {
-                // Log the action
-                logAdminAction("User Verified", `Verified user ${user.name}`);
-                return {...user, verified: true};
-            }
-            return user;
-        });
-        setUserList(updatedUserList);
-    };
+  // Handlers
+  const logAction = (action: string, details: string) => {
+    setActionLogs((logs) => [
+      { id: logs.length + 1, timestamp: format(new Date(), 'yyyy-MM-dd HH:mm'), action, details },
+      ...logs,
+    ]);
+  };
 
-    const handleEnableUser = (id: number) => {
-        const updatedUserList = userList.map(user => {
-            if (user.id === id) {
-                // Log the action
-                logAdminAction("User Enabled", `Enabled user ${user.name}`);
-                return {...user, status: "Active"};
-            }
-            return user;
-        });
-        setUserList(updatedUserList);
-    };
+  const verifyUser = (id: number) => {
+    setUsers((u) => u.map((x) => (x.id === id ? { ...x, verified: true } : x)));
+    logAction('User Verified', `Verified user ID ${id}`);
+    toast({ title: 'User Verified', description: `User ${id} has been verified.` });
+  };
 
-    const handleDisableUser = (id: number) => {
-        const updatedUserList = userList.map(user => {
-            if (user.id === id) {
-                // Log the action
-                logAdminAction("User Disabled", `Disabled user ${user.name}`);
-                return {...user, status: "Inactive"};
-            }
-            return user;
-        });
-        setUserList(updatedUserList);
-    };
+  const changeStatus = (id: number, status: 'Active' | 'Inactive') => {
+    setUsers((u) => u.map((x) => (x.id === id ? { ...x, status } : x)));
+    logAction(`User ${status}`, `Changed user ${id} to ${status}`);
+    toast({ title: `User ${status}`, description: `User ${id} now ${status}.` });
+  };
 
-    const handleOpenTransactionDetails = (transaction: any) => {
-        setTransactionDetails({
-            id: transaction.id,
-            userId: transaction.userId,
-            type: transaction.type,
-            amount: transaction.amount,
-            date: transaction.date,
-            status: transaction.status,
-        });
-        setOpen(true);
-    };
+  const openTransaction = (txn: typeof initialTransactions[0]) => {
+    setSelectedTxn(txn);
+    setOpenDialog(true);
+  };
+  const updateTxnStatus = (status: string) => {
+    if (!selectedTxn) return;
+    setTransactions((t) => t.map((x) => (x.id === selectedTxn.id ? { ...x, status } : x)));
+    logAction('Transaction Updated', `Txn ${selectedTxn.id} to ${status}`);
+    setOpenDialog(false);
+  };
 
-    const handleUpdateTransactionStatus = (status: string) => {
-        setTransactionList(transactionList.map(transaction =>
-            transaction.id === transactionDetails.id ? {...transaction, status: status} : transaction
-        ));
-        setTransactionDetails({...transactionDetails, status: status});
-        setOpen(false);
-        logAdminAction("Transaction Updated", `Updated transaction ${transactionDetails.id} to ${status}`); // Log the action
-    };
+  // Filters
+  const filteredTxns = transactions
+    .filter((t) => (filterType === 'all' ? true : t.type === filterType))
+    .filter((t) => (filterDate ? format(new Date(t.date), 'yyyy-MM-dd') === format(filterDate, 'yyyy-MM-dd') : true));
 
-    const filteredTransactions = filter === 'all' ? transactionList : transactionList.filter(transaction => transaction.type === filter);
+  // Stats
+  const last7 = transactions.filter((t) => {
+    const d = new Date(t.date);
+    const weekAgo = new Date();
+    weekAgo.setDate(weekAgo.getDate() - 7);
+    return d >= weekAgo;
+  });
+  const chartData = [
+    { name: 'Deposits', count: last7.filter((t) => t.type === 'Deposit').length },
+    { name: 'Withdrawals', count: last7.filter((t) => t.type === 'Withdrawal').length },
+    { name: 'Loans', count: last7.filter((t) => t.type === 'Loan').length },
+  ];
 
-    const last7DaysTransactions = transactionList.filter(transaction => {
-        const transactionDate = new Date(transaction.date);
-        const sevenDaysAgo = new Date();
-        sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
-        return transactionDate >= sevenDaysAgo;
-    });
+  return (
+    <div className="space-y-10 p-6">
+      {/* User Management */}
+      <Card>
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-2">
+              <UsersIcon className="h-6 w-6" />
+              <CardTitle>User Management</CardTitle>
+            </div>
+            <Pagination>
+              <PaginationPrevious onClick={() => setCurrentPage((p) => Math.max(p - 1, 1))}>
+                <ArrowLeft />
+              </PaginationPrevious>
+              {[...Array(Math.ceil(users.length / usersPerPage)).keys()].map((n) => (
+                <PaginationItem key={n + 1}>
+                  <PaginationLink onClick={() => setCurrentPage(n + 1)}>{n + 1}</PaginationLink>
+                </PaginationItem>
+              ))}
+              <PaginationNext onClick={() => setCurrentPage((p) => p + 1)}>
+                <ArrowRight />
+              </PaginationNext>
+            </Pagination>
+          </div>
+        </CardHeader>
+        <CardContent>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>ID</TableHead>
+                <TableHead>Name</TableHead>
+                <TableHead>Email</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead>Verified</TableHead>
+                <TableHead>Membership</TableHead>
+                <TableHead>Actions</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {currentUsers.map((u) => (
+                <TableRow key={u.id}>
+                  <TableCell>{u.id}</TableCell>
+                  <TableCell>{u.name}</TableCell>
+                  <TableCell>{u.email}</TableCell>
+                  <TableCell>{u.status}</TableCell>
+                  <TableCell>{u.verified ? 'Yes' : 'No'}</TableCell>
+                  <TableCell>{u.membership}</TableCell>
+                  <TableCell className="space-x-2">
+                    {!u.verified && <Button size="sm" onClick={() => verifyUser(u.id)}>Verify</Button>}
+                    {u.status === 'Inactive' && <Button size="sm" onClick={() => changeStatus(u.id, 'Active')}>Enable</Button>}
+                    {u.status === 'Active' && <Button size="sm" onClick={() => changeStatus(u.id, 'Inactive')}>Disable</Button>}
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </CardContent>
+      </Card>
 
-    // Dummy data for the bar chart
-    const chartData = [
-        {name: 'Deposits', count: transactionList.filter(t => t.type === 'Deposit').length},
-        {name: 'Withdrawals', count: transactionList.filter(t => t.type === 'Withdrawal').length},
-        {name: 'Loans', count: transactionList.filter(t => t.type === 'Loan').length},
-    ];
+      {/* Transaction Monitoring */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Transaction Monitoring</CardTitle>
+          <CardDescription>Filter and review transactions</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="flex space-x-4">            
+            <Select onValueChange={(v) => setFilterType(v as any)}>
+              <SelectTrigger className="w-40">
+                <SelectValue placeholder={`Type: ${filterType}`} />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All</SelectItem>
+                <SelectItem value="Deposit">Deposit</SelectItem>
+                <SelectItem value="Withdrawal">Withdrawal</SelectItem>
+                <SelectItem value="Loan">Loan</SelectItem>
+              </SelectContent>
+            </Select>
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button variant="outline"><CalendarIcon className="mr-2" />{filterDate ? format(filterDate, 'yyyy-MM-dd') : 'Pick Date'}</Button>
+              </PopoverTrigger>
+              <PopoverContent>
+                <Calendar mode="single" selected={filterDate} onSelect={setFilterDate} />
+              </PopoverContent>
+            </Popover>
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button variant="ghost" onClick={() => { setFilterType('all'); setFilterDate(undefined); toast({ title: 'Filters reset' }); }}>Reset</Button>
+                </TooltipTrigger>
+                <TooltipContent>Reset all filters</TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          </div>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>ID</TableHead>
+                <TableHead>User ID</TableHead>
+                <TableHead>Type</TableHead>
+                <TableHead>Amount</TableHead>
+                <TableHead>Date</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead>Actions</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {filteredTxns.map((t) => (
+                <TableRow key={t.id}>
+                  <TableCell>{t.id}</TableCell>
+                  <TableCell>{t.userId}</TableCell>
+                  <TableCell>{t.type}</TableCell>
+                  <TableCell>R{t.amount}</TableCell>
+                  <TableCell>{t.date}</TableCell>
+                  <TableCell>{t.status}</TableCell>
+                  <TableCell>
+                    <Dialog open={openDialog && selectedTxn?.id === t.id} onOpenChange={setOpenDialog}>
+                      <DialogTrigger asChild>
+                        <Button size="sm" onClick={() => openTransaction(t)}>Review</Button>
+                      </DialogTrigger>
+                      <DialogContent>
+                        <DialogHeader>
+                          <DialogTitle>Transaction Details</DialogTitle>
+                          <DialogDescription>Review and update status</DialogDescription>
+                        </DialogHeader>
+                        <div className="space-y-2">
+                          <p><strong>ID:</strong> {selectedTxn?.id}</p>
+                          <p><strong>User:</strong> {selectedTxn?.userId}</p>
+                          <p><strong>Type:</strong> {selectedTxn?.type}</p>
+                          <p><strong>Amount:</strong> R{selectedTxn?.amount}</p>
+                          <p><strong>Date:</strong> {selectedTxn?.date}</p>
+                        </div>
+                        <Select value={selectedTxn?.status} onValueChange={updateTxnStatus}>
+                          <SelectTrigger className="w-full">
+                            <SelectValue placeholder="Select Status" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="Pending">Pending</SelectItem>
+                            <SelectItem value="Completed">Completed</SelectItem>
+                            <SelectItem value="Failed">Failed</SelectItem>
+                            <SelectItem value="Refunded">Refunded</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <div className="mt-4 flex justify-end space-x-2">
+                          <DialogClose asChild><Button variant="outline">Cancel</Button></DialogClose>
+                          <Button onClick={() => selectedTxn && updateTxnStatus(selectedTxn.status)}>Update</Button>
+                        </div>
+                      </DialogContent>
+                    </Dialog>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </CardContent>
+      </Card>
 
-    const handleResetFilters = () => {
-        setFilter('all');
-        setDate(undefined);
-        setTransactionDetails(initialTransactionDetails);
-        toast({
-            title: "Filters Reset",
-            description: "Transaction filters have been reset.",
-        });
-    };
+      {/* Statistics */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Transaction Statistics (Last 7 days)</n          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div style={{ width: '100%', height: 300 }}>
+            <ResponsiveContainer>
+              <BarChart data={chartData}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="name" />
+                <YAxis allowDecimals={false} />
+                <ChartTooltip />
+                <Bar dataKey="count" fill="#6366F1" />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        </CardContent>
+      </Card>
 
-    // Function to log admin actions
-    const logAdminAction = (action: string, details: string) => {
-        const newLog: ActionLogItem = {
-            id: actionLogs.length + 1,
-            timestamp: new Date().toLocaleString(),
-            action: action,
-            details: details,
-        };
-        setActionLogs(prevLogs => [newLog, ...prevLogs]); // Add new log at the beginning
-    };
+      {/* Compliance Info */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Compliance Information</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <p>Total KYC Verified Users: {users.filter((u) => u.verified).length}</p>
+          <p>Total Active Users: {users.filter((u) => u.status === 'Active').length}</p>
+          <p>Report Date: {format(new Date(), 'yyyy-MM-dd')}</p>
+        </CardContent>
+      </Card>
 
-      if (!isMounted) {
-        return <div>Loading...</div>;
-    }
-     // Check if the user is an admin (based on email)
-    if (!user || user.email !== 'admin@example.com') {
-        return (
-            
-                <h2>Access Denied</h2>
-                
-            
-        );
-    }
-
-
-    return (
-        
-            
-                
-                    
-                        
-                            
-                                User Management
-                            
-                            
-                                Manage user accounts and verify identities.
-                            
-                        
-                        
-                            
-                                
-                                    
-                                        ID
-                                        Name
-                                        Email
-                                        Status
-                                        Verified
-                                        Membership
-                                        Actions
-                                    
-                                
-                            
-                            
-                                {currentUsers.map((user) => (
-                                    
-                                        
-                                            {user.id}
-                                            {user.name}
-                                            {user.email}
-                                            {user.status}
-                                            {user.verified ? "Yes" : "No"}
-                                            {user.membership}
-                                            
-                                                
-                                                     
-                                                            Verify
-                                                        
-                                                        Verify this user
-                                                     
-                                                
-                                                
-                                                     
-                                                            Enable
-                                                        
-                                                        Enable this user
-                                                     
-                                                
-                                            
-                                                
-                                                     
-                                                            Disable
-                                                        
-                                                        Disable this user
-                                                     
-                                                
-                                            
-                                        
-                                    
-                                ))}
-                            
-                        
-
-                        
-                            
-                                
-                                    {userList.length} Users
-                                
-                                
-                                    
-                                        
-                                            
-                                                
-                                                
-                                                
-                                                    
-                                                    
-                                                
-                                            
-                                        
-                                    
-                                
-                            
-                        
-                    
-                
-            
-
-            
-                
-                    
-                        
-                            Transaction Monitoring
-                            
-                            
-                                Review and monitor transactions for fraud prevention.
-                            
-                        
-                        
-                            
-                                
-                                    
-                                        Filter by Type
-                                        
-                                            
-                                                
-                                                    {filter}
-                                                
-                                                
-                                                    All
-                                                    Deposit
-                                                    Withdrawal
-                                                    Loan
-                                                
-                                            
-                                        
-                                    
-                                
-                            
-                            
-                                
-                                    
-                                         Filter by Date
-                                        
-                                            
-                                                
-                                                    
-                                                        
-                                                    
-                                                
-                                                Pick a date
-                                            
-                                        
-                                        
-                                            
-                                                
-                                                    
-                                            
-                                        
-                                    
-                                
-                            
-                            
-                                
-                                    
-                                         
-                                             Reset Filters
-                                         
-                                         Click to reset all filters
-                                        
-                                    
-                                
-                            
-                        
-
-                        
-                            
-                                ID
-                                User ID
-                                Type
-                                Amount
-                                Date
-                                Status
-                                Actions
-                            
-                            
-                                {filteredTransactions.map((transaction) => (
-                                    
-                                        
-                                            {transaction.id}
-                                            {transaction.userId}
-                                            {transaction.type}
-                                            {transaction.amount}
-                                            {transaction.date}
-                                            {transaction.status}
-                                            
-                                                
-                                                     
-                                                            Review
-                                                        
-                                                        Review this transaction
-                                                     
-                                                
-                                            
-                                        
-                                    
-                                ))}
-                            
-                        
-                    
-                
-            
-            
-                
-                    
-                        
-                            Transaction Statistics
-                            
-                            
-                                Statistics of transactions in the last 7 days.
-                            
-                        
-                    
-                        
-                            
-                                
-                                
-                                    
-                                
-                                
-                                    
-                                
-                                
-                                    
-                                
-                                
-                                    
-                                
-                            
-                        
-                    
-                
-
-                
-                    
-                        Compliance Information
-                        
-                        
-                            Information related to user compliance and activity.
-                        
-                    
-                        
-                            Total KYC Verified Users: {userList.filter(user => user.verified).length}
-                            Total Active Users: {userList.filter(user => user.status === 'Active').length}
-                            Last login: {new Date().toLocaleDateString()}
-                            Date: {new Date().toLocaleDateString()}
-                        
-                    
-                
-            
-            
-                
-                    
-                        
-                            Transaction Details
-                        
-                        
-                            Review and update transaction status.
-                        
-                    
-                    
-                        
-                            
-                                Transaction ID
-                                
-                                    {transactionDetails.id}
-                                
-                                User ID
-                                
-                                    {transactionDetails.userId}
-                                
-                                Type
-                                
-                                    {transactionDetails.type}
-                                
-                                Amount
-                                
-                                    {transactionDetails.amount}
-                                
-                                Date
-                                
-                                    {transactionDetails.date}
-                                
-                                Status
-                                
-                                    
-                                        
-                                            {transactionDetails.status || "Select Status"}
-                                        
-                                        
-                                            Pending
-                                            Completed
-                                            Failed
-                                            Refunded
-                                        
-                                    
-                                
-                            
-                        
-                        
-                            
-                                Cancel
-                            
-                        
-                    
-                
-            
-
-            
-                
-                    
-                        Admin Action Log
-                        
-                        
-                            Log of admin actions for auditing and monitoring.
-                        
-                    
-                    
-                        
-                            
-                                Timestamp
-                                Action
-                                Details
-                            
-                            
-                                {actionLogs.map((log) => (
-                                    
-                                        
-                                            {log.timestamp}
-                                            {log.action}
-                                            {log.details}
-                                        
-                                    
-                                ))}
-                            
-                        
-                    
-                
-            
-        
-    );
+      {/* Action Log */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Admin Action Log</CardTitle>
+          <CardDescription>Audit trail of admin activities</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Time</TableHead>
+                <TableHead>Action</TableHead>
+                <TableHead>Details</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {actionLogs.map((log) => (
+                <TableRow key={log.id}>
+                  <TableCell>{log.timestamp}</TableCell>
+                  <TableCell>{log.action}</TableCell>
+                  <TableCell>{log.details}</TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </CardContent>
+      </Card>
+    </div>
+  );
 }
-    
-    

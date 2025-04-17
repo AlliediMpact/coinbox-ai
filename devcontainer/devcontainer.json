@@ -1,0 +1,17 @@
+{
+    "name": "CoinBox AI Codespace",
+    "image": "mcr.microsoft.com/devcontainers/javascript-node:18",   // Node 18 LTS
+    "customizations": {
+      "vscode": {
+        "extensions": [
+          "esbenp.prettier-vscode",
+          "dbaeumer.vscode-eslint",
+          "formulahendry.auto-rename-tag"
+        ]
+      }
+    },
+    "postCreateCommand": "npm install",
+    "forwardPorts": [3000],
+    "remoteUser": "node"
+  }
+  
