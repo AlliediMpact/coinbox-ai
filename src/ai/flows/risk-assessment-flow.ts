@@ -97,7 +97,7 @@ const prompt = ai.definePrompt({
   - Good (700-749): -5 points
   - Fair (650-699): +5 points
   - Poor (300-649): +15 points
-  - If no credit score is available, use the getUserCreditScore tool to fetch it. If the tool fails, assign a neutral impact.
+  - If no credit score is available, assign a neutral impact.
   5. Loan History:
   - No loan history: Neutral impact.
   - Positive history (all loans repaid on time): -10 points
@@ -174,14 +174,6 @@ const prompt = ai.definePrompt({
     - No user profile available.
   {{/if}}
 
-  {{#if creditScore}}
-  Credit Score: {{creditScore}}
-  {{else}}
-  {{tool_call getUserCreditScore userId=userId}}
-  No credit score provided, but I am using the getUserCreditScore tool to retrieve it.
-  {{/tool_call}}
-  {{/if}}
-  
   {{#if income}}
   Income: {{income}}
   {{else}}
@@ -193,7 +185,7 @@ const prompt = ai.definePrompt({
   {{else}}
     - No employment history provided.
   {{/if}}`,
-    tools: [getUserCreditScore],
+    tools: [],
 });
 
 // Define the Genkit flow for risk assessment
@@ -235,3 +227,4 @@ const riskAssessmentFlow = ai.defineFlow<
     return {riskScore: riskScore, explanation: explanation};
   }
 );
+

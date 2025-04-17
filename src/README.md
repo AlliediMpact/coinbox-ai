@@ -16,7 +16,7 @@ Our mission is to provide an innovative, user-friendly, and secure digital marke
 
 ## Features
 
--   **Authentication:** Email/Password, OTP, Social Login (Google, Facebook), MFA. Includes enhanced security and account recovery.
+-   **Authentication:** Email/Password, OTP.
 -   **Peer-to-Peer Trading:** Automated matching algorithm, Escrow, Dispute Resolution with clear guidelines and automated transaction system.
 -   **Referral System:** Tiered commissions based on performance, Automated payouts with multiple withdrawal options, Leaderboard & Bonuses.
 -   **Wallet Management:** Multiple payment options (Stripe, Bank Transfer, Crypto), Transaction history, KYC integration.
@@ -37,22 +37,29 @@ Our mission is to provide an innovative, user-friendly, and secure digital marke
 
 ## UI/UX Improvements
 
-- Professional and modern design with inspiration from established financial institutions.
-- Focus on clean and minimalist design, microinteractions, and enhanced accessibility.
+-   Professional and modern design with inspiration from established financial institutions.
+-   Focus on clean and minimalist design, microinteractions, and enhanced accessibility.
 
 ## Security Enhancements
 
-- Implemented multi-factor authentication (MFA) to provide an additional layer of security.
-- Enhanced data encryption techniques.
-- KYC verification to ensure user identity.
+-   Implemented multi-factor authentication (MFA) to provide an additional layer of security.
+-   Enhanced data encryption techniques.
+-   KYC verification to ensure user identity.
 
 ## Implemented Automated Systems
 
--Automated transaction matching
--Automated commission payouts
+-   Automated transaction matching
+-   Automated commission payouts
 
 ## Referral program
 
--Tier-based commission program
+-   Tier-based commission program
+
+## Revenue Model
+
+-   Transaction Fees: R10 per transaction.
+-   Membership Fees: One-time security deposit.
+-   Loan Interest Fees: 20% repayment fee.
+-   Premium Features: Priority transactions, staking, financial insights.
 
 To get started, take a look at src/app/page.tsx.
