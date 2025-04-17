@@ -32,6 +32,7 @@ import {
     query,
     where,
     getDocs,
+    runTransaction,
 } from "firebase/firestore";
 import {app} from "@/lib/firebase";
 import * as z from "zod"
@@ -231,79 +232,161 @@ export default function CoinTrading() {
         }
     };
 
-
-
+    //Enhanced findMatchingTrades function with risk assessment and membership tier
     const findMatchingTrades = async (ticket: any) => {
-        if (!user?.uid) {
-            console.error("User ID is not available");
-            return null;
-        }
+      if (!user?.uid) {
+        console.error("User ID is not available");
+        return null;
+      }
 
+      try {
         const userDoc = await getDoc(doc(db, "users", user.uid));
         if (!userDoc.exists()) {
-            console.error("User document not found");
-            return null;
+          console.error("User document not found");
+          return null;
         }
         const userData = userDoc.data();
         const membershipTier = userData.membershipTier;
 
-        // Fetch trade offers from Firestore that match the ticket and user's membership tier
+        // Fetch trade offers from Firestore that match the ticket, user's membership tier, and are not the user's own tickets
         const tradeOffersRef = collection(db, 'tradeOffers');
         const q = query(tradeOffersRef,
-            where('type', '!=', ticket.type),
-            where('status', '==', 'Pending'),
-            where('membershipTier', '==', membershipTier), // Ensure only trades suitable for user's tier are matched
+          where('type', '!=', ticket.type),
+          where('status', '==', 'Pending'),
+          where('membershipTier', '==', membershipTier), // Ensure only trades suitable for user's tier are matched
+          where('userId', '!=', user.uid) // Exclude the user's own trade offers
         );
 
         const querySnapshot = await getDocs(q);
 
         if (!querySnapshot.empty) {
-            // Get the first matching trade offer
-            const potentialMatch = querySnapshot.docs[0].data();
+          let potentialMatch = null;
+          let bestRiskScore = Infinity;
 
-            try {
-                const riskAssessment = await getRiskAssessment({userId: user.uid});
-                const riskScore = riskAssessment?.riskScore || 50; // Default risk score
+          for (const doc of querySnapshot.docs) {
+            const offer = doc.data();
 
-                if (riskScore < 70) {
-                    return potentialMatch;
-                } else {
-                    console.log("Risk assessment failed for potential match.");
-                    return null; // Do not match if risk assessment fails
-                }
-            } catch (error) {
-                console.error("Failed to retrieve risk assessment:", error);
-                return null; // Do not match if risk assessment fails
+            // Fetch risk assessment for the potential match
+            const riskAssessment = await getRiskAssessment({
+              userId: user.uid,
+              tradeType: ticket.type, //Type of trade
+              tradeAmount: parseFloat(ticket.amount), //Amount of trade
+              loanHistory: userData.loanHistory, //Loan history
+              activeInvestments: userData.activeInvestments, //Active investments
+              paymentBehaviour: userData.paymentBehaviour, //Payment behaviour
+              transactionHistory: userData.transactionHistory, //Transaction history
+              userProfile: userData.userProfile, //User profile
+              creditScore: userData.creditScore, //Credit score
+              income: userData.income, //Income
+              employmentHistory: userData.employmentHistory, //Employment history
+            });
+
+            const riskScore = riskAssessment?.riskScore || 50; // Default risk score
+
+            // Select the offer with the lowest risk score
+            if (riskScore < bestRiskScore) {
+              potentialMatch = { id: doc.id, ...offer, riskScore: riskScore };
+              bestRiskScore = riskScore;
             }
+          }
+
+          if (potentialMatch) {
+            console.log("Risk assessment passed. Proceeding with trade.");
+            return potentialMatch;
+          } else {
+            console.log("Risk assessment failed for all potential matches.");
+            return null; // Do not match if risk assessment fails
+          }
         } else {
-            console.log("No matching trade offers found.");
-            return null; // No matching trade offers found
+          console.log("No matching trade offers found.");
+          return null; // No matching trade offers found
         }
+      } catch (error) {
+        console.error("Failed to retrieve user or trade offer data:", error);
+        return null; // Do not match if there's an error
+      }
     };
+
 
 
     const handleMatchTrade = async (ticket: any) => {
         const match = await findMatchingTrades(ticket);
 
         if (match) {
-            // Calculate escrow amount (including interest)
-            const escrowAmount = parseFloat(ticket.amount) + (parseFloat(ticket.amount) * (parseFloat(ticket.interest) / 100));
+            try {
+                // Perform a transaction to ensure atomicity
+                await runTransaction(db, async (transaction) => {
+                    // Get references to the ticket and trade offer documents
+                    const ticketRef = doc(db, "tickets", ticket.id); // Assuming you have a 'tickets' collection
+                    const tradeOfferRef = doc(db, "tradeOffers", match.id);
 
-            // Update status of matched ticket and trade offer
-            setTickets(tickets.map(t =>
-                t.id === ticket.id ? { ...t, status: "Escrow", escrowAmount: escrowAmount } : t
-            ));
-            setTradeOffers(tradeOffers.map(offer =>
-                offer.id === match.id ? { ...offer, status: "Escrow", escrowAmount: escrowAmount } : offer
-            ));
+                    // Fetch current states of ticket and trade offer to prevent conflicts
+                    const ticketDoc = await transaction.get(ticketRef);
+                    const tradeOfferDoc = await transaction.get(tradeOfferRef);
 
-            // Update escrow balance
-            setEscrowBalance(prevBalance => prevBalance + escrowAmount);
+                    if (!ticketDoc.exists() || !tradeOfferDoc.exists()) {
+                        throw new Error("Ticket or Trade Offer not found during transaction.");
+                    }
 
-            toast({
-                title: "Trade Matched",
-                description: `Trade matched with offer ID: ${match.id}. Funds are now in escrow.`,
-            });
+                    // Calculate escrow amount (including interest)
+                    const escrowAmount = parseFloat(ticket.amount) + (parseFloat(ticket.amount) * (parseFloat(ticket.interest) / 100));
+
+                    // Update ticket status to "Escrow" and add escrow details
+                    transaction.update(ticketRef, {
+                        status: "Escrow",
+                        escrowAmount: escrowAmount,
+                        matchedTradeOfferId: match.id // Store the matched trade offer ID
+                    });
+
+                    // Update trade offer status to "Escrow" and add escrow details
+                    transaction.update(tradeOfferRef, {
+                        status: "Escrow",
+                        escrowAmount: escrowAmount,
+                        matchedTicketId: ticket.id // Store the matched ticket ID
+                    });
+
+                    // Update wallet balance (assuming funds are moved to escrow)
+                    const userWalletRef = doc(db, "wallets", user.uid); // Assuming you have a 'wallets' collection
+                    const userWalletDoc = await transaction.get(userWalletRef);
+
+                    if (!userWalletDoc.exists()) {
+                        throw new Error("User wallet not found during transaction.");
+                    }
+
+                    const currentWalletBalance = userWalletDoc.data().balance || 0;
+                    const newWalletBalance = currentWalletBalance - escrowAmount;
+
+                    if (newWalletBalance < 0) {
+                        throw new Error("Insufficient funds for escrow.");
+                    }
+
+                    transaction.update(userWalletRef, {
+                        balance: newWalletBalance
+                    });
+                });
+
+                // Update local state to reflect changes
+                setTickets(tickets.map(t =>
+                    t.id === ticket.id ? { ...t, status: "Escrow", escrowAmount: escrowAmount, matchedTradeOfferId: match.id } : t
+                ));
+                setTradeOffers(tradeOffers.map(offer => ({ ...offer, status: "Escrow", escrowAmount: escrowAmount, matchedTicketId: ticket.id })));
+                setWalletBalance(prevBalance => prevBalance - escrowAmount);
+                setEscrowBalance(prevBalance => prevBalance + escrowAmount);
+
+                toast({
+                    title: "Trade Matched",
+                    description: `Trade matched with offer ID: ${match.id}. Funds are now in escrow.`,
+                });
+
+            } catch (error: any) {
+                console.error("Transaction failed: ", error);
+                toast({
+                    title: "Trade Match Error",
+                    description: "Failed to match trade: " + error.message,
+                    variant: "destructive",
+                });
+            }
+
         } else {
             toast({
                 title: "No Match Found",

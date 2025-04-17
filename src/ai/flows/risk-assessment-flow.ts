@@ -36,6 +36,8 @@ const RiskAssessmentInputSchema = z.object({
   creditScore: z.number().optional().describe('The user\'s credit score (if available).'),
   income: z.number().optional().describe('The user\'s monthly income (if available).'),
   employmentHistory: z.string().optional().describe('The user\'s employment history (if available).'),
+  tradeType: z.string().describe('The type of trade (Borrow or Invest).'), // Add tradeType
+  tradeAmount: z.number().describe('The amount of the trade.'), // Add tradeAmount
 });
 export type RiskAssessmentInput = z.infer<typeof RiskAssessmentInputSchema>;
 
@@ -80,12 +82,15 @@ const prompt = ai.definePrompt({
   output: {
     schema: RiskAssessmentOutputSchema,
   },
-  prompt: `You are an AI assistant that assesses financial risk based on user data.
+  prompt: `You are an AI assistant that assesses financial risk based on user data for P2P lending.
   Given the user data, generate a risk score between 0 and 100.
   A lower score indicates lower risk, while a higher score indicates higher risk.
   Provide a detailed explanation of the risk score, including the factors that influenced it.
   
   Here's the user ID: {{userId}}
+
+  Type of Trade: {{tradeType}}
+  Amount of Trade: {{tradeAmount}}
 
   Analyze available data, calculate the risk score, and provide a detailed explanation.
   If specific data is unavailable, adjust the score accordingly, explaining the impact of missing information on the assessment.
@@ -155,6 +160,7 @@ const prompt = ai.definePrompt({
   {{/if}}
 
   Based on the available user data, determine a risk score and explain your reasoning.
+  Take into consideration the user's history, credit score, and the type and amount of the current trade.
   Provide the risk score as a number and the explanation as a string.`,
     tools: [getUserCreditScore],
 });
