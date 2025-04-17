@@ -63,13 +63,6 @@ const Header: React.FC<HeaderProps> = ({ walletBalance, commissionBalance, searc
                     className="mr-2 cursor-pointer"
                     onClick={() => router.push('/')}
                 />
-                {/*<Image
-                    src="/assets/allied_impact_logo_placeholder.png"
-                    alt="Allied iMpact Cup Final"
-                    width={30}
-                    height={30}
-                    className="mr-4"
-                />*/}
                 <div className="w-64 ml-4">
                     <Input
                         type="search"
@@ -208,7 +201,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isCollapsed, toggleCollapse }) => {
                          <TooltipProvider>
                             <Tooltip>
                                 <TooltipTrigger asChild>
-                                    <Button variant="ghost" className="justify-start" onClick={() => router.push('/')}>
+                                    <Button variant="ghost" className="justify-start" onClick={() => router.push('/') }>
                                         <HomeIcon className="mr-2 h-4 w-4" />
                                         <span>Home</span>
                                     </Button>
@@ -249,7 +242,6 @@ const Sidebar: React.FC<SidebarProps> = ({ isCollapsed, toggleCollapse }) => {
                             </Tooltip>
                         </TooltipProvider>
                     </li>
-                    {/* Add more menu items here */}
                 </ul>
             </nav>
         </aside>
@@ -270,21 +262,19 @@ const HeaderSidebarLayout: React.FC<HeaderSidebarLayoutProps> = ({ children }) =
     const [commissionBalance, setCommissionBalance] = useState(0);
 
     const toggleCollapse = () => setIsCollapsed(!isCollapsed);
-   useEffect(() => {
-        // Mock data for demonstration
+    useEffect(() => {
         setWalletBalance(1800);
         setCommissionBalance(500);
     }, []);
+
     const handleSearch = (event: React.ChangeEvent<HTMLInputElement>) => {
         setSearchTerm(event.target.value);
-        // Mock data for search results
         const mockResults = [
             { id: 1, title: "Trading Guide", link: "/trading/guide" },
             { id: 2, title: "Wallet FAQs", link: "/wallet/faq" },
             { id: 3, title: "Referral Program Details", link: "/referral/details" },
         ];
 
-        // Filter mock results based on search term
         const filteredResults = mockResults.filter(result =>
             result.title.toLowerCase().includes(event.target.value.toLowerCase())
         );
