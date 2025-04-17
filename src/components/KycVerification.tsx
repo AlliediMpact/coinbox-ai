@@ -24,6 +24,7 @@ import { cn } from "@/lib/utils";
 import { useAuth } from '@/components/AuthProvider';
 import { doc, setDoc, getFirestore } from "firebase/firestore";
 import { app } from '@/lib/firebase';
+import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage"; // Import Firebase Storage functions
 
 interface KycFormValues {
     fullName: string;
@@ -46,6 +47,7 @@ export default function KycVerification() {
 	const [open, setOpen] = useState(false);
     const { user } = useAuth();
     const db = getFirestore(app); // Initialize Firestore
+    const storage = getStorage(app);
 
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
         const { name, value } = e.target;
@@ -67,9 +69,29 @@ export default function KycVerification() {
         e.preventDefault();
         setIsSubmitting(true);
 
-        // Simulate the verification process
-        setTimeout(() => {
+        try {
+            if (!formValues.documentImage) {
+                throw new Error("Please upload an ID document.");
+            }
+
+            // Upload image to Firebase Storage
+            const storageRef = ref(storage, `kyc/${user?.uid}/${formValues.documentImage.name}`);
+            const snapshot = await uploadBytes(storageRef, formValues.documentImage);
+            const downloadURL = await getDownloadURL(snapshot.ref);
+
+            // Store user data and document URL in Firestore
+            const userDocRef = doc(db, "users", user!.uid);
+            await setDoc(userDocRef, {
+                kycStatus: 'Pending',
+                fullName: formValues.fullName,
+                idNumber: formValues.idNumber,
+                address: formValues.address,
+                documentImageURL: downloadURL,
+            }, { merge: true });
+
             setVerificationStatus('Pending');
+
+            // Simulate the verification process
             setTimeout(() => {
                 // Simulate success
                 setVerificationStatus('Verified');
@@ -87,7 +109,11 @@ export default function KycVerification() {
 
 
             }, 3000); // Simulate the duration of verification process
-        }, 1000); // Simulate delay before starting verification
+        } catch (error: any) {
+            console.error("KYC submission failed:", error.message);
+            alert(`KYC submission failed: ${error.message}`);
+            setIsSubmitting(false);
+        }
     };
 
     return (

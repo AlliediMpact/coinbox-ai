@@ -1,3 +1,5 @@
+'use client';
+
 import {Card, CardContent, CardDescription, CardHeader, CardTitle} from "@/components/ui/card";
 import {Table, TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRow} from "@/components/ui/table";
 import {Button} from "@/components/ui/button";
@@ -72,16 +74,52 @@ import {
     TrendingUp,
     AlertCircle,
 } from 'lucide-react';
-
+import {
+    Pagination,
+    PaginationContent,
+    PaginationEllipsis,
+    PaginationItem,
+    PaginationLink,
+    PaginationNext,
+    PaginationPrevious,
+} from "@/components/ui/pagination"
+import {
+    ArrowLeft,
+    ArrowRight,
+} from 'lucide-react';
+import { useAuth } from '@/components/AuthProvider';
 
 const users = [
     {id: 1, name: "John Doe", email: "john.doe@example.com", status: "Active", verified: true, membership: "Basic"},
     {id: 2, name: "Jane Smith", email: "jane.smith@example.com", status: "Inactive", verified: false, membership: "Ambassador"},
+    {id: 3, name: "Alice Johnson", email: "alice.johnson@example.com", status: "Active", verified: true, membership: "VIP"},
+    {id: 4, name: "Bob Williams", email: "bob.williams@example.com", status: "Inactive", verified: false, membership: "Basic"},
+    {id: 5, name: "Charlie Brown", email: "charlie.brown@example.com", status: "Active", verified: true, membership: "Ambassador"},
+    {id: 6, name: "Diana Miller", email: "diana.miller@example.com", status: "Inactive", verified: false, membership: "VIP"},
+    {id: 7, name: "Ethan Davis", email: "ethan.davis@example.com", status: "Active", verified: true, membership: "Basic"},
+    {id: 8, name: "Fiona Wilson", email: "fiona.wilson@example.com", status: "Inactive", verified: false, membership: "Ambassador"},
+    {id: 9, name: "George Taylor", email: "george.taylor@example.com", status: "Active", verified: true, membership: "VIP"},
+    {id: 10, name: "Hannah Moore", email: "hannah.moore@example.com", status: "Inactive", verified: false, membership: "Basic"},
+    {id: 11, name: "Isaac Clark", email: "isaac.clark@example.com", status: "Active", verified: true, membership: "Ambassador"},
+    {id: 12, name: "Julia Adams", email: "julia.adams@example.com", status: "Inactive", verified: false, membership: "VIP"},
 ];
 
 const transactions = [
     {id: 1, userId: 1, type: "Deposit", amount: "R1000", date: "2024-07-15", status: "Completed"},
     {id: 2, userId: 2, type: "Withdrawal", amount: "R200", date: "2024-07-14", status: "Pending"},
+    {id: 3, userId: 1, type: "Loan", amount: "R300", date: "2024-07-12", status: "Completed"},
+    {id: 4, userId: 3, type: "Deposit", amount: "R500", date: "2024-07-10", status: "Completed"},
+    {id: 5, userId: 4, type: "Withdrawal", amount: "R100", date: "2024-07-08", status: "Pending"},
+    {id: 6, userId: 2, type: "Loan", amount: "R400", date: "2024-07-05", status: "Completed"},
+    {id: 7, userId: 5, type: "Deposit", amount: "R1200", date: "2024-07-03", status: "Completed"},
+    {id: 8, userId: 6, type: "Withdrawal", amount: "R250", date: "2024-07-01", status: "Pending"},
+    {id: 9, userId: 3, type: "Loan", amount: "R350", date: "2024-06-28", status: "Completed"},
+    {id: 10, userId: 7, type: "Deposit", amount: "R800", date: "2024-06-26", status: "Completed"},
+    {id: 11, userId: 8, type: "Withdrawal", amount: "R180", date: "2024-06-24", status: "Pending"},
+    {id: 12, userId: 4, type: "Loan", amount: "R280", date: "2024-06-22", status: "Completed"},
+    {id: 13, userId: 9, type: "Deposit", amount: "R1500", date: "2024-06-20", status: "Completed"},
+    {id: 14, userId: 10, type: "Withdrawal", amount: "R320", date: "2024-06-18", status: "Pending"},
+    {id: 15, userId: 5, type: "Loan", amount: "R420", date: "2024-06-16", status: "Completed"}
 ];
 
 const initialTransactionDetails = {
@@ -116,6 +154,24 @@ export default function AdminDashboard() {
     const [date, setDate] = useState<Date | undefined>(new Date());
     const {toast} = useToast();
     const [actionLogs, setActionLogs] = useState<ActionLogItem[]>(sampleActionLogs);
+    const { user } = useAuth(); // Use the useAuth hook
+    const [isMounted, setIsMounted] = useState(false);
+
+    // Pagination state
+    const [currentPage, setCurrentPage] = useState(1);
+    const usersPerPage = 5;
+
+    useEffect(() => {
+        setIsMounted(true);
+    }, []);
+
+    // Get current users
+    const indexOfLastUser = currentPage * usersPerPage;
+    const indexOfFirstUser = indexOfLastUser - usersPerPage;
+    const currentUsers = userList.slice(indexOfFirstUser, indexOfLastUser);
+
+    // Change page
+    const paginate = (pageNumber: number) => setCurrentPage(pageNumber);
 
     const handleVerifyUser = (id: number) => {
         const updatedUserList = userList.map(user => {
@@ -211,359 +267,355 @@ export default function AdminDashboard() {
         setActionLogs(prevLogs => [newLog, ...prevLogs]); // Add new log at the beginning
     };
 
+      if (!isMounted) {
+        return <div>Loading...</div>;
+    }
+     // Check if the user is an admin (based on email)
+    if (!user || user.email !== 'admin@example.com') {
+        return (
+            
+                <h2>Access Denied</h2>
+                
+            
+        );
+    }
+
+
     return (
-        <div>
-            <h1 className="text-3xl font-bold mb-5">Admin Dashboard</h1>
-
-            <div className="grid gap-4 grid-cols-1 md:grid-cols-2">
-                <Card>
-                    <CardHeader>
-                        <CardTitle>User Management</CardTitle>
-                        <CardDescription>Manage user accounts and verify identities.</CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                        <Table>
-                            <TableHeader>
-                                <TableRow>
-                                    <TableHead>ID</TableHead>
-                                    <TableHead>Name</TableHead>
-                                    <TableHead>Email</TableHead>
-                                    <TableHead>Status</TableHead>
-                                    <TableHead>Verified</TableHead>
-                                    <TableHead>Membership</TableHead>
-                                    <TableHead>Actions</TableHead>
-                                </TableRow>
-                            </TableHeader>
-                            <TableBody>
-                                {userList.map((user) => (
-                                    <TableRow key={user.id}>
-                                        <TableCell>{user.id}</TableCell>
-                                        <TableCell>{user.name}</TableCell>
-                                        <TableCell>{user.email}</TableCell>
-                                        <TableCell>{user.status}</TableCell>
-                                        <TableCell>{user.verified ? "Yes" : "No"}</TableCell>
-                                        <TableCell>{user.membership}</TableCell>
-                                        <TableCell>
-                                            {!user.verified && (
-                                                <TooltipProvider>
-                                                    <Tooltip>
-                                                        <TooltipTrigger asChild>
-                                                            <Button variant="secondary" size="sm"
-                                                                    onClick={() => handleVerifyUser(user.id)}>
-                                                                Verify
-                                                            </Button>
-                                                        </TooltipTrigger>
-                                                        <TooltipContent>
-                                                            Verify this user
-                                                        </TooltipContent>
-                                                    </Tooltip>
-                                                </TooltipProvider>
-                                            )}
-                                            {user.status === "Inactive" ? (
-                                                <TooltipProvider>
-                                                    <Tooltip>
-                                                        <TooltipTrigger asChild>
-                                                            <Button variant="secondary" size="sm"
-                                                                    onClick={() => handleEnableUser(user.id)}>
-                                                                Enable
-                                                            </Button>
-                                                        </TooltipTrigger>
-                                                        <TooltipContent>
-                                                            Enable this user
-                                                        </TooltipContent>
-                                                    </Tooltip>
-                                                </TooltipProvider>
-                                            ) : (
-                                                <TooltipProvider>
-                                                    <Tooltip>
-                                                        <TooltipTrigger asChild>
-                                                            <Button variant="secondary" size="sm"
-                                                                    onClick={() => handleDisableUser(user.id)}>
-                                                                Disable
-                                                            </Button>
-                                                        </TooltipTrigger>
-                                                        <TooltipContent>
-                                                            Disable this user
-                                                        </TooltipContent>
-                                                    </Tooltip>
-                                                </TooltipProvider>
-                                            )}
-                                        </TableCell>
-                                    </TableRow>
+        
+            
+                
+                    
+                        
+                            
+                                {`User Management`}
+                            
+                            
+                                {`Manage user accounts and verify identities.`}
+                            
+                        
+                        
+                            
+                                
+                                    
+                                        {`ID`}
+                                        {`Name`}
+                                        {`Email`}
+                                        {`Status`}
+                                        {`Verified`}
+                                        {`Membership`}
+                                        {`Actions`}
+                                    
+                                
+                            
+                            
+                                {currentUsers.map((user) => (
+                                    
+                                        
+                                            {user.id}
+                                            {user.name}
+                                            {user.email}
+                                            {user.status}
+                                            {user.verified ? "Yes" : "No"}
+                                            {user.membership}
+                                            
+                                                
+                                                     
+                                                            {`Verify`}
+                                                        
+                                                        {`Verify this user`}
+                                                     
+                                                
+                                                
+                                                     
+                                                            {`Enable`}
+                                                        
+                                                        {`Enable this user`}
+                                                     
+                                                
+                                            
+                                                
+                                                     
+                                                            {`Disable`}
+                                                        
+                                                        {`Disable this user`}
+                                                     
+                                                
+                                            
+                                        
+                                    
                                 ))}
-                            </TableBody>
-                        </Table>
-                    </CardContent>
-                </Card>
+                            
+                        
 
-                <Card>
-                    <CardHeader>
-                        <CardTitle>Transaction Monitoring</CardTitle>
-                        <CardDescription>Review and monitor transactions for fraud prevention.</CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                        <div className="flex flex-wrap gap-4 mb-4">
-                            <div>
-                                <label htmlFor="filterType" className="block text-sm font-medium text-gray-700">Filter by
-                                    Type</label>
-                                <Select onValueChange={(value) => setFilter(value)}>
-                                    <SelectTrigger id="filterType">
-                                        <SelectValue placeholder={filter}/>
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        <SelectItem value="all">All</SelectItem>
-                                        <SelectItem value="Deposit">Deposit</SelectItem>
-                                        <SelectItem value="Withdrawal">Withdrawal</SelectItem>
-                                        <SelectItem value="Loan">Loan</SelectItem>
-                                    </SelectContent>
-                                </Select>
-                            </div>
-                            <div>
-                                <label htmlFor="datePicker" className="block text-sm font-medium text-gray-700">Filter by
-                                    Date</label>
-                                <Popover>
-                                    <PopoverTrigger asChild>
-                                        <Button
-                                            variant={"outline"}
-                                            className={cn(
-                                                "w-[300px] justify-start text-left font-normal",
-                                                !date && "text-muted-foreground"
-                                            )}
-                                        >
-                                            <CalendarIcon className="mr-2 h-4 w-4"/>
-                                            {date ? format(date, "PPP") : <span>Pick a date</span>}
-                                        </Button>
-                                    </PopoverTrigger>
-                                    <PopoverContent className="w-auto p-0" align="center" sideOffset={5}>
-                                        <Calendar
-                                            mode="single"
-                                            selected={date}
-                                            onSelect={setDate}
-                                            disabled={(date) =>
-                                                date > new Date() || date < new Date("2020-01-01")
-                                            }
-                                            initialFocus
-                                        />
-                                    </PopoverContent>
-                                </Popover>
-                            </div>
-                            <div>
-                                <TooltipProvider>
-                                    <Tooltip>
-                                        <TooltipTrigger asChild>
-                                            <Button variant="ghost" size="sm" onClick={handleResetFilters}>
-                                                Reset Filters
-                                            </Button>
-                                        </TooltipTrigger>
-                                        <TooltipContent>
-                                            Click to reset all filters
-                                        </TooltipContent>
-                                    </Tooltip>
-                                </TooltipProvider>
-                            </div>
-                        </div>
-                        <Table>
-                            <TableHeader>
-                                <TableRow>
-                                    <TableHead>ID</TableHead>
-                                    <TableHead>User ID</TableHead>
-                                    <TableHead>Type</TableHead>
-                                    <TableHead>Amount</TableHead>
-                                    <TableHead>Date</TableHead>
-                                    <TableHead>Status</TableHead>
-                                    <TableHead>Actions</TableHead>
-                                </TableRow>
-                            </TableHeader>
-                            <TableBody>
+                        
+                            
+                                
+                                    {userList.length} Users
+                                
+                                
+                                    
+                                        
+                                            
+                                                
+                                                
+                                                
+                                                    
+                                                    
+                                                
+                                            
+                                        
+                                    
+                                
+                            
+                        
+                    
+                
+            
+
+            
+                
+                    
+                        
+                            {`Transaction Monitoring`}
+                            
+                            
+                                {`Review and monitor transactions for fraud prevention.`}
+                            
+                        
+                        
+                            
+                                
+                                    
+                                        {`Filter by Type`}
+                                        
+                                            
+                                                
+                                                    {filter}
+                                                
+                                                
+                                                    {`All`}
+                                                    {`Deposit`}
+                                                    {`Withdrawal`}
+                                                    {`Loan`}
+                                                
+                                            
+                                        
+                                    
+                                
+                            
+                            
+                                
+                                    
+                                         {`Filter by Date`}
+                                        
+                                            
+                                                
+                                                    
+                                                        
+                                                    
+                                                
+                                                {`Pick a date`}
+                                            
+                                        
+                                        
+                                            
+                                                
+                                                    
+                                            
+                                        
+                                    
+                                
+                            
+                            
+                                
+                                    
+                                         
+                                             {`Reset Filters`}
+                                         
+                                         {`Click to reset all filters`}
+                                        
+                                    
+                                
+                            
+                        
+
+                        
+                            
+                                {`ID`}
+                                {`User ID`}
+                                {`Type`}
+                                {`Amount`}
+                                {`Date`}
+                                {`Status`}
+                                {`Actions`}
+                            
+                            
                                 {filteredTransactions.map((transaction) => (
-                                    <TableRow key={transaction.id}>
-                                        <TableCell>{transaction.id}</TableCell>
-                                        <TableCell>{transaction.userId}</TableCell>
-                                        <TableCell>{transaction.type}</TableCell>
-                                        <TableCell>{transaction.amount}</TableCell>
-                                        <TableCell>{transaction.date}</TableCell>
-                                        <TableCell>{transaction.status}</TableCell>
-                                        <TableCell>
-                                            <TooltipProvider>
-                                                <Tooltip>
-                                                    <TooltipTrigger asChild>
-                                                        <Button variant="secondary" size="sm"
-                                                                onClick={() => handleOpenTransactionDetails(transaction)}>
-                                                            Review
-                                                        </Button>
-                                                    </TooltipTrigger>
-                                                    <TooltipContent>
-                                                        Review this transaction
-                                                    </TooltipContent>
-                                                </Tooltip>
-                                            </TooltipProvider>
-                                        </TableCell>
-                                    </TableRow>
+                                    
+                                        
+                                            {transaction.id}
+                                            {transaction.userId}
+                                            {transaction.type}
+                                            {transaction.amount}
+                                            {transaction.date}
+                                            {transaction.status}
+                                            
+                                                
+                                                     
+                                                            {`Review`}
+                                                        
+                                                        {`Review this transaction`}
+                                                     
+                                                
+                                            
+                                        
+                                    
                                 ))}
-                            </TableBody>
-                        </Table>
-                    </CardContent>
-                </Card>
-            </div>
-            <div className="grid gap-4 grid-cols-1 md:grid-cols-2">
-                <Card>
-                    <CardHeader>
-                        <CardTitle>Transaction Statistics</CardTitle>
-                        <CardDescription>Statistics of transactions in the last 7 days.</CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                        <ResponsiveContainer width="100%" height={300}>
-                            <BarChart data={chartData}>
-                                <CartesianGrid strokeDasharray="3 3"/>
-                                <XAxis dataKey="name"/>
-                                <YAxis/>
-                                <ChartTooltip/>
-                                <Legend/>
-                                <Bar dataKey="count" fill="#8884d8"/>
-                            </BarChart>
-                        </ResponsiveContainer>
-                    </CardContent>
-                </Card>
-                <Card>
-                    <CardHeader>
-                        <CardTitle>Compliance Information</CardTitle>
-                        <CardDescription>Information related to user compliance and activity.</CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                        <ul>
-                            <li>Total KYC Verified Users: {userList.filter(user => user.verified).length}</li>
-                            <li>Total Active Users: {userList.filter(user => user.status === 'Active').length}</li>
-                            <li>Last login: {new Date().toLocaleDateString()}</li>
-                            <li>Date: {new Date().toLocaleDateString()}</li>
-                        </ul>
-                    </CardContent>
-                </Card>
-            </div>
-            <Dialog open={open} onOpenChange={setOpen}>
-                <DialogContent>
-                    <DialogHeader>
-                        <DialogTitle>Transaction Details</DialogTitle>
-                        <DialogDescription>
-                            Review and update transaction status.
-                        </DialogDescription>
-                    </DialogHeader>
-                    <div className="grid gap-4 py-4">
-                        <div className="grid gap-2">
-                            <label htmlFor="transactionId">Transaction ID</label>
-                            <Input id="transactionId" value={transactionDetails.id || ''} disabled/>
-                        </div>
-                        <div className="grid gap-2">
-                            <label htmlFor="userId">User ID</label>
-                            <Input id="userId" value={transactionDetails.userId || ''} disabled/>
-                        </div>
-                        <div className="grid gap-2">
-                            <label htmlFor="type">Type</label>
-                            <Input id="type" value={transactionDetails.type || ''} disabled/>
-                        </div>
-                        <div className="grid gap-2">
-                            <label htmlFor="amount">Amount</label>
-                            <Input id="amount" value={transactionDetails.amount || ''} disabled/>
-                        </div>
-                        <div className="grid gap-2">
-                            <label htmlFor="date">Date</label>
-                            <Input id="date" value={transactionDetails.date || ''} disabled/>
-                        </div>
-                        <div className="grid gap-2">
-                            <label htmlFor="status">Status</label>
-                            <Select onValueChange={(value) => handleUpdateTransactionStatus(value)}>
-                                <SelectTrigger>
-                                    <SelectValue placeholder={transactionDetails.status || "Select Status"}/>
-                                </SelectTrigger>
-                                <SelectContent>
-                                    <SelectItem value="Pending">Pending</SelectItem>
-                                    <SelectItem value="Completed">Completed</SelectItem>
-                                    <SelectItem value="Failed">Failed</SelectItem>
-                                    <SelectItem value="Refunded">Refunded</SelectItem>
-                                </SelectContent>
-                            </Select>
-                        </div>
-                    </div>
-                    <div className="flex justify-end space-x-2">
-                        <DialogClose asChild>
-                            <Button type="button" variant="secondary">
-                                Cancel
-                            </Button>
-                        </DialogClose>
-                    </div>
-                </DialogContent>
-            </Dialog>
-            <div className="grid gap-4 grid-cols-1 md:grid-cols-2">
-                <Card>
-                    <CardHeader>
-                        <CardTitle>Monthly Activity</CardTitle>
-                        {/* Potential Fix: Try wrapping the text in curly braces */}
-                        <CardDescription>{"Overview of deposits, withdrawals, and loans."}</CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                        <ResponsiveContainer width="100%" height={300}>
-                            <BarChart data={chartData}>
-                                <CartesianGrid strokeDasharray="3 3"/>
-                                <XAxis dataKey="name"/>
-                                <YAxis/>
-                                <ChartTooltip/>
-                                <Legend/>
-                                <Bar dataKey="deposits" name="Deposits" fill="#82ca9d"/>
-                                <Bar dataKey="withdrawals" name="Withdrawals" fill="#8884d8"/>
-                                <Bar dataKey="loans" name="Loans" fill="#ffc658"/>
-                            </BarChart>
-                        </ResponsiveContainer>
-                    </CardContent>
-                </Card>
-                <Card>
-                    <CardHeader>
-                        <CardTitle>KYC Verification Status</CardTitle>
-                        <CardDescription>Overview of user verification status over time.</CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                        <ResponsiveContainer width="100%" height={300}>
-                            <BarChart data={[{month: 'Jan', verified: 50, pending: 10}, {
-                                month: 'Feb',
-                                verified: 60,
-                                pending: 8
-                            }, {month: 'Mar', verified: 70, pending: 5}]}>
-                                <CartesianGrid strokeDasharray="3 3"/>
-                                <XAxis dataKey="month"/>
-                                <YAxis/>
-                                <ChartTooltip/>
-                                <Legend/>
-                                <Bar dataKey="verified" name="Verified" fill="#82ca9d"/>
-                                <Bar dataKey="pending" name="Pending" fill="#ff7300"/>
-                            </BarChart>
-                        </ResponsiveContainer>
-                    </CardContent>
-                </Card>
-            </div>
-               <Card>
-                <CardHeader>
-                    <CardTitle>Admin Action Log</CardTitle>
-                    <CardDescription>Log of admin actions for auditing and monitoring.</CardDescription>
-                </CardHeader>
-                <CardContent>
-                    <Table>
-                        <TableHeader>
-                            <TableRow>
-                                <TableHead>Timestamp</TableHead>
-                                <TableHead>Action</TableHead>
-                                <TableHead>Details</TableHead>
-                            </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                            {actionLogs.map((log) => (
-                                <TableRow key={log.id}>
-                                    <TableCell>{log.timestamp}</TableCell>
-                                    <TableCell>{log.action}</TableCell>
-                                    <TableCell>{log.details}</TableCell>
-                                </TableRow>
-                            ))}
-                        </TableBody>
-                    </Table>
-                </CardContent>
-            </Card>
-        </div>
+                            
+                        
+                    
+                
+            
+            
+                
+                    
+                        
+                            {`Transaction Statistics`}
+                            
+                            
+                                {`Statistics of transactions in the last 7 days.`}
+                            
+                        
+                    
+                        
+                            
+                                
+                                
+                                    
+                                
+                                
+                                    
+                                
+                                
+                                    
+                                
+                                
+                                    
+                                
+                            
+                        
+                    
+                
+
+                
+                    
+                        
+                            {`Compliance Information`}
+                            
+                            
+                                {`Information related to user compliance and activity.`}
+                            
+                        
+                    
+                        
+                            {`Total KYC Verified Users:`} {userList.filter(user => user.verified).length}
+                            {`Total Active Users:`} {userList.filter(user => user.status === 'Active').length}
+                            {`Last login:`} {new Date().toLocaleDateString()}
+                            {`Date:`} {new Date().toLocaleDateString()}
+                        
+                    
+                
+            
+            
+                
+                    
+                        {`Transaction Details`}
+                        
+                        
+                            {`Review and update transaction status.`}
+                        
+                    
+                    
+                        
+                            
+                                {`Transaction ID`}
+                                
+                                    {transactionDetails.id}
+                                
+                                {`User ID`}
+                                
+                                    {transactionDetails.userId}
+                                
+                                {`Type`}
+                                
+                                    {transactionDetails.type}
+                                
+                                {`Amount`}
+                                
+                                    {transactionDetails.amount}
+                                
+                                {`Date`}
+                                
+                                    {transactionDetails.date}
+                                
+                                {`Status`}
+                                
+                                    
+                                        
+                                            {transactionDetails.status || "Select Status"}
+                                        
+                                        
+                                            {`Pending`}
+                                            {`Completed`}
+                                            {`Failed`}
+                                            {`Refunded`}
+                                        
+                                    
+                                
+                            
+                        
+                        
+                            
+                                {`Cancel`}
+                            
+                        
+                    
+                
+            
+
+            
+                
+                    
+                        {`Admin Action Log`}
+                        
+                        
+                            {`Log of admin actions for auditing and monitoring.`}
+                        
+                    
+                    
+                        
+                            
+                                {`Timestamp`}
+                                {`Action`}
+                                {`Details`}
+                            
+                            
+                                {actionLogs.map((log) => (
+                                    
+                                        
+                                            {log.timestamp}
+                                            {log.action}
+                                            {log.details}
+                                        
+                                    
+                                ))}
+                            
+                        
+                    
+                
+            
+        
     );
 }
+
