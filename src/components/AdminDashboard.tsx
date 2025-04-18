@@ -9,12 +9,12 @@ import {
   Card,
   CardHeader,
   CardTitle,
+  CardDescription,
   CardContent,
 } from '@/components/ui/card';
 import {
   Table,
   TableBody,
-  TableCaption,
   TableCell,
   TableHead,
   TableHeader,
@@ -30,6 +30,7 @@ import {
   DialogDescription,
   DialogClose,
 } from '@/components/ui/dialog';
+import { Popover, PopoverTrigger, PopoverContent } from '@/components/ui/popover';
 import { Input } from '@/components/ui/input';
 import {
   Select,
@@ -49,7 +50,7 @@ import {
   PaginationPrevious,
   PaginationNext,
   PaginationItem,
-  PaginationEllipsis,
+  PaginationLink,
 } from '@/components/ui/pagination';
 import {
   BarChart,
@@ -62,40 +63,58 @@ import {
 } from 'recharts';
 import { Calendar } from '@/components/ui/calendar';
 import { CalendarIcon } from '@radix-ui/react-icons';
-import {
-  Users as UsersIcon,
-  Bell as BellIcon,
-  ArrowLeft,
-  ArrowRight,
-} from 'lucide-react';
+import { Users as UsersIcon, ArrowLeft, ArrowRight } from 'lucide-react';
 
-// Sample data
-const initialUsers = [
+type User = {
+  id: number;
+  name: string;
+  email: string;
+  status: 'Active' | 'Inactive';
+  verified: boolean;
+  membership: string;
+};
+
+type Transaction = {
+  id: number;
+  userId: number;
+  type: 'Deposit' | 'Withdrawal' | 'Loan';
+  amount: number;
+  date: string;
+  status: string;
+};
+
+type ActionLog = {
+  id: number;
+  timestamp: string;
+  action: string;
+  details: string;
+};
+
+const initialUsers: User[] = [
   { id: 1, name: 'John Doe', email: 'john.doe@example.com', status: 'Active', verified: true, membership: 'Basic' },
-  // ... add other users
-];
-const initialTransactions = [
-  { id: 1, userId: 1, type: 'Deposit', amount: 1000, date: '2024-07-15', status: 'Completed' },
-  // ... add other transactions
+  /* ... */
 ];
 
-type ActionLog = { id: number; timestamp: string; action: string; details: string };
+const initialTransactions: Transaction[] = [
+  { id: 1, userId: 1, type: 'Deposit', amount: 1000, date: '2024-07-15', status: 'Completed' },
+  /* ... */
+];
 
 export default function AdminDashboard() {
-  const { user, signOutUser } = useAuth();
-  const router = useRouter();
+  const { user } = useAuth();
   const { toast } = useToast();
-
   const [isMounted, setIsMounted] = useState(false);
-  const [users, setUsers] = useState(initialUsers);
-  const [transactions, setTransactions] = useState(initialTransactions);
-  const [filterType, setFilterType] = useState<'all' | 'Deposit' | 'Withdrawal' | 'Loan'>('all');
-  const [filterDate, setFilterDate] = useState<Date | undefined>();
+
+  const [users, setUsers] = useState<User[]>(initialUsers);
+  const [transactions, setTransactions] = useState<Transaction[]>(initialTransactions);
+  const [filterType, setFilterType] = useState<'all' | Transaction['type']>('all');
+  const [filterDate, setFilterDate] = useState<Date | undefined>(undefined);
+
   const [openDialog, setOpenDialog] = useState(false);
-  const [selectedTxn, setSelectedTxn] = useState<typeof initialTransactions[0] | null>(null);
+  const [selectedTxn, setSelectedTxn] = useState<Transaction | null>(null);
   const [actionLogs, setActionLogs] = useState<ActionLog[]>([]);
 
-  // Pagination for users
+  // Pagination
   const [currentPage, setCurrentPage] = useState(1);
   const usersPerPage = 5;
   const indexOfLast = currentPage * usersPerPage;
@@ -109,53 +128,54 @@ export default function AdminDashboard() {
   if (!isMounted) return <div>Loading...</div>;
   if (!user || user.email !== 'admin@example.com') return <h2>Access Denied</h2>;
 
-  // Handlers
   const logAction = (action: string, details: string) => {
-    setActionLogs((logs) => [
+    setActionLogs(logs => [
       { id: logs.length + 1, timestamp: format(new Date(), 'yyyy-MM-dd HH:mm'), action, details },
       ...logs,
     ]);
   };
 
   const verifyUser = (id: number) => {
-    setUsers((u) => u.map((x) => (x.id === id ? { ...x, verified: true } : x)));
+    setUsers(u => u.map(x => x.id === id ? { ...x, verified: true } : x));
     logAction('User Verified', `Verified user ID ${id}`);
     toast({ title: 'User Verified', description: `User ${id} has been verified.` });
   };
 
-  const changeStatus = (id: number, status: 'Active' | 'Inactive') => {
-    setUsers((u) => u.map((x) => (x.id === id ? { ...x, status } : x)));
+  const changeStatus = (id: number, status: User['status']) => {
+    setUsers(u => u.map(x => x.id === id ? { ...x, status } : x));
     logAction(`User ${status}`, `Changed user ${id} to ${status}`);
-    toast({ title: `User ${status}`, description: `User ${id} now ${status}.` });
+    toast({ title: `User ${status}`, description: `User ${id} is now ${status}.` });
   };
 
-  const openTransaction = (txn: typeof initialTransactions[0]) => {
+  const openTransaction = (txn: Transaction) => {
     setSelectedTxn(txn);
     setOpenDialog(true);
   };
+
   const updateTxnStatus = (status: string) => {
     if (!selectedTxn) return;
-    setTransactions((t) => t.map((x) => (x.id === selectedTxn.id ? { ...x, status } : x)));
+    setTransactions(t => t.map(x => x.id === selectedTxn.id ? { ...x, status } : x));
     logAction('Transaction Updated', `Txn ${selectedTxn.id} to ${status}`);
     setOpenDialog(false);
   };
 
-  // Filters
   const filteredTxns = transactions
-    .filter((t) => (filterType === 'all' ? true : t.type === filterType))
-    .filter((t) => (filterDate ? format(new Date(t.date), 'yyyy-MM-dd') === format(filterDate, 'yyyy-MM-dd') : true));
+    .filter(t => filterType === 'all' ? true : t.type === filterType)
+    .filter(t => filterDate
+      ? format(new Date(t.date), 'yyyy-MM-dd') === format(filterDate, 'yyyy-MM-dd')
+      : true
+    );
 
-  // Stats
-  const last7 = transactions.filter((t) => {
+  const last7 = transactions.filter(t => {
     const d = new Date(t.date);
     const weekAgo = new Date();
     weekAgo.setDate(weekAgo.getDate() - 7);
     return d >= weekAgo;
   });
   const chartData = [
-    { name: 'Deposits', count: last7.filter((t) => t.type === 'Deposit').length },
-    { name: 'Withdrawals', count: last7.filter((t) => t.type === 'Withdrawal').length },
-    { name: 'Loans', count: last7.filter((t) => t.type === 'Loan').length },
+    { name: 'Deposits', count: last7.filter(t => t.type === 'Deposit').length },
+    { name: 'Withdrawals', count: last7.filter(t => t.type === 'Withdrawal').length },
+    { name: 'Loans', count: last7.filter(t => t.type === 'Loan').length },
   ];
 
   return (
@@ -169,15 +189,15 @@ export default function AdminDashboard() {
               <CardTitle>User Management</CardTitle>
             </div>
             <Pagination>
-              <PaginationPrevious onClick={() => setCurrentPage((p) => Math.max(p - 1, 1))}>
+              <PaginationPrevious onClick={() => setCurrentPage(p => Math.max(p - 1, 1))}>
                 <ArrowLeft />
               </PaginationPrevious>
-              {[...Array(Math.ceil(users.length / usersPerPage)).keys()].map((n) => (
+              {[...Array(Math.ceil(users.length / usersPerPage)).keys()].map(n => (
                 <PaginationItem key={n + 1}>
                   <PaginationLink onClick={() => setCurrentPage(n + 1)}>{n + 1}</PaginationLink>
                 </PaginationItem>
               ))}
-              <PaginationNext onClick={() => setCurrentPage((p) => p + 1)}>
+              <PaginationNext onClick={() => setCurrentPage(p => p + 1)}>
                 <ArrowRight />
               </PaginationNext>
             </Pagination>
@@ -197,7 +217,7 @@ export default function AdminDashboard() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {currentUsers.map((u) => (
+              {currentUsers.map(u => (
                 <TableRow key={u.id}>
                   <TableCell>{u.id}</TableCell>
                   <TableCell>{u.name}</TableCell>
@@ -224,8 +244,8 @@ export default function AdminDashboard() {
           <CardDescription>Filter and review transactions</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="flex space-x-4">            
-            <Select onValueChange={(v) => setFilterType(v as any)}>
+          <div className="flex space-x-4">
+            <Select onValueChange={v => setFilterType(v as any)}>
               <SelectTrigger className="w-40">
                 <SelectValue placeholder={`Type: ${filterType}`} />
               </SelectTrigger>
@@ -238,7 +258,10 @@ export default function AdminDashboard() {
             </Select>
             <Popover>
               <PopoverTrigger asChild>
-                <Button variant="outline"><CalendarIcon className="mr-2" />{filterDate ? format(filterDate, 'yyyy-MM-dd') : 'Pick Date'}</Button>
+                <Button variant="outline">
+                  <CalendarIcon className="mr-2" />
+                  {filterDate ? format(filterDate, 'yyyy-MM-dd') : 'Pick Date'}
+                </Button>
               </PopoverTrigger>
               <PopoverContent>
                 <Calendar mode="single" selected={filterDate} onSelect={setFilterDate} />
@@ -247,7 +270,9 @@ export default function AdminDashboard() {
             <TooltipProvider>
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <Button variant="ghost" onClick={() => { setFilterType('all'); setFilterDate(undefined); toast({ title: 'Filters reset' }); }}>Reset</Button>
+                  <Button variant="ghost" onClick={() => { setFilterType('all'); setFilterDate(undefined); toast({ title: 'Filters reset' }); }}>
+                    Reset
+                  </Button>
                 </TooltipTrigger>
                 <TooltipContent>Reset all filters</TooltipContent>
               </Tooltip>
@@ -266,7 +291,7 @@ export default function AdminDashboard() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {filteredTxns.map((t) => (
+              {filteredTxns.map(t => (
                 <TableRow key={t.id}>
                   <TableCell>{t.id}</TableCell>
                   <TableCell>{t.userId}</TableCell>
@@ -316,10 +341,10 @@ export default function AdminDashboard() {
         </CardContent>
       </Card>
 
-      {/* Statistics */}
+      {/* Transaction Statistics */}
       <Card>
         <CardHeader>
-          <CardTitle>Transaction Statistics (Last 7 days)</n          </CardTitle>
+          <CardTitle>Transaction Statistics (Last 7 days)</CardTitle>
         </CardHeader>
         <CardContent>
           <div style={{ width: '100%', height: 300 }}>
@@ -342,13 +367,13 @@ export default function AdminDashboard() {
           <CardTitle>Compliance Information</CardTitle>
         </CardHeader>
         <CardContent>
-          <p>Total KYC Verified Users: {users.filter((u) => u.verified).length}</p>
-          <p>Total Active Users: {users.filter((u) => u.status === 'Active').length}</p>
+          <p>Total KYC Verified Users: {users.filter(u => u.verified).length}</p>
+          <p>Total Active Users: {users.filter(u => u.status === 'Active').length}</p>
           <p>Report Date: {format(new Date(), 'yyyy-MM-dd')}</p>
         </CardContent>
       </Card>
 
-      {/* Action Log */}
+      {/* Admin Action Log */}
       <Card>
         <CardHeader>
           <CardTitle>Admin Action Log</CardTitle>
@@ -364,7 +389,7 @@ export default function AdminDashboard() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {actionLogs.map((log) => (
+              {actionLogs.map(log => (
                 <TableRow key={log.id}>
                   <TableCell>{log.timestamp}</TableCell>
                   <TableCell>{log.action}</TableCell>
