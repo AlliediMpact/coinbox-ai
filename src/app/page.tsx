@@ -9,12 +9,12 @@ import AdminDashboard from "@/components/AdminDashboard";
 import Image from 'next/image';
 import MembershipComponent from "@/components/MembershipComponent";
 import CoinTradingComponent from "@/components/CoinTradingComponent";
-import WalletComponent from "@/components/WalletComponent";
 import RiskAssessmentComponent from "@/components/RiskAssessmentComponent";
-import ReferralTrackingComponent from "@/components/ReferralTrackingComponent";
 import SupportComponent from "@/components/SupportComponent";
 import KycVerification from "@/components/KycVerification";
 import CommissionTracking from "@/components/CommissionTracking";
+import WalletManagement from "@/components/WalletManagement";
+import ReferralTracking from "@/components/ReferralTracking";
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -117,9 +117,9 @@ export default function Home() {
                     <div className="grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
                         <MembershipComponent />
                         <CoinTradingComponent />
-                        <WalletComponent />
+                        <WalletManagement />
                         <RiskAssessmentComponent userId={user?.uid || 'default'} />
-                        <ReferralTrackingComponent />
+                        <ReferralTracking />
                         <SupportComponent />
                         <KycVerification />
                         <CommissionTracking />

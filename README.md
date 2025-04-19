@@ -1,65 +1,54 @@
-# Firebase Studio
+# Allied iMpact Coin Box (PTY) Ltd
 
-## Allied iMpact Coin Box
+## Overview
+Allied iMpact Coin Box is a peer-to-peer (P2P) financial platform enabling users to invest and borrow digital assets securely and transparently. The platform uses a membership model, advanced KYC, and automated matching to facilitate seamless financial transactions for individuals and businesses.
 
-**"Your Ultimate Peer-to-Peer Financial Solution"**
+## Vision & Mission
+- **Vision:** Revolutionize P2P financial transactions with a secure, transparent, and efficient coin-based marketplace.
+- **Mission:** Provide an innovative, user-friendly, and secure digital marketplace for trading coins, accessing instant loans, and earning referral commissions.
 
-Allied iMpact Coin Box is an innovative peer-to-peer (P2P) financial platform that provides users with a seamless, secure, and efficient way to invest and borrow digital assets. Through an advanced membership model, the platform enables individuals and businesses to conduct financial transactions with transparency and ease.
+## Business Model
+- **Membership Tiers:** Users select a plan (Basic, Ambassador, VIP, Business) and pay a security fee to activate their account.
+- **Trading:** Users can invest or borrow coins, create tickets, and get matched automatically.
+- **Referral System:** Earn tiered commissions for referring new users.
+- **Revenue:** Transaction fees, membership fees, loan interest, and premium features.
 
-**Vision Statement**
+## Key Features
+- **Authentication & Membership:** Secure sign-up, email verification, Paystack integration, tiered membership.
+- **Wallet Management:** Real-time balance, transaction history, CSV export, deposit/withdrawal simulation.
+- **KYC Verification:** Multi-step KYC, document upload, expiry tracking, progress bar.
+- **Referral & Commission:** Unique referral codes, tier-based commission, tracking, and withdrawal.
+- **P2P Borrow & Invest:** Ticket creation, automated matching, escrow, loan repayment, and investment maturity (in progress).
+- **Risk Assessment:** AI-driven scoring based on user history (in progress).
+- **Security:** Rate limiting, suspicious activity logging, session management, user flagging.
+- **Admin Tools:** User management, transaction monitoring, dispute resolution (planned).
+- **Mobile-Friendly:** Responsive dashboard, future mobile app.
 
-To revolutionize peer-to-peer financial transactions by offering a secure, transparent, and efficient coin-based marketplace that empowers individuals and businesses to invest and loan digital assets with confidence.
+## Membership Tiers
+| Plan        | Security Fee | Refundable | Loan Limit | Investment Limit | Commission | Txn Fee | Admin Fee |
+|-------------|-------------|------------|------------|------------------|------------|---------|-----------|
+| Basic       | R550        | R500       | R500       | R5,000           | 1%         | R10     | R50       |
+| Ambassador  | R1,100      | R1,000     | R1,000     | R10,000          | 2%         | R10     | R100      |
+| VIP         | R5,500      | R5,000     | R5,000     | R50,000          | 3%         | R10     | R500      |
+| Business    | R11,000     | R10,000    | R10,000    | R100,000         | 5%         | R10     | R1,000    |
 
-**Mission Statement**
+## Technology Stack
+- Next.js, React, TypeScript, Tailwind CSS
+- Firebase (Auth, Firestore, Storage)
+- Paystack (Payments)
+- AI/ML for risk assessment (planned)
 
-Our mission is to provide an innovative, user-friendly, and secure digital marketplace where users can trade coins effortlessly, access instant loans, and earn commissions through referrals, all while ensuring financial inclusivity and transparency.
+## Roadmap
+- Complete P2P ticketing, matching, and escrow
+- Integrate advanced risk assessment
+- Launch admin dashboard for compliance and support
+- Enable cross-border, fiat, and blockchain features
+- Release mobile app
 
-## Features
+## Contributing
+- Keep code DRY, modular, and well-documented
+- Remove duplicates and standardize error handling
+- Follow business logic and blueprint for all features
 
-- **Authentication:** Email/Password, OTP, Social Login (Google, Facebook), MFA. Includes enhanced security and account recovery.
-- **Peer-to-Peer Trading:** Automated matching algorithm, Escrow, Dispute Resolution with clear guidelines and automated transaction system.
-- **Referral System:** Tiered commissions based on performance, Automated payouts with multiple withdrawal options, Leaderboard & Bonuses.
-- **Wallet Management:** Multiple payment options (Stripe, Bank Transfer, Crypto), Transaction history, KYC integration.
-- **Risk Assesment** Leverages AI to asses risk
-- **Security:** Data encryption at rest and transit, KYC, GDPR and CCPA compliance.
-- **Text Summarization** Leverages AI to create summaries
-- **Customer Support:** Live Chat, Support Tickets, FAQ & Help Center
-- **Admin dashboard:** Comprehensive user management, transaction monitoring and system configuration, reporting and analytics, KYC &amp; Compliance.
-    - **User Management:** Verify accounts, enable/disable users.
-    - **Transaction Monitoring:** Review transactions, approve withdrawals.
-    - **Membership Management:** Adjust fees, upgrade/downgrade plans.
-    - **Referral System Management:** Monitor commission payouts.
-    - **KYC &amp; Compliance:** Review ID verifications, manage disputes.
-    - **Reporting and analytics**: Generate reports on platform usage, transaction volume, and revenue.
-    - **Membership Management**: adjust fees, upgrade/downgrade plans.
-    - **KYC &amp; Compliance**: Review ID verifications, Manage Disputes
-    - **Referral System Management**: Monitor Commission Payouts.
-
-## UI/UX Improvements
-
-- Professional and modern design with inspiration from established financial institutions.
-- Focus on clean and minimalist design, microinteractions, and enhanced accessibility.
-
-## Security Enhancements
-
-- Implemented multi-factor authentication (MFA) to provide an additional layer of security.
-- Enhanced data encryption techniques.
-- KYC verification to ensure user identity.
-
-## Implemented Automated Systems
-
--Automated transaction matching
--Automated commission payouts
-
-## Referral program
-
--Tier-based commission program
-
-## Revenue Model
-
-- Transaction Fees: R10 per transaction.
-- Membership Fees: One-time security deposit.
-- Loan Interest Fees: 20% repayment fee.
-- Premium Features: Priority transactions, staking, financial insights.
-
-To get started, take a look at src/app/page.tsx.
+## License
+Proprietary – Allied iMpact Coin Box (PTY) Ltd
