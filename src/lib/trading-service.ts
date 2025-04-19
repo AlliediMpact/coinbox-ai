@@ -1,9 +1,9 @@
-import { getFirestore, doc, collection, addDoc, updateDoc, query, where, getDocs, runTransaction } from 'firebase/firestore';
+import { getFirestore, doc, collection, addDoc, updateDoc, query, getDocs, runTransaction } from 'firebase/firestore';
 import { TradeTicket, EscrowTransaction, DisputeRequest } from './types';
 import { validateLoanAmount, validateInvestmentAmount, getTierConfig } from './membership-tiers';
 import { getRiskAssessment } from '@/ai/flows/risk-assessment-flow';
 import { ServiceClient } from './service-client';
-import { where, orderBy } from 'firebase/firestore';
+import { orderBy, where as firestoreWhere } from 'firebase/firestore';
 
 export class TradingService extends ServiceClient {
     private db = getFirestore();
@@ -21,9 +21,9 @@ export class TradingService extends ServiceClient {
 
     async findMatch(ticket: TradeTicket): Promise<TradeTicket | null> {
         const matches = await this.queryCollection<TradeTicket>('tickets', [
-            where('type', '==', ticket.type === 'Borrow' ? 'Invest' : 'Borrow'),
-            where('status', '==', 'Open'),
-            where('amount', '==', ticket.amount),
+            firestoreWhere('type', '==', ticket.type === 'Borrow' ? 'Invest' : 'Borrow'),
+            firestoreWhere('status', '==', 'Open'),
+            firestoreWhere('amount', '==', ticket.amount),
             orderBy('createdAt', 'asc')
         ]);
 

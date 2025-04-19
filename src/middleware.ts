@@ -1,46 +1,37 @@
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
-import { getAuth } from 'firebase-admin/auth';
-import { getFirestore } from 'firebase-admin/firestore';
-import { initAdmin } from './lib/firebase-admin';
-
-initAdmin();
 
 export async function middleware(request: NextRequest) {
-    const session = request.cookies.get('session')?.value || '';
-
-    // Return early if no session exists
-    if (!session) {
-        return redirectToLogin(request);
-    }
-
     try {
-        // Verify session cookie
-        const decodedClaims = await getAuth().verifySessionCookie(session, true);
-        
-        // If session is valid, check if user profile is complete
-        if (request.nextUrl.pathname.startsWith('/dashboard') && 
-            request.nextUrl.pathname !== '/dashboard/profile') {
-            
-            const db = getFirestore();
-            const userDoc = await db.collection('users').doc(decodedClaims.uid).get();
-            const userData = userDoc.data();
+        const sessionCookie = request.cookies.get('session')?.value || '';
 
-            if (!userData?.profileCompleted) {
-                // Redirect to profile page if profile is not complete
-                return NextResponse.redirect(new URL('/dashboard/profile', request.url));
+        if (!sessionCookie) {
+            return redirectToLogin(request);
+        }
+
+        // Verify session through API route instead of directly
+        const verifyResponse = await fetch('/api/auth/verify', {
+            headers: {
+                Cookie: `session=${sessionCookie}`
             }
+        });
+
+        if (!verifyResponse.ok) {
+            return redirectToLogin(request);
         }
 
         return NextResponse.next();
     } catch (error) {
+        console.error('Auth middleware error:', error);
         return redirectToLogin(request);
     }
 }
 
 function redirectToLogin(request: NextRequest) {
-    const redirectUrl = new URL('/auth', request.url);
-    return NextResponse.redirect(redirectUrl);
+    const url = request.nextUrl.clone()
+    url.pathname = '/auth'
+    url.search = `redirect=${request.nextUrl.pathname}`
+    return NextResponse.redirect(url)
 }
 
 // Specify which routes should be protected

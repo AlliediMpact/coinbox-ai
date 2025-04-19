@@ -1,30 +1,32 @@
 # Allied iMpact Coin Box (PTY) Ltd
 
-## Overview
-Allied iMpact Coin Box is a peer-to-peer (P2P) financial platform enabling users to invest and borrow digital assets securely and transparently. The platform uses a membership model, advanced KYC, and automated matching to facilitate seamless financial transactions for individuals and businesses.
+## Business Type
+Peer-to-Peer (P2P) Financial Platform
 
-## Vision & Mission
-- **Vision:** Revolutionize P2P financial transactions with a secure, transparent, and efficient coin-based marketplace.
-- **Mission:** Provide an innovative, user-friendly, and secure digital marketplace for trading coins, accessing instant loans, and earning referral commissions.
+## Vision Statement
+To revolutionize peer-to-peer financial transactions by offering a secure, transparent, and efficient coin-based marketplace that empowers individuals and businesses to invest and loan digital assets with confidence.
 
-## Business Model
-- **Membership Tiers:** Users select a plan (Basic, Ambassador, VIP, Business) and pay a security fee to activate their account.
-- **Trading:** Users can invest or borrow coins, create tickets, and get matched automatically.
-- **Referral System:** Earn tiered commissions for referring new users.
-- **Revenue:** Transaction fees, membership fees, loan interest, and premium features.
+## Mission Statement
+To provide an innovative, user-friendly, and secure digital marketplace where users can trade coins effortlessly, access instant loans, and earn commissions through referrals, all while ensuring financial inclusivity and transparency.
 
-## Key Features
-- **Authentication & Membership:** Secure sign-up, email verification, Paystack integration, tiered membership.
-- **Wallet Management:** Real-time balance, transaction history, CSV export, deposit/withdrawal simulation.
-- **KYC Verification:** Multi-step KYC, document upload, expiry tracking, progress bar.
-- **Referral & Commission:** Unique referral codes, tier-based commission, tracking, and withdrawal.
-- **P2P Borrow & Invest:** Ticket creation, automated matching, escrow, loan repayment, and investment maturity (in progress).
-- **Risk Assessment:** AI-driven scoring based on user history (in progress).
-- **Security:** Rate limiting, suspicious activity logging, session management, user flagging.
-- **Admin Tools:** User management, transaction monitoring, dispute resolution (planned).
-- **Mobile-Friendly:** Responsive dashboard, future mobile app.
+---
 
-## Membership Tiers
+## Business Model & How It Works
+
+### Step 1: Choose & Buy a Membership Package
+- Users select a membership plan and deposit funds to activate their account.
+- This deposit acts as a security fee, allowing users to trade.
+- Users are charged 10% of their security fund as an administration fee.
+
+### Step 2: Start Trading
+- Users log into their dashboard to invest and borrow coins.
+- If the desired amount isn’t available, they can create a Borrow or Invest ticket.
+- The system matches investors and lenders for seamless peer-to-peer transactions.
+
+---
+
+## Membership Packages
+
 | Plan        | Security Fee | Refundable | Loan Limit | Investment Limit | Commission | Txn Fee | Admin Fee |
 |-------------|-------------|------------|------------|------------------|------------|---------|-----------|
 | Basic       | R550        | R500       | R500       | R5,000           | 1%         | R10     | R50       |
@@ -32,23 +34,68 @@ Allied iMpact Coin Box is a peer-to-peer (P2P) financial platform enabling users
 | VIP         | R5,500      | R5,000     | R5,000     | R50,000          | 3%         | R10     | R500      |
 | Business    | R11,000     | R10,000    | R10,000    | R100,000         | 5%         | R10     | R1,000    |
 
-## Technology Stack
-- Next.js, React, TypeScript, Tailwind CSS
-- Firebase (Auth, Firestore, Storage)
-- Paystack (Payments)
-- AI/ML for risk assessment (planned)
+- Loan up to your tier limit, with a 25% repayment fee (5% to borrower's wallet, rest to investor).
+- Invest up to your tier limit and earn 20% interest per month (5% to investor's wallet, rest to bank account).
+- Earn tiered commission on referrals.
+- R10 transaction fee applies to user-initiated transactions.
 
-## Roadmap
-- Complete P2P ticketing, matching, and escrow
-- Integrate advanced risk assessment
-- Launch admin dashboard for compliance and support
-- Enable cross-border, fiat, and blockchain features
-- Release mobile app
+---
 
-## Contributing
-- Keep code DRY, modular, and well-documented
-- Remove duplicates and standardize error handling
-- Follow business logic and blueprint for all features
+## Key Features
 
-## License
-Proprietary – Allied iMpact Coin Box (PTY) Ltd
+### Loan System
+- Borrow funds based on membership tier.
+- 25% repayment fee on loans; 5% of repaid money goes to borrower's wallet.
+- Instant loan approval based on account history and activity.
+
+### Lending System
+- List coins for lending or investment.
+- Create lending/investment tickets if no suitable offer is found.
+- Automated matching system for secure transactions.
+
+### Referral & Commission System
+- Earn up to 5% commission on all referrals.
+- Tiered commission structure and bonuses for top referrers.
+
+### Transaction Security & Compliance
+- Escrow system: Funds held until both parties confirm.
+- KYC (Know Your Customer) verification.
+- Regulatory compliance (FSCA & SARB guidelines).
+
+### Customer Support & Dispute Resolution
+- 24/7 support team.
+- Clear dispute resolution process.
+
+### Technology & Innovation
+- AI-powered fraud detection and risk assessment.
+- Mobile-friendly dashboard.
+- Future: Mobile app, cross-border transactions, fiat-to-coin, blockchain integration.
+
+### Revenue Model
+- Transaction Fees: R10 per transaction.
+- Membership Fees: One-time security deposit.
+
+---
+
+## Roadmap & Future Enhancements
+- Cross-border transactions.
+- Fiat-to-coin conversions.
+- Blockchain integration for transparency and security.
+- Enhanced admin dashboard for compliance and support.
+- Automated commission payouts and referral leaderboard.
+- Advanced risk assessment and loan scoring.
+
+---
+
+## Compliance & Security
+- Escrow, KYC, and audit logging.
+- Automated and manual fraud detection.
+- Data privacy and regulatory compliance.
+
+---
+
+## Style & UX Guidelines
+- Clean, card-based layouts.
+- Deep Teal (#008080) as primary color, Gold (#FFD700) for accents.
+- Simple, outlined icons for actions and categories.
+- Mobile-first, accessible design.

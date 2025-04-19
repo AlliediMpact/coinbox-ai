@@ -183,6 +183,10 @@ export default function AdminDashboard() {
       {/* User Management */}
       <Card>
         <CardHeader>
+          <CardTitle>User Management</CardTitle>
+          <CardDescription>Manage and monitor user accounts</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-2">
               <UsersIcon className="h-6 w-6" />
@@ -202,8 +206,6 @@ export default function AdminDashboard() {
               </PaginationNext>
             </Pagination>
           </div>
-        </CardHeader>
-        <CardContent>
           <Table>
             <TableHeader>
               <TableRow>
