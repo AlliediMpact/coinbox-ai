@@ -148,22 +148,18 @@ export default function AuthPage() {
     return (
         <div className="min-h-screen flex items-center justify-center bg-[#f4f6fa] px-2">
             <div className="w-full max-w-md mx-auto flex flex-col items-center justify-center py-12">
-                {/* Welcome message at the top */}
+                {/* Welcome message at the top, always shown */}
                 <div className="w-full mb-6 animate-fade-in-down">
-                    <h2 className={cn(
-                        "text-3xl font-extrabold mb-2 tracking-tight text-center",
-                        isFlipped ? "text-[#193281]" : "text-[#5e17eb]"
-                    )}>
-                        {isFlipped ? "Create your account" : "Sign in to CoinBox"}
+                    <h2 className="text-3xl font-extrabold mb-2 tracking-tight text-center text-[#5e17eb]">
+                        Hello, Friend!
                     </h2>
                     <p className="mb-4 text-gray-700 text-lg text-center">
-                        {isFlipped
-                            ? "Get started with your secure digital finance journey."
-                            : "Welcome back! Please sign in to continue."}
+                        Enter your personal details and start your journey with us.
                     </p>
                 </div>
                 <div className="w-full">
                     <div className="bg-white border border-[#e3e6ef] rounded-2xl shadow-xl p-8 sm:p-10 flex flex-col gap-6 transition-all duration-500 relative animate-fade-in-up">
+                        {/* Remove extra welcome messages below the form */}
                         {isFlipped ? (
                             <form
                                 onSubmit={form.handleSubmit(handleSignUp)}
@@ -395,70 +391,56 @@ export default function AuthPage() {
                         )}
                     </div>
                 </div>
-                {/* Welcome message for larger screens */}
-                <div className="hidden md:block mt-8 text-center">
-                    <h2 className={cn(
-                        "text-3xl font-extrabold mb-2 tracking-tight",
-                        isFlipped ? "text-[#193281]" : "text-[#5e17eb]"
-                    )}>
-                        {isFlipped ? "Welcome Back!" : "Hello, Friend!"}
-                    </h2>
-                    <p className="mb-4 text-gray-700 text-lg">
-                        {isFlipped
-                            ? "To keep connected with us please login with your personal info"
-                            : "Enter your personal details and start your journey with us."}
-                    </p>
-                </div>
-            </div>
-            {/* Forgot Password Modal */}
-            {showForgotPassword && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
-                    <div className="bg-white border border-[#e3e6ef] rounded-2xl shadow-xl p-8 w-full max-w-md animate-fade-in-up">
-                        <div className="mb-6">
-                            <h2 className="text-2xl font-extrabold mb-2 tracking-tight text-center text-[#193281]">Reset Password</h2>
-                            <p className="mb-2 text-gray-700 text-center text-base">
-                                Enter your email address and we'll send you a link to reset your password.
-                            </p>
-                        </div>
-                        <form onSubmit={handleForgotPassword} className="space-y-5">
-                            <div className="space-y-2">
-                                <Label htmlFor="resetEmail">Email</Label>
-                                <input
-                                    id="resetEmail"
-                                    type="email"
-                                    placeholder="Enter your email"
-                                    className="block w-full rounded-lg border border-[#e3e6ef] bg-[#f4f6fa] px-4 py-3 text-base focus:outline-none focus:ring-2 focus:ring-[#193281] transition"
-                                    value={signInEmail}
-                                    onChange={(e) => setSignInEmail(e.target.value)}
-                                    required
-                                    autoFocus
-                                />
+                {/* Forgot Password Modal */}
+                {showForgotPassword && (
+                    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+                        <div className="bg-white border border-[#e3e6ef] rounded-2xl shadow-xl p-8 w-full max-w-md animate-fade-in-up">
+                            <div className="mb-6">
+                                <h2 className="text-2xl font-extrabold mb-2 tracking-tight text-center text-[#193281]">Reset Password</h2>
+                                <p className="mb-2 text-gray-700 text-center text-base">
+                                    Enter your email address and we'll send you a link to reset your password.
+                                </p>
                             </div>
-                            <Button
-                                type="submit"
-                                className="w-full bg-[#193281] hover:bg-[#5e17eb] text-white font-bold py-3 rounded-lg shadow-md transition-all duration-200"
-                                disabled={isSubmitting}
-                                aria-busy={isSubmitting}
-                            >
-                                {isSubmitting ? (
-                                    <span className="flex items-center gap-2">
-                                        <span className="animate-spin rounded-full border-2 border-white border-t-transparent h-4 w-4" />
-                                        Sending...
-                                    </span>
-                                ) : "Send Reset Link"}
-                            </Button>
-                            <Button
-                                type="button"
-                                variant="ghost"
-                                className="w-full mt-2 text-[#193281] hover:text-[#5e17eb] font-semibold"
-                                onClick={() => setShowForgotPassword(false)}
-                            >
-                                Cancel
-                            </Button>
-                        </form>
+                            <form onSubmit={handleForgotPassword} className="space-y-5">
+                                <div className="space-y-2">
+                                    <Label htmlFor="resetEmail">Email</Label>
+                                    <input
+                                        id="resetEmail"
+                                        type="email"
+                                        placeholder="Enter your email"
+                                        className="block w-full rounded-lg border border-[#e3e6ef] bg-[#f4f6fa] px-4 py-3 text-base focus:outline-none focus:ring-2 focus:ring-[#193281] transition"
+                                        value={signInEmail}
+                                        onChange={(e) => setSignInEmail(e.target.value)}
+                                        required
+                                        autoFocus
+                                    />
+                                </div>
+                                <Button
+                                    type="submit"
+                                    className="w-full bg-[#193281] hover:bg-[#5e17eb] text-white font-bold py-3 rounded-lg shadow-md transition-all duration-200"
+                                    disabled={isSubmitting}
+                                    aria-busy={isSubmitting}
+                                >
+                                    {isSubmitting ? (
+                                        <span className="flex items-center gap-2">
+                                            <span className="animate-spin rounded-full border-2 border-white border-t-transparent h-4 w-4" />
+                                            Sending...
+                                        </span>
+                                    ) : "Send Reset Link"}
+                                </Button>
+                                <Button
+                                    type="button"
+                                    variant="ghost"
+                                    className="w-full mt-2 text-[#193281] hover:text-[#5e17eb] font-semibold"
+                                    onClick={() => setShowForgotPassword(false)}
+                                >
+                                    Cancel
+                                </Button>
+                            </form>
+                        </div>
                     </div>
-                </div>
-            )}
+                )}
+            </div>
         </div>
     );
 }
