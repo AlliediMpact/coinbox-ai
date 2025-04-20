@@ -16,7 +16,6 @@ import { useToast } from "@/hooks/use-toast"; // Import the useToast hook
 import { useAuth } from '@/components/AuthProvider';
 import { getFirestore, doc, onSnapshot, updateDoc, collection, query, orderBy, limit, startAfter, getDocs, addDoc } from 'firebase/firestore';
 import { formatCurrency } from '@/lib/utils';
-import { CSVLink } from 'react-csv';
 import { useFormWithValidation } from '@/lib/form-utils';
 import { ErrorBoundary } from './ErrorBoundary';
 import { z } from 'zod';
@@ -46,6 +45,25 @@ const depositFormSchema = z.object({
   amount: z.number().positive(),
   method: z.string()
 });
+
+const downloadCSV = (data: any[], filename: string) => {
+  const csvContent = [
+    // Headers
+    Object.keys(data[0]).join(','),
+    // Data rows
+    ...data.map(item => Object.values(item).join(','))
+  ].join('\n');
+
+  const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+  const link = document.createElement('a');
+  const url = URL.createObjectURL(blob);
+  link.setAttribute('href', url);
+  link.setAttribute('download', filename);
+  link.style.visibility = 'hidden';
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+};
 
 export default function WalletManagement() {
   const { user } = useAuth();
@@ -291,13 +309,12 @@ export default function WalletManagement() {
             <CardTitle>Wallet Management</CardTitle>
             <CardDescription>View your wallet balance and transaction history.</CardDescription>
           </div>
-          <CSVLink
-            data={getExportData()}
-            filename={`transactions-${new Date().toISOString()}.csv`}
-            className="inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none ring-offset-background bg-primary text-primary-foreground hover:bg-primary/90 h-10 py-2 px-4"
+          <Button 
+            onClick={() => downloadCSV(getExportData(), `transactions-${new Date().toISOString()}.csv`)}
+            className="inline-flex items-center justify-center"
           >
             Export Statement
-          </CSVLink>
+          </Button>
         </CardHeader>
         <CardContent className="grid gap-4">
           <div className="grid gap-2">

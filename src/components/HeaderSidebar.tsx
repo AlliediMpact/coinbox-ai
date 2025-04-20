@@ -55,14 +55,16 @@ interface HeaderProps {
     membershipTier: string;
 }
 
-const Header: React.FC<HeaderProps> = ({ 
+const Header: React.FC<HeaderProps & { onMobileMenuClick: () => void; isSidebarCollapsed: boolean }> = ({ 
     walletBalance, 
     commissionBalance, 
     searchTerm, 
     handleSearch, 
     searchResults,
     kycStatus,
-    membershipTier
+    membershipTier,
+    onMobileMenuClick,
+    isSidebarCollapsed
 }) => {
     const { user, signOutUser } = useAuth();
     const router = useRouter();
@@ -116,25 +118,40 @@ const Header: React.FC<HeaderProps> = ({
     };
 
     return (
-        <header className="bg-primary text-primary-foreground py-3 px-4 flex items-center justify-between shadow-md">
+        <header className="bg-primary text-primary-foreground py-3 px-4 flex items-center justify-between shadow-md relative">
             <div className="flex items-center">
-                <Image
-                    src="/assets/coinbox-ai.svg"
-                    alt="App Logo"
-                    width={50}
-                    height={50}
-                    className="mr-2 cursor-pointer"
-                    onClick={() => router.push('/')}
-                />
-                <div className="w-64 ml-4">
+                {/* Hamburger for mobile */}
+                <button
+                    className="mr-2 sm:hidden flex items-center justify-center p-2 rounded hover:bg-primary/80 focus:outline-none"
+                    aria-label="Open sidebar menu"
+                    onClick={onMobileMenuClick}
+                >
+                    <Menu className="w-6 h-6" />
+                </button>
+                {/* Logo: show in header if sidebar is collapsed (desktop) or always on mobile */}
+                <span className={cn(
+                    "mr-2 cursor-pointer",
+                    "block sm:hidden", // always show on mobile
+                    isSidebarCollapsed ? "hidden sm:block" : "hidden" // show on desktop only if collapsed
+                )}>
+                    <Image
+                        src="/assets/coinbox-ai.svg"
+                        alt="App Logo"
+                        width={50}
+                        height={50}
+                        onClick={() => router.push('/')}
+                    />
+                </span>
+                <div className="w-40 sm:w-64 ml-2 sm:ml-4 relative">
                     <Input
                         type="search"
                         placeholder="Search..."
                         value={searchTerm}
                         onChange={handleSearch}
+                        className="w-full"
                     />
                     {searchTerm && searchResults.length > 0 && (
-                        <Card className="absolute z-10 w-64 mt-1">
+                        <Card className="absolute z-20 w-full mt-1 left-0">
                             <CardContent className="p-2">
                                 <ul>
                                     {searchResults.map(result => (
@@ -198,12 +215,29 @@ const Header: React.FC<HeaderProps> = ({
     );
 };
 
+// Sidebar overlay for mobile
+const SidebarOverlay: React.FC<{ show: boolean; onClose: () => void }> = ({ show, onClose }) => (
+    <div
+        className={cn(
+            "fixed inset-0 bg-black bg-opacity-40 z-[99] transition-opacity duration-200",
+            show ? "block" : "hidden"
+        )}
+        aria-hidden={!show}
+        onClick={onClose}
+    />
+);
+
 interface SidebarProps {
     isCollapsed: boolean;
     toggleCollapse: () => void;
 }
 
-const Sidebar: React.FC<SidebarProps> = ({ isCollapsed, toggleCollapse }) => {
+const Sidebar: React.FC<SidebarProps & { mobileOpen: boolean; onMobileClose: () => void }> = ({
+    isCollapsed,
+    toggleCollapse,
+    mobileOpen,
+    onMobileClose
+}) => {
     const router = useRouter();
 
     const navigationItems = [
@@ -219,71 +253,139 @@ const Sidebar: React.FC<SidebarProps> = ({ isCollapsed, toggleCollapse }) => {
     ];
 
     return (
-        <aside className={cn(
-            "bg-secondary text-secondary-foreground flex flex-col transition-width duration-300",
-            isCollapsed ? 'w-16' : 'w-64',
-            "shadow-md"
-        )}>
-            <div className="flex items-center justify-between p-4">
-                <Image
-                    src="/assets/coinbox-ai.svg"
-                    alt="Sidebar Logo"
-                    width={40}
-                    height={40}
-                    className="cursor-pointer"
-                    onClick={() => router.push('/')}
-                    style={{ display: isCollapsed ? 'none' : 'block' }}
-                />
-                <TooltipProvider>
-                    <Tooltip>
-                        <TooltipTrigger asChild>
-                            <Button variant="ghost" size="icon" onClick={toggleCollapse}>
-                                <Menu className="h-4 w-4" />
-                            </Button>
-                         </TooltipTrigger>
-                        <TooltipContent>
-                            Toggle Sidebar
-                        </TooltipContent>
-                      </Tooltip>
+        <>
+            {/* Desktop sidebar */}
+            <aside
+                className={cn(
+                    "bg-secondary text-secondary-foreground flex flex-col transition-width duration-300 shadow-md h-full z-30",
+                    isCollapsed ? 'w-16' : 'w-64',
+                    "hidden sm:flex"
+                )}
+            >
+                <div className="flex items-center justify-between p-4">
+                    {/* Logo: show only if sidebar is expanded */}
+                    {!isCollapsed && (
+                        <Image
+                            src="/assets/coinbox-ai.svg"
+                            alt="Sidebar Logo"
+                            width={40}
+                            height={40}
+                            className="cursor-pointer"
+                            onClick={() => router.push('/')}
+                        />
+                    )}
+                    <TooltipProvider>
+                        <Tooltip>
+                            <TooltipTrigger asChild>
+                                <Button variant="ghost" size="icon" onClick={toggleCollapse}>
+                                    <Menu className="h-4 w-4" />
+                                </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                                Toggle Sidebar
+                            </TooltipContent>
+                        </Tooltip>
                     </TooltipProvider>
-            </div>
-            <div className="p-4">
-                <Input type="text" placeholder="Search..." className="bg-secondary-foreground/10 border-none text-secondary-foreground" />
-            </div>
-            <nav className="flex-1 p-4">
-                <ul className="space-y-2">
-                    {navigationItems.map((item) => (
-                        <li key={item.path}>
-                            <TooltipProvider>
-                                <Tooltip>
-                                    <TooltipTrigger asChild>
-                                        <Button
-                                            variant="ghost"
-                                            className={cn(
-                                                "w-full justify-start",
-                                                isCollapsed ? "px-2" : "px-4"
-                                            )}
-                                            onClick={() => router.push(item.path)}
-                                        >
-                                            <item.icon className={cn(
-                                                "h-4 w-4",
-                                                isCollapsed ? "mr-0" : "mr-2"
-                                            )} />
-                                            {!isCollapsed && <span>{item.label}</span>}
-                                        </Button>
-                                    </TooltipTrigger>
-                                    {isCollapsed && (
-                                        <TooltipContent side="right">
-                                            {item.label}
-                                        </TooltipContent>
-                                    )}
-                                </Tooltip>
-                            </TooltipProvider>
-                        </li>
-                    ))}
-                </ul>
-            </nav>
-        </aside>
+                </div>
+                <div className="p-4">
+                    <Input type="text" placeholder="Search..." className="bg-secondary-foreground/10 border-none text-secondary-foreground" />
+                </div>
+                <nav className="flex-1 p-4">
+                    <ul className="space-y-2">
+                        {navigationItems.map((item) => (
+                            <li key={item.path}>
+                                <TooltipProvider>
+                                    <Tooltip>
+                                        <TooltipTrigger asChild>
+                                            <Button
+                                                variant="ghost"
+                                                className={cn(
+                                                    "w-full justify-start",
+                                                    isCollapsed ? "px-2" : "px-4"
+                                                )}
+                                                onClick={() => router.push(item.path)}
+                                            >
+                                                <item.icon className={cn(
+                                                    "h-4 w-4",
+                                                    isCollapsed ? "mr-0" : "mr-2"
+                                                )} />
+                                                {!isCollapsed && <span>{item.label}</span>}
+                                            </Button>
+                                        </TooltipTrigger>
+                                        {isCollapsed && (
+                                            <TooltipContent side="right">
+                                                {item.label}
+                                            </TooltipContent>
+                                        )}
+                                    </Tooltip>
+                                </TooltipProvider>
+                            </li>
+                        ))}
+                    </ul>
+                </nav>
+            </aside>
+            {/* Mobile sidebar */}
+            <aside
+                className={cn(
+                    "fixed top-0 left-0 h-full bg-secondary text-secondary-foreground flex flex-col shadow-lg z-[100] transition-transform duration-300 sm:hidden",
+                    mobileOpen ? "translate-x-0" : "-translate-x-full",
+                    "w-64"
+                )}
+                role="dialog"
+                aria-modal="true"
+            >
+                <div className="flex items-center justify-between p-4">
+                    {/* Always show logo in mobile sidebar */}
+                    <Image
+                        src="/assets/coinbox-ai.svg"
+                        alt="Sidebar Logo"
+                        width={40}
+                        height={40}
+                        className="cursor-pointer"
+                        onClick={() => router.push('/')}
+                    />
+                    <Button variant="ghost" size="icon" onClick={onMobileClose} aria-label="Close sidebar">
+                        <Menu className="h-4 w-4" />
+                    </Button>
+                </div>
+                <div className="p-4">
+                    <Input type="text" placeholder="Search..." className="bg-secondary-foreground/10 border-none text-secondary-foreground" />
+                </div>
+                <nav className="flex-1 p-4">
+                    <ul className="space-y-2">
+                        {navigationItems.map((item) => (
+                            <li key={item.path}>
+                                <TooltipProvider>
+                                    <Tooltip>
+                                        <TooltipTrigger asChild>
+                                            <Button
+                                                variant="ghost"
+                                                className={cn(
+                                                    "w-full justify-start",
+                                                    isCollapsed ? "px-2" : "px-4"
+                                                )}
+                                                onClick={() => router.push(item.path)}
+                                            >
+                                                <item.icon className={cn(
+                                                    "h-4 w-4",
+                                                    isCollapsed ? "mr-0" : "mr-2"
+                                                )} />
+                                                {!isCollapsed && <span>{item.label}</span>}
+                                            </Button>
+                                        </TooltipTrigger>
+                                        {isCollapsed && (
+                                            <TooltipContent side="right">
+                                                {item.label}
+                                            </TooltipContent>
+                                        )}
+                                    </Tooltip>
+                                </TooltipProvider>
+                            </li>
+                        ))}
+                    </ul>
+                </nav>
+            </aside>
+        </>
     );
 };
 
@@ -293,6 +395,7 @@ interface HeaderSidebarLayoutProps {
 
 const HeaderSidebarLayout: React.FC<HeaderSidebarLayoutProps> = ({ children }) => {
     const [isCollapsed, setIsCollapsed] = useState(false);
+    const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
     const [searchTerm, setSearchTerm] = useState('');
     const [searchResults, setSearchResults] = useState<any[]>([]);
     const { user } = useAuth();
@@ -303,6 +406,7 @@ const HeaderSidebarLayout: React.FC<HeaderSidebarLayoutProps> = ({ children }) =
     const [membershipTier, setMembershipTier] = useState('BASIC');
 
     const toggleCollapse = () => setIsCollapsed(!isCollapsed);
+
     useEffect(() => {
         setWalletBalance(1800);
         setCommissionBalance(500);
@@ -323,9 +427,26 @@ const HeaderSidebarLayout: React.FC<HeaderSidebarLayoutProps> = ({ children }) =
         setSearchResults(filteredResults);
     };
 
+    // Prevent body scroll when mobile sidebar is open
+    useEffect(() => {
+        if (mobileSidebarOpen) {
+            document.body.style.overflow = 'hidden';
+        } else {
+            document.body.style.overflow = '';
+        }
+    }, [mobileSidebarOpen]);
+
     return (
         <div className="flex h-screen">
-            <Sidebar isCollapsed={isCollapsed} toggleCollapse={toggleCollapse} />
+            {/* Sidebar for desktop and mobile */}
+            <Sidebar
+                isCollapsed={isCollapsed}
+                toggleCollapse={toggleCollapse}
+                mobileOpen={mobileSidebarOpen}
+                onMobileClose={() => setMobileSidebarOpen(false)}
+            />
+            {/* Overlay for mobile sidebar */}
+            <SidebarOverlay show={mobileSidebarOpen} onClose={() => setMobileSidebarOpen(false)} />
             <div className="flex-1 flex flex-col">
                 <Header 
                     walletBalance={walletBalance} 
@@ -335,8 +456,10 @@ const HeaderSidebarLayout: React.FC<HeaderSidebarLayoutProps> = ({ children }) =
                     searchResults={searchResults}
                     kycStatus={kycStatus}
                     membershipTier={membershipTier}
+                    onMobileMenuClick={() => setMobileSidebarOpen(true)}
+                    isSidebarCollapsed={isCollapsed}
                 />
-                <main className="flex-1 p-4 overflow-auto">
+                <main className="flex-1 p-2 sm:p-4 overflow-auto">
                     {children}
                 </main>
             </div>
