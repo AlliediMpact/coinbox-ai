@@ -5,6 +5,7 @@ import { SidebarProvider } from '@/components/ui/sidebar';
 import { Toaster } from '@/components/ui/toaster';
 import { AuthProvider } from '@/components/AuthProvider';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
+import HeaderSidebarLayout from '@/components/HeaderSidebar';
 
 export const metadata: Metadata = {
   title: 'Allied iMpact Coin Box',
@@ -22,7 +23,9 @@ export default function RootLayout({
         <ErrorBoundary>
           <AuthProvider>
             <SidebarProvider>
-              {children}
+              <HeaderSidebarLayout>
+                {children}
+              </HeaderSidebarLayout>
               <Toaster />
             </SidebarProvider>
           </AuthProvider>

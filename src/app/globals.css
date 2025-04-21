@@ -137,6 +137,30 @@ body {
   color: white; /* Pure white on hover */
 }
 
+/* Sidebar active and hover styles */
+.sidebar .button.active,
+.sidebar .button[data-active="true"],
+.sidebar .button.active:focus {
+  background-color: #193281 !important;
+  color: #fff !important;
+}
+.sidebar .button.active:hover,
+.sidebar .button[data-active="true"]:hover {
+  background-color: #193281 !important;
+  color: #fff !important;
+}
+.sidebar .button:hover,
+.sidebar .button:focus-visible {
+  background-color: #fff !important;
+  color: #5e17eb !important;
+}
+
+/* Hamburger menu hover color */
+button[aria-label="Open sidebar menu"]:hover,
+button[aria-label="Close sidebar"]:hover {
+  background-color: #5e17eb !important;
+}
+
 /* Auth Card Flip Animation */
 .auth-container {
     perspective: 1000px;
@@ -231,6 +255,90 @@ body {
 
 .auth-button-outline:hover {
     background: rgba(255, 255, 255, 0.1);
+}
+
+/* Auth submit button styles */
+.auth-page .button, .auth-button, .auth-form button[type="submit"] {
+  background-color: #193281 !important;
+  color: #fff !important;
+  transition: background 0.3s, color 0.3s;
+}
+.auth-page .button:hover, .auth-button:hover, .auth-form button[type="submit"]:hover {
+  background-color: #5e17eb !important;
+  color: #fff !important;
+}
+
+/* Center auth forms and make responsive */
+.auth-page, .auth-container, .auth-form {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  width: 100vw;
+  padding: 1rem;
+  box-sizing: border-box;
+}
+.auth-form {
+  width: 100%;
+  max-width: 400px;
+  background: rgba(255,255,255,0.08);
+  border-radius: 1rem;
+  padding: 2rem 1.5rem;
+  box-shadow: 0 4px 24px rgba(25,50,129,0.08);
+  margin: 0 auto;
+}
+
+/* Responsive tweaks */
+@media (max-width: 600px) {
+  .auth-form {
+    max-width: 98vw;
+    padding: 1.2rem 0.5rem;
+  }
+  .auth-page, .auth-container {
+    padding: 0.5rem;
+  }
+}
+
+/* Logo animation */
+.logo-animated {
+  transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.logo-animated:hover {
+  transform: rotate(-15deg) scale(1.08);
+}
+
+/* Responsive page content for Home, About, Contact */
+.responsive-center-page {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem 1rem;
+  box-sizing: border-box;
+}
+
+.responsive-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.25rem 0.75rem;
+  font-size: 1rem;
+  border-radius: 9999px;
+  background: #5e17eb;
+  color: #fff;
+  margin-bottom: 1.5rem;
+  font-weight: 500;
+}
+
+@media (max-width: 640px) {
+  .responsive-center-page {
+    padding: 1rem 0.5rem;
+  }
+  .responsive-badge {
+    font-size: 0.9rem;
+    padding: 0.2rem 0.6rem;
+  }
 }
 
 

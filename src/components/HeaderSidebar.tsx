@@ -91,7 +91,10 @@ const Header: React.FC<HeaderProps & { onMobileMenuClick: () => void; isSidebarC
                     <TooltipProvider>
                         <Tooltip>
                             <TooltipTrigger>
-                                <Badge variant="warning" className="ml-2">
+                                <Badge
+                                    className="ml-2"
+                                    style={{ backgroundColor: '#5e17eb', color: 'white' }}
+                                >
                                     <AlertCircle className="w-4 h-4 mr-1" />
                                     Pending
                                 </Badge>
@@ -130,15 +133,16 @@ const Header: React.FC<HeaderProps & { onMobileMenuClick: () => void; isSidebarC
                 </button>
                 {/* Logo: show in header if sidebar is collapsed (desktop) or always on mobile */}
                 <span className={cn(
-                    "mr-2 cursor-pointer",
+                    "mr-2 cursor-pointer logo-animated",
                     "block sm:hidden", // always show on mobile
                     isSidebarCollapsed ? "hidden sm:block" : "hidden" // show on desktop only if collapsed
                 )}>
                     <Image
                         src="/assets/coinbox-ai.svg"
                         alt="App Logo"
-                        width={50}
-                        height={50}
+                        width={40}
+                        height={40}
+                        className="logo-animated"
                         onClick={() => router.push('/')}
                     />
                 </span>
@@ -239,8 +243,15 @@ const Sidebar: React.FC<SidebarProps & { mobileOpen: boolean; onMobileClose: () 
     onMobileClose
 }) => {
     const router = useRouter();
+    const { user } = useAuth();
 
-    const navigationItems = [
+    // Define navigation items for logged-in and logged-out users
+    const loggedOutItems = [
+        { icon: HomeIcon, label: 'Home', path: '/' },
+        { icon: UserIcon, label: 'About Us', path: '/about' },
+        { icon: HelpCircle, label: 'Contact Us', path: '/contact' },
+    ];
+    const loggedInItems = [
         { icon: HomeIcon, label: 'Dashboard', path: '/dashboard' },
         { icon: Coins, label: 'Trading', path: '/dashboard/trading' },
         { icon: PiggyBank, label: 'Investments', path: '/dashboard/investments' },
@@ -251,6 +262,12 @@ const Sidebar: React.FC<SidebarProps & { mobileOpen: boolean; onMobileClose: () 
         { icon: Shield, label: 'Security', path: '/dashboard/security' },
         { icon: HelpCircle, label: 'Support', path: '/dashboard/support' },
     ];
+
+    // Determine which items to show
+    const navigationItems = user ? loggedInItems : loggedOutItems;
+
+    // Get current path for active link styling
+    const currentPath = typeof window !== "undefined" ? window.location.pathname : "";
 
     return (
         <>
@@ -270,14 +287,19 @@ const Sidebar: React.FC<SidebarProps & { mobileOpen: boolean; onMobileClose: () 
                             alt="Sidebar Logo"
                             width={40}
                             height={40}
-                            className="cursor-pointer"
+                            className="cursor-pointer logo-animated"
                             onClick={() => router.push('/')}
                         />
                     )}
                     <TooltipProvider>
                         <Tooltip>
                             <TooltipTrigger asChild>
-                                <Button variant="ghost" size="icon" onClick={toggleCollapse}>
+                                <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    onClick={toggleCollapse}
+                                    className="hover:bg-[#5e17eb]"
+                                >
                                     <Menu className="h-4 w-4" />
                                 </Button>
                             </TooltipTrigger>
@@ -292,35 +314,42 @@ const Sidebar: React.FC<SidebarProps & { mobileOpen: boolean; onMobileClose: () 
                 </div>
                 <nav className="flex-1 p-4">
                     <ul className="space-y-2">
-                        {navigationItems.map((item) => (
-                            <li key={item.path}>
-                                <TooltipProvider>
-                                    <Tooltip>
-                                        <TooltipTrigger asChild>
-                                            <Button
-                                                variant="ghost"
-                                                className={cn(
-                                                    "w-full justify-start",
-                                                    isCollapsed ? "px-2" : "px-4"
-                                                )}
-                                                onClick={() => router.push(item.path)}
-                                            >
-                                                <item.icon className={cn(
-                                                    "h-4 w-4",
-                                                    isCollapsed ? "mr-0" : "mr-2"
-                                                )} />
-                                                {!isCollapsed && <span>{item.label}</span>}
-                                            </Button>
-                                        </TooltipTrigger>
-                                        {isCollapsed && (
-                                            <TooltipContent side="right">
-                                                {item.label}
-                                            </TooltipContent>
-                                        )}
-                                    </Tooltip>
-                                </TooltipProvider>
-                            </li>
-                        ))}
+                        {navigationItems.map((item) => {
+                            const isActive = currentPath === item.path || (currentPath.startsWith(item.path) && item.path !== '/');
+                            return (
+                                <li key={item.path}>
+                                    <TooltipProvider>
+                                        <Tooltip>
+                                            <TooltipTrigger asChild>
+                                                <Button
+                                                    variant="ghost"
+                                                    className={cn(
+                                                        "w-full justify-start transition-colors",
+                                                        isCollapsed ? "px-2" : "px-4",
+                                                        isActive
+                                                            ? "bg-[#193281] text-white"
+                                                            : "hover:bg-white hover:text-[#5e17eb] text-secondary-foreground"
+                                                    )}
+                                                    style={isActive ? { pointerEvents: 'none' } : {}}
+                                                    onClick={() => router.push(item.path)}
+                                                >
+                                                    <item.icon className={cn(
+                                                        "h-4 w-4",
+                                                        isCollapsed ? "mr-0" : "mr-2"
+                                                    )} />
+                                                    {!isCollapsed && <span>{item.label}</span>}
+                                                </Button>
+                                            </TooltipTrigger>
+                                            {isCollapsed && (
+                                                <TooltipContent side="right">
+                                                    {item.label}
+                                                </TooltipContent>
+                                            )}
+                                        </Tooltip>
+                                    </TooltipProvider>
+                                </li>
+                            );
+                        })}
                     </ul>
                 </nav>
             </aside>
@@ -341,10 +370,16 @@ const Sidebar: React.FC<SidebarProps & { mobileOpen: boolean; onMobileClose: () 
                         alt="Sidebar Logo"
                         width={40}
                         height={40}
-                        className="cursor-pointer"
+                        className="cursor-pointer logo-animated"
                         onClick={() => router.push('/')}
                     />
-                    <Button variant="ghost" size="icon" onClick={onMobileClose} aria-label="Close sidebar">
+                    <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={onMobileClose}
+                        aria-label="Close sidebar"
+                        className="hover:bg-[#5e17eb]"
+                    >
                         <Menu className="h-4 w-4" />
                     </Button>
                 </div>
@@ -353,35 +388,30 @@ const Sidebar: React.FC<SidebarProps & { mobileOpen: boolean; onMobileClose: () 
                 </div>
                 <nav className="flex-1 p-4">
                     <ul className="space-y-2">
-                        {navigationItems.map((item) => (
-                            <li key={item.path}>
-                                <TooltipProvider>
-                                    <Tooltip>
-                                        <TooltipTrigger asChild>
-                                            <Button
-                                                variant="ghost"
-                                                className={cn(
-                                                    "w-full justify-start",
-                                                    isCollapsed ? "px-2" : "px-4"
-                                                )}
-                                                onClick={() => router.push(item.path)}
-                                            >
-                                                <item.icon className={cn(
-                                                    "h-4 w-4",
-                                                    isCollapsed ? "mr-0" : "mr-2"
-                                                )} />
-                                                {!isCollapsed && <span>{item.label}</span>}
-                                            </Button>
-                                        </TooltipTrigger>
-                                        {isCollapsed && (
-                                            <TooltipContent side="right">
-                                                {item.label}
-                                            </TooltipContent>
+                        {navigationItems.map((item) => {
+                            const isActive = currentPath === item.path || (currentPath.startsWith(item.path) && item.path !== '/');
+                            return (
+                                <li key={item.path}>
+                                    <Button
+                                        variant="ghost"
+                                        className={cn(
+                                            "w-full justify-start transition-colors",
+                                            isActive
+                                                ? "bg-[#193281] text-white"
+                                                : "hover:bg-white hover:text-[#5e17eb] text-secondary-foreground"
                                         )}
-                                    </Tooltip>
-                                </TooltipProvider>
-                            </li>
-                        ))}
+                                        style={isActive ? { pointerEvents: 'none' } : {}}
+                                        onClick={() => {
+                                            router.push(item.path);
+                                            onMobileClose();
+                                        }}
+                                    >
+                                        <item.icon className="h-4 w-4 mr-2" />
+                                        <span>{item.label}</span>
+                                    </Button>
+                                </li>
+                            );
+                        })}
                     </ul>
                 </nav>
             </aside>
