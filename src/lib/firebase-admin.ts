@@ -1,7 +1,10 @@
+import admin from "firebase-admin";
+
+let adminAuth: admin.auth.Auth | null = null;
+let adminDb: admin.firestore.Firestore | null = null;
+
 // This ensures the code only runs on the server
 if (typeof window === 'undefined') {
-  const admin = require('firebase-admin');
-
   if (!admin.apps.length) {
     admin.initializeApp({
       credential: admin.credential.cert({
@@ -13,9 +16,10 @@ if (typeof window === 'undefined') {
     });
   }
 
-  export const adminAuth = admin.auth();
-  export const adminDb = admin.firestore();
-} else {
-  export const adminAuth = null;
-  export const adminDb = null;
+  if (admin.apps.length) {
+    adminAuth = admin.auth();
+    adminDb = admin.firestore();
+  }
 }
+
+export { adminAuth, adminDb };

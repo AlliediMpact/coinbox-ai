@@ -348,6 +348,15 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
         throw new Error('Invalid membership tier selected');
       }
 
+      // Enforce Paystack payment before user creation
+      if (!userData.paymentReference) {
+        throw new Error('Payment reference is required');
+      }
+      const paymentValid = await validatePayment(userData.paymentReference);
+      if (!paymentValid) {
+        throw new Error('Payment validation failed');
+      }
+
       // Create user in Firebase Auth
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
@@ -382,12 +391,14 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
       });
 
       await sendEmailVerification(user);
-      await signOut(auth);
 
+      // Instead of signing out, redirect to profile page
       toast({
         title: "Account Created",
         description: "Please verify your email to activate your account.",
       });
+
+      router.push('/profile');
     } catch (error: any) {
       console.error('Sign up error:', error);
       throw error;
