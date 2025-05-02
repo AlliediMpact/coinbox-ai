@@ -55,11 +55,11 @@ interface HeaderProps {
     membershipTier: string;
 }
 
-const Header: React.FC<HeaderProps & { onMobileMenuClick: () => void; isSidebarCollapsed: boolean }> = ({ 
-    walletBalance, 
-    commissionBalance, 
-    searchTerm, 
-    handleSearch, 
+const Header: React.FC<HeaderProps & { onMobileMenuClick: () => void; isSidebarCollapsed: boolean }> = ({
+    walletBalance,
+    commissionBalance,
+    searchTerm,
+    handleSearch,
     searchResults,
     kycStatus,
     membershipTier,
@@ -121,7 +121,7 @@ const Header: React.FC<HeaderProps & { onMobileMenuClick: () => void; isSidebarC
     };
 
     return (
-        <header className="bg-primary text-primary-foreground py-3 px-4 flex items-center justify-between shadow-md relative">
+        <header className="bg-primary text-primary-foreground py-3 px-4 flex items-center justify-between shadow-md relative w-full"> {/* Added w-full */}
             <div className="flex items-center">
                 {/* Hamburger for mobile */}
                 <button
@@ -276,7 +276,8 @@ const Sidebar: React.FC<SidebarProps & { mobileOpen: boolean; onMobileClose: () 
                 className={cn(
                     "bg-secondary text-secondary-foreground flex flex-col transition-width duration-300 shadow-md h-full z-30",
                     isCollapsed ? 'w-16' : 'w-64',
-                    "hidden sm:flex"
+                    "hidden sm:flex",
+                    "flex-shrink-0" // Added flex-shrink-0
                 )}
             >
                 <div className="flex items-center justify-between p-4">
@@ -309,7 +310,7 @@ const Sidebar: React.FC<SidebarProps & { mobileOpen: boolean; onMobileClose: () 
                         </Tooltip>
                     </TooltipProvider>
                 </div>
-                <div className="p-4">
+                <div className={cn("p-4", isCollapsed && "hidden")}> {/* Added conditional hidden */}
                     <Input type="text" placeholder="Search..." className="bg-secondary-foreground/10 border-none text-secondary-foreground" />
                 </div>
                 <nav className="flex-1 p-4">
@@ -477,12 +478,12 @@ const HeaderSidebarLayout: React.FC<HeaderSidebarLayoutProps> = ({ children }) =
             />
             {/* Overlay for mobile sidebar */}
             <SidebarOverlay show={mobileSidebarOpen} onClose={() => setMobileSidebarOpen(false)} />
-            <div className="flex-1 flex flex-col">
-                <Header 
-                    walletBalance={walletBalance} 
-                    commissionBalance={commissionBalance} 
-                    searchTerm={searchTerm} 
-                    handleSearch={handleSearch} 
+            <div className="flex-1 flex flex-col overflow-hidden"> {/* Added overflow-hidden */}
+                <Header
+                    walletBalance={walletBalance}
+                    commissionBalance={commissionBalance}
+                    searchTerm={searchTerm}
+                    handleSearch={handleSearch}
                     searchResults={searchResults}
                     kycStatus={kycStatus}
                     membershipTier={membershipTier}

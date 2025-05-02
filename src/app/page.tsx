@@ -32,13 +32,12 @@ import {
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import HeaderSidebarLayout from "@/components/HeaderSidebar";
 
 const HomePageContent = () => {
     const router = useRouter();
 
     return (
-        <div className="flex flex-col items-center justify-center min-h-screen py-12">
+        <div className="flex flex-col items-center justify-center h-screen">
             {/* Hero Image */}
             <Image
                 src="/assets/hero-image.jpg" // Replace with your actual image path
@@ -107,8 +106,7 @@ export default function Home() {
     };
 
     return (
-        
-           <HeaderSidebarLayout>
+        <>
             {user ? (
                 user.email === 'admin@example.com' ? (
                     <AdminDashboard />
@@ -130,7 +128,6 @@ export default function Home() {
                  <HomePageContent />
             )}
             <SummaryComponent />
-         </HeaderSidebarLayout>
-        
+        </>
     );
 }

@@ -1,6 +1,7 @@
 'use client';
 
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { MEMBERSHIP_TIERS } from '@/lib/membership-tiers';
 import {
   getAuth,
   createUserWithEmailAndPassword,
@@ -13,11 +14,21 @@ import {
   sendPasswordResetEmail,
   confirmPasswordReset,
   applyActionCode,
-  GoogleAuthProvider,
-  signInWithPopup,
 } from 'firebase/auth';
 import { app } from '@/lib/firebase';
-import { doc, setDoc, getDoc, updateDoc, getFirestore, collection, query, where, getDocs, addDoc } from "firebase/firestore";
+import { 
+  doc, 
+  setDoc, 
+  getDoc, 
+  updateDoc, 
+  getFirestore, 
+  collection, 
+  query, 
+  where, 
+  getDocs, 
+  addDoc,
+  DocumentData 
+} from "firebase/firestore";
 import { useToast } from "@/hooks/use-toast";
 import { useRouter } from 'next/navigation';
 import { paystackService } from '@/lib/paystack-service';
@@ -26,18 +37,23 @@ import { getMembershipTier } from '@/lib/membership-tiers';
 interface AuthContextProps {
   user: User | null;
   loading: boolean;
-  validatePayment: (reference: string) => Promise<boolean>;
-  initiateSignUp: (email: string, password: string, additionalData?: any) => Promise<void>;
-  completeSignUp: (userData: any) => Promise<void>;
+  signUp: (email: string, password: string, userData: SignUpData) => Promise<void>;
   signIn: (email: string, password: string) => Promise<void>;
-  signInWithGoogle: () => Promise<void>;
-  signOutUser: () => Promise<void>;
-  sendPasswordResetLink: (email: string) => Promise<void>;
+  signOut: () => Promise<void>;  // change signOutUser to signOut in interface
+  sendPasswordReset: (email: string) => Promise<void>;
   resetPassword: (oobCode: string, newPassword: string) => Promise<void>;
   verifyEmail: (oobCode: string) => Promise<void>;
   updateUserProfile: (data: Partial<UserProfile>) => Promise<void>;
   resendVerificationEmail: () => Promise<void>;
   checkEmailVerification: () => Promise<boolean>;
+}
+
+interface SignUpData {
+  fullName: string;
+  phone: string;
+  referralCode?: string;
+  membershipTier: 'Basic' | 'Ambassador' | 'VIP' | 'Business';
+  paymentReference?: string;
 }
 
 interface UserProfile {
@@ -54,6 +70,36 @@ interface UserProfile {
 const PERSISTENCE_KEY = 'auth_session';
 const SESSION_DURATION = 7 * 24 * 60 * 60 * 1000; // 7 days
 const SESSION_RENEWAL_THRESHOLD = 24 * 60 * 60 * 1000; // 1 day
+
+const PASSWORD_REQUIREMENTS = {
+  minLength: 8,
+  requireUppercase: true,
+  requireLowercase: true,
+  requireNumber: true,
+  requireSpecial: true,
+};
+
+const validatePassword = (password: string): { isValid: boolean; error?: string } => {
+  if (password.length < PASSWORD_REQUIREMENTS.minLength) {
+    return { isValid: false, error: `Password must be at least ${PASSWORD_REQUIREMENTS.minLength} characters long` };
+  }
+  if (PASSWORD_REQUIREMENTS.requireUppercase && !/[A-Z]/.test(password)) {
+    return { isValid: false, error: 'Password must contain at least one uppercase letter' };
+  }
+  if (PASSWORD_REQUIREMENTS.requireLowercase && !/[a-z]/.test(password)) {
+    return { isValid: false, error: 'Password must contain at least one lowercase letter' };
+  }
+  if (PASSWORD_REQUIREMENTS.requireNumber && !/\d/.test(password)) {
+    return { isValid: false, error: 'Password must contain at least one number' };
+  }
+  if (PASSWORD_REQUIREMENTS.requireSpecial && !/[!@#$%^&*(),.?":{}|<>]/.test(password)) {
+    return { isValid: false, error: 'Password must contain at least one special character' };
+  }
+  return { isValid: true };
+};
+
+const EMAIL_VERIFICATION_INTERVAL = 5 * 60 * 1000; // 5 minutes
+const MAX_VERIFICATION_ATTEMPTS = 12; // 1 hour total (12 * 5 minutes)
 
 const AuthContext = createContext<AuthContextProps | undefined>(undefined);
 
@@ -72,14 +118,58 @@ interface Props {
 export const AuthProvider: React.FC<Props> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const [verificationAttempts, setVerificationAttempts] = useState(0);
+  const [emailVerificationTimer, setEmailVerificationTimer] = useState<NodeJS.Timeout | null>(null);
   const auth = getAuth(app);
   const db = getFirestore(app);
   const { toast } = useToast();
   const router = useRouter();
-  const googleProvider = new GoogleAuthProvider();
-  const [emailVerificationTimer, setEmailVerificationTimer] = useState<NodeJS.Timeout | null>(null);
 
-  // Session Management
+  const startEmailVerificationCheck = () => {
+    if (emailVerificationTimer) {
+      clearInterval(emailVerificationTimer);
+    }
+
+    const timer = setInterval(async () => {
+      if (!user || user.emailVerified || verificationAttempts >= MAX_VERIFICATION_ATTEMPTS) {
+        clearInterval(timer);
+        setEmailVerificationTimer(null);
+        return;
+      }
+
+      try {
+        await user.reload();
+        if (user.emailVerified) {
+          clearInterval(timer);
+          setEmailVerificationTimer(null);
+          await updateDoc(doc(db, "users", user.uid), {
+            emailVerified: true,
+            updatedAt: new Date()
+          });
+          toast({
+            title: "Email Verified",
+            description: "Your email has been verified successfully.",
+          });
+        } else {
+          setVerificationAttempts(prev => prev + 1);
+          if (verificationAttempts >= MAX_VERIFICATION_ATTEMPTS - 1) {
+            clearInterval(timer);
+            setEmailVerificationTimer(null);
+            toast({
+              title: "Verification Timeout",
+              description: "Please try verifying your email again or contact support.",
+              variant: "destructive",
+            });
+          }
+        }
+      } catch (error) {
+        console.error('Email verification check error:', error);
+      }
+    }, EMAIL_VERIFICATION_INTERVAL);
+
+    setEmailVerificationTimer(timer);
+  };
+
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       if (user) {
@@ -89,10 +179,11 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
           let session = sessionStr ? JSON.parse(sessionStr) : null;
           const now = Date.now();
           let shouldRenew = false;
+
           if (session) {
             // Expire session if too old
             if (now - session.timestamp > SESSION_DURATION) {
-              await signOutUser();
+              await signOut(auth);
               setUser(null);
               setLoading(false);
               return;
@@ -104,6 +195,7 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
           } else {
             shouldRenew = true;
           }
+
           if (shouldRenew) {
             const idToken = await user.getIdToken(true);
             await createSessionCookie(idToken);
@@ -111,55 +203,47 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
             localStorage.setItem(PERSISTENCE_KEY, JSON.stringify(session));
           }
 
-          // Check if email is verified
+          setUser(user);
+
+          // Start email verification check if needed
           if (!user.emailVerified) {
+            startEmailVerificationCheck();
+          }
+
+          // Check for suspicious activity
+          const flaggedDoc = await getDoc(doc(db, 'flaggedUsers', user.uid));
+          if (flaggedDoc.exists()) {
+            await invalidateSession();
             toast({
-              title: "Email Not Verified",
-              description: "Please verify your email to access all features.",
+              title: "Account Flagged",
+              description: "Your account has been flagged for suspicious activity. Please contact support.",
               variant: "destructive",
             });
+            return;
           }
-
-          // Check if profile is completed
-          const userDoc = await getDoc(doc(db, "users", user.uid));
-          if (userDoc.exists()) {
-            const userData = userDoc.data();
-            if (!userData.profileCompleted && window.location.pathname !== '/dashboard/profile') {
-              router.push('/dashboard/profile');
-            }
-          }
-
-          setUser(user);
         } catch (error) {
           console.error('Session refresh error:', error);
-          await signOutUser();
+          await invalidateSession();
         }
       } else {
-        // Check for existing session
-        const sessionStr = localStorage.getItem(PERSISTENCE_KEY);
-        if (sessionStr) {
-          const session = JSON.parse(sessionStr);
-          if (Date.now() - session.timestamp < SESSION_DURATION) {
-            // Session is still valid
-            const userDoc = await getDoc(doc(db, "users", session.uid));
-            if (userDoc.exists()) {
-              // Revalidate session
-              session.timestamp = Date.now();
-              localStorage.setItem(PERSISTENCE_KEY, JSON.stringify(session));
-            } else {
-              localStorage.removeItem(PERSISTENCE_KEY);
-            }
-          } else {
-            localStorage.removeItem(PERSISTENCE_KEY);
-          }
+        // Clear verification timer if exists
+        if (emailVerificationTimer) {
+          clearInterval(emailVerificationTimer);
+          setEmailVerificationTimer(null);
         }
+        setVerificationAttempts(0);
         setUser(null);
       }
       setLoading(false);
     });
 
-    return () => unsubscribe();
-  }, [auth, db, toast, router]);
+    return () => {
+      unsubscribe();
+      if (emailVerificationTimer) {
+        clearInterval(emailVerificationTimer);
+      }
+    };
+  }, [auth, db, router, toast, emailVerificationTimer]);
 
   // Invalidate session on suspicious activity or password change
   const invalidateSession = async () => {
@@ -250,315 +334,123 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
     }
   };
 
-  const initiateSignUp = async (email: string, password: string, additionalData = {}) => {
+  const signUp = async (email: string, password: string, userData: SignUpData) => {
     try {
-      const selectedTier = getMembershipTier(additionalData.membershipTier);
-      
-      // Initialize Paystack payment with proper amount
-      const response = await paystackService.initializePayment(
-        email,
-        selectedTier.securityFee,
-        {
-          fullName: additionalData.fullName,
-          phone: additionalData.phone,
-          referralCode: additionalData.referralCode,
-          membershipTier: additionalData.membershipTier,
-          metadata: {
-            securityFee: selectedTier.securityFee,
-            refundableAmount: selectedTier.refundableAmount,
-            administrationFee: selectedTier.administrationFee
-          }
-        }
-      );
+      // Validate password
+      const passwordValidation = validatePassword(password);
+      if (!passwordValidation.isValid) {
+        throw new Error(passwordValidation.error);
+      }
 
-      // Store signup data with membership details
-      localStorage.setItem('pending_signup', JSON.stringify({
-        email,
-        password,
-        ...additionalData,
+      // Validate membership tier
+      const tierConfig = MEMBERSHIP_TIERS[userData.membershipTier];
+      if (!tierConfig) {
+        throw new Error('Invalid membership tier selected');
+      }
+
+      // Create user in Firebase Auth
+      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+      const user = userCredential.user;
+
+      // Create user document with membership details
+      await setDoc(doc(db, "users", user.uid), {
+        fullName: userData.fullName,
+        email: user.email,
+        phone: userData.phone,
+        membershipTier: userData.membershipTier,
         membershipDetails: {
-          tier: selectedTier.name,
-          securityFee: selectedTier.securityFee,
-          refundableAmount: selectedTier.refundableAmount,
-          administrationFee: selectedTier.administrationFee
-        }
-      }));
-
-      window.location.href = response.data.authorization_url;
-    } catch (error: any) {
-      console.error('Payment initialization error:', error.message);
-      throw error;
-    }
-  };
-
-  const completeSignUp = async (userData: any) => {
-    try {
-      // Validate payment status first
-      const paymentValid = await validatePayment(userData.paymentReference);
-      if (!paymentValid) {
-        throw new Error('Payment validation failed');
-      }
-
-      const userCredential = await createUserWithEmailAndPassword(
-        auth,
-        userData.email,
-        userData.password
-      );
-      const { user } = userCredential;
-
-      // Send email verification immediately
-      await sendEmailVerification(user);
-      startEmailVerificationCheck(user);
-
-      // Update user profile
-      await updateProfile(user, {
-        displayName: userData.fullName || null,
-      });
-
-      // Generate unique referral code
-      const referralCode = await generateUniqueReferralCode(userData.fullName);
-
-      // Create user document in Firestore
-      const userDocRef = doc(db, "users", user.uid);
-      await setDoc(userDocRef, {
-        fullName: userData.fullName || null,
-        phone: userData.phone || null,
-        email: userData.email,
-        emailVerified: false,
-        membershipTier: userData.membershipTier || 'Basic',
-        kycStatus: 'none',
-        paymentVerified: true,
-        paymentReference: userData.paymentReference,
-        paymentDetails: {
-          securityFee: userData.membershipDetails?.securityFee,
-          refundableAmount: userData.membershipDetails?.refundableAmount,
-          administrationFee: userData.membershipDetails?.administrationFee,
-          paidAt: new Date()
+          securityFee: tierConfig.securityFee,
+          refundableAmount: tierConfig.refundable,
+          adminFee: tierConfig.adminFee,
+          loanLimit: tierConfig.loanLimit,
+          investmentLimit: tierConfig.investmentLimit,
+          commission: tierConfig.commission
         },
-        referralCode: referralCode,
-        referralBy: null,
+        referralCode: userData.referralCode || "",
+        emailVerified: false,
+        kycStatus: 'none',
         createdAt: new Date(),
-        lastLoginAt: new Date(),
-        profileCompleted: false
+        lastLoginAt: new Date()
       });
 
-      // Create wallet document with proper structure
-      const walletDocRef = doc(db, "wallets", user.uid);
-      await setDoc(walletDocRef, {
-        mainBalance: 0,
-        commissionBalance: 0,
-        lockedBalance: userData.membershipDetails?.refundableAmount || 0,
-        currency: 'ZAR',
-        createdAt: new Date(),
-        lastUpdatedAt: new Date(),
-        transactions: []
+      // Initialize wallet with locked security deposit
+      await setDoc(doc(db, "wallets", user.uid), {
+        availableBalance: 0,
+        lockedBalance: tierConfig.refundable,
+        totalBalance: tierConfig.refundable,
+        lastUpdated: new Date()
       });
 
-      // Handle referral if code exists
-      if (userData.referralCode) {
-        await processReferral(userData.referralCode, user.uid);
-      }
-
-      // Clear pending signup data
-      localStorage.removeItem('pending_signup');
+      await sendEmailVerification(user);
+      await signOut(auth);
 
       toast({
-        title: "Account Created Successfully",
-        description: "Please check your email to verify your account.",
+        title: "Account Created",
+        description: "Please verify your email to activate your account.",
       });
-
-      // Redirect to profile completion
-      router.push('/dashboard/profile');
-
-      return user;
     } catch (error: any) {
-      console.error('Signup completion error:', error.message);
+      console.error('Sign up error:', error);
       throw error;
     }
-  };
-
-  const processReferral = async (referralCode: string, newUserId: string) => {
-    try {
-      const usersRef = collection(db, "users");
-      const q = query(usersRef, where("referralCode", "==", referralCode));
-      const querySnapshot = await getDocs(q);
-
-      if (!querySnapshot.empty) {
-        const referrerDoc = querySnapshot.docs[0];
-        const referrerData = referrerDoc.data();
-        const referrerTier = getMembershipTier(referrerData.membershipTier);
-
-        // Update new user's referral information
-        await updateDoc(doc(db, "users", newUserId), {
-          referralBy: referrerDoc.id
-        });
-
-        // Create referral record
-        await addDoc(collection(db, "referrals"), {
-          referrerId: referrerDoc.id,
-          referredId: newUserId,
-          status: 'active',
-          commissionRate: referrerTier.commissionRate,
-          createdAt: new Date()
-        });
-      }
-    } catch (error) {
-      console.error('Error processing referral:', error);
-    }
-  };
-
-  const generateUniqueReferralCode = async (name: string): Promise<string> => {
-    const baseCode = name
-      .replace(/[^a-zA-Z0-9]/g, '')
-      .substring(0, 4)
-      .toUpperCase();
-    
-    let referralCode = `${baseCode}${Math.floor(1000 + Math.random() * 9000)}`;
-    let isUnique = false;
-    let attempts = 0;
-
-    while (!isUnique && attempts < 10) {
-      const existingUser = await getDocs(
-        query(collection(db, "users"), where("referralCode", "==", referralCode))
-      );
-
-      if (existingUser.empty) {
-        isUnique = true;
-      } else {
-        referralCode = `${baseCode}${Math.floor(1000 + Math.random() * 9000)}`;
-        attempts++;
-      }
-    }
-
-    return referralCode;
-  };
-
-  const startEmailVerificationCheck = (user: User) => {
-    if (emailVerificationTimer) {
-      clearTimeout(emailVerificationTimer);
-    }
-
-    const timer = setInterval(async () => {
-      try {
-        await user.reload();
-        if (user.emailVerified) {
-          clearInterval(timer);
-          await updateDoc(doc(db, "users", user.uid), {
-            emailVerified: true
-          });
-          toast({
-            title: "Email Verified",
-            description: "Your email has been successfully verified.",
-          });
-        }
-      } catch (error) {
-        console.error('Error checking email verification:', error);
-        clearInterval(timer);
-      }
-    }, 10000); // Check every 10 seconds
-
-    setEmailVerificationTimer(timer);
   };
 
   const signIn = async (email: string, password: string) => {
     try {
-      const result = await signInWithEmailAndPassword(auth, email, password);
-      const idToken = await result.user.getIdToken();
-      await createSessionCookie(idToken);
-      
-      const userDoc = await getDoc(doc(db, "users", result.user.uid));
-      
-      if (userDoc.exists()) {
-        await updateDoc(doc(db, "users", result.user.uid), {
-          lastLoginAt: new Date(),
-        });
+      const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      const user = userCredential.user;
+
+      if (!user.emailVerified) {
+        await signOut(auth);
+        throw new Error('Please verify your email before logging in.');
       }
 
-      return result.user;
-    } catch (error: any) {
-      console.error('Signin error:', error.message);
-      throw error;
-    }
-  };
+      await updateDoc(doc(db, "users", user.uid), {
+        lastLoginAt: new Date(),
+      });
 
-  const signInWithGoogle = async () => {
-    try {
-      const result = await signInWithPopup(auth, googleProvider);
-      const idToken = await result.user.getIdToken();
+      // Create session
+      const idToken = await user.getIdToken();
       await createSessionCookie(idToken);
-      
-      const { user } = result;
+      localStorage.setItem(PERSISTENCE_KEY, JSON.stringify({
+        uid: user.uid,
+        timestamp: Date.now()
+      }));
 
-      // Check if user document exists
-      const userDoc = await getDoc(doc(db, "users", user.uid));
-      if (!userDoc.exists()) {
-        // Create new user document for Google sign-in
-        await setDoc(doc(db, "users", user.uid), {
-          fullName: user.displayName,
-          email: user.email,
-          emailVerified: user.emailVerified,
-          membershipTier: 'Basic',
-          createdAt: new Date(),
-          lastLoginAt: new Date(),
-        });
-
-        // Create wallet document
-        await setDoc(doc(db, "wallets", user.uid), {
-          balance: 0,
-          pendingBalance: 0,
-          currency: 'ZAR',
-          createdAt: new Date(),
-        });
-      } else {
-        // Update last login
-        await updateDoc(doc(db, "users", user.uid), {
-          lastLoginAt: new Date(),
-        });
-      }
-
-      return user;
+      router.push('/dashboard');
     } catch (error: any) {
-      console.error('Google sign-in error:', error.message);
+      console.error('Sign in error:', error);
       throw error;
     }
   };
 
-  const signOutUser = async () => {
-    try {
-      await signOut(auth);
-      // Clear session cookie
-      await fetch('/api/auth/session', { method: 'DELETE' });
-      localStorage.removeItem(PERSISTENCE_KEY);
-      router.push('/auth');
-    } catch (error: any) {
-      console.error('Signout error:', error.message);
-      throw error;
-    }
-  };
-
-  const sendPasswordResetLink = async (email: string) => {
+  const sendPasswordReset = async (email: string) => {
     try {
       await sendPasswordResetEmail(auth, email);
       toast({
-        title: "Reset Link Sent",
-        description: "Check your email for password reset instructions.",
+        title: "Password Reset Email Sent",
+        description: "Please check your inbox for reset instructions.",
       });
     } catch (error: any) {
-      console.error('Password reset error:', error.message);
+      console.error('Password reset error:', error);
       throw error;
     }
   };
 
   const resetPassword = async (oobCode: string, newPassword: string) => {
     try {
+      // Validate password
+      const passwordValidation = validatePassword(newPassword);
+      if (!passwordValidation.isValid) {
+        throw new Error(passwordValidation.error);
+      }
+
       await confirmPasswordReset(auth, oobCode, newPassword);
       toast({
-        title: "Password Reset",
+        title: "Password Reset Success",
         description: "Your password has been successfully reset.",
       });
-      await invalidateSession();
     } catch (error: any) {
-      console.error('Password reset confirmation error:', error.message);
+      console.error('Password reset error:', error);
       throw error;
     }
   };
@@ -576,33 +468,25 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
         description: "Your email has been successfully verified.",
       });
     } catch (error: any) {
-      console.error('Email verification error:', error.message);
+      console.error('Email verification error:', error);
       throw error;
     }
   };
 
+  // Add missing functions
   const updateUserProfile = async (data: Partial<UserProfile>) => {
     if (!user) throw new Error('No user logged in');
-
     try {
-      const userRef = doc(db, "users", user.uid);
-      await updateDoc(userRef, {
+      await updateDoc(doc(db, "users", user.uid), {
         ...data,
-        updatedAt: new Date(),
+        updatedAt: new Date()
       });
-
-      if (data.fullName) {
-        await updateProfile(user, {
-          displayName: data.fullName,
-        });
-      }
-
       toast({
         title: "Profile Updated",
         description: "Your profile has been successfully updated.",
       });
     } catch (error: any) {
-      console.error('Profile update error:', error.message);
+      console.error('Profile update error:', error);
       throw error;
     }
   };
@@ -616,7 +500,7 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
         description: "Please check your inbox for the verification link.",
       });
     } catch (error: any) {
-      console.error('Email verification resend error:', error.message);
+      console.error('Email verification resend error:', error);
       throw error;
     }
   };
@@ -627,30 +511,39 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
       await user.reload();
       return user.emailVerified;
     } catch (error) {
-      console.error('Error checking email verification:', error);
+      console.error('Email verification check error:', error);
       return false;
     }
   };
 
-  const value: AuthContextProps = {
-    user,
-    loading,
-    validatePayment,
-    initiateSignUp,
-    completeSignUp,
-    signIn,
-    signInWithGoogle,
-    signOutUser,
-    sendPasswordResetLink,
-    resetPassword,
-    verifyEmail,
-    updateUserProfile,
-    resendVerificationEmail,
-    checkEmailVerification,
+  // Implement signOut for context
+  const signOutUser = async () => {
+    try {
+      await signOut(auth);
+      localStorage.removeItem(PERSISTENCE_KEY);
+      setUser(null);
+      router.push('/auth');
+    } catch (error) {
+      console.error('Sign out error:', error);
+      throw error;
+    }
   };
 
+  // Return context with all required functions
   return (
-    <AuthContext.Provider value={value}>
+    <AuthContext.Provider value={{
+      user,
+      loading,
+      signUp,
+      signIn,
+      signOut: signOutUser,
+      sendPasswordReset,
+      resetPassword,
+      verifyEmail,
+      updateUserProfile,
+      resendVerificationEmail,
+      checkEmailVerification,
+    }}>
       {!loading && children}
     </AuthContext.Provider>
   );
