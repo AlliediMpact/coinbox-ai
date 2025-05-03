@@ -20,12 +20,18 @@ export default function CompleteSignupPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
-  const paymentReference = searchParams.get('reference');
+  // Fix: get reference on every render (searchParams is a function in Next 13+)
+  const paymentReference = typeof searchParams.get === 'function'
+    ? searchParams.get('reference')
+    : null;
 
   useEffect(() => {
-    const pending = localStorage.getItem('pending_signup');
-    if (pending) {
-      setUserData(JSON.parse(pending));
+    // Defensive: ensure this runs only on client
+    if (typeof window !== 'undefined') {
+      const pending = localStorage.getItem('pending_signup');
+      if (pending) {
+        setUserData(JSON.parse(pending));
+      }
     }
   }, []);
 
@@ -54,7 +60,9 @@ export default function CompleteSignupPage() {
         password,
         { ...userData, paymentReference }
       );
-      localStorage.removeItem('pending_signup');
+      if (typeof window !== 'undefined') {
+        localStorage.removeItem('pending_signup');
+      }
       toast({
         title: "Registration Complete",
         description: "Your account has been created. Please check your email to verify your account.",
