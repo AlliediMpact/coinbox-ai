@@ -34,3 +34,5 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+coinbox-connect-firebase-adminsdk-fbsvc-9391c339af.json

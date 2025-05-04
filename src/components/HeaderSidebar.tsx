@@ -9,7 +9,7 @@ import {
     DropdownMenuItem,
     DropdownMenuTrigger,
     DropdownMenuSeparator,
-} from "@/components/ui/dropdown-menu"
+} from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -46,16 +46,18 @@ import {
 import { getMembershipTier, formatCurrency } from '@/lib/membership-tiers';
 
 interface HeaderProps {
-    walletBalance: number;
-    commissionBalance: number;
+    walletBalance: number | string; // Allow string for formatted currency
+    commissionBalance: number | string; // Allow string for formatted currency
     searchTerm: string;
     handleSearch: (event: React.ChangeEvent<HTMLInputElement>) => void;
     searchResults: any[];
     kycStatus: 'pending' | 'verified' | 'unverified';
     membershipTier: string;
+    onMobileMenuClick: () => void;
+    isSidebarCollapsed: boolean;
 }
 
-const Header: React.FC<HeaderProps & { onMobileMenuClick: () => void; isSidebarCollapsed: boolean }> = ({
+const Header: React.FC<HeaderProps> = ({
     walletBalance,
     commissionBalance,
     searchTerm,
@@ -66,9 +68,9 @@ const Header: React.FC<HeaderProps & { onMobileMenuClick: () => void; isSidebarC
     onMobileMenuClick,
     isSidebarCollapsed
 }) => {
-    const { user, signOutUser } = useAuth();
+    const { user, signOut } = useAuth(); // Use signOut from context
     const router = useRouter();
-    const tier = getMembershipTier(membershipTier);
+    const tier = getMembershipTier(membershipTier); // Assuming getMembershipTier handles the string value
 
     const KycStatusBadge = () => {
         switch (kycStatus) {
@@ -121,7 +123,7 @@ const Header: React.FC<HeaderProps & { onMobileMenuClick: () => void; isSidebarC
     };
 
     return (
-        <header className="bg-primary text-primary-foreground py-3 px-4 flex items-center justify-between shadow-md relative w-full"> {/* Added w-full */}
+        <header className="bg-primary text-primary-foreground py-3 px-4 flex items-center justify-between shadow-md relative w-full">
             <div className="flex items-center">
                 {/* Hamburger for mobile */}
                 <button
@@ -177,16 +179,16 @@ const Header: React.FC<HeaderProps & { onMobileMenuClick: () => void; isSidebarC
                     </Badge>
                     <KycStatusBadge />
                     <DropdownMenu>
-                        <DropdownMenuTrigger>
-                            <Button className="px-4 py-2 bg-secondary text-secondary-foreground rounded-md hover:bg-secondary/80">
+                        <DropdownMenuTrigger asChild> {/* Added asChild to wrap the button */}
+                             <Button className="px-4 py-2 bg-secondary text-secondary-foreground rounded-md hover:bg-secondary/80">
                                 <Wallet className="w-4 h-4 mr-2" />
-                                {formatCurrency(walletBalance)}
+                                {formatCurrency(walletBalance)} {/* Ensure walletBalance is formatted */}
                             </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent className="w-56">
                             <DropdownMenuItem>
                                 <Coins className="w-4 h-4 mr-2" />
-                                Commission: {formatCurrency(commissionBalance)}
+                                Commission: {formatCurrency(commissionBalance)} {/* Ensure commissionBalance is formatted */}
                             </DropdownMenuItem>
                             <DropdownMenuItem onClick={() => router.push('/dashboard/wallet')}>
                                 <PiggyBank className="w-4 h-4 mr-2" />
@@ -196,14 +198,20 @@ const Header: React.FC<HeaderProps & { onMobileMenuClick: () => void; isSidebarC
                                 <TrendingUp className="w-4 h-4 mr-2" />
                                 Transaction History
                             </DropdownMenuItem>
+                             <DropdownMenuSeparator />
+                            <DropdownMenuItem onClick={() => signOut()}>
+                                <LogOut className="w-4 h-4 mr-2" />
+                                Logout
+                            </DropdownMenuItem>
                         </DropdownMenuContent>
                     </DropdownMenu>
                 </div>
             ) : (
                 <div className="space-x-4">
+                    {/* Corrected Sign Up button redirect */}
                     <Button
                         className="px-4 py-2 bg-secondary text-secondary-foreground rounded-md hover:bg-secondary/80"
-                        onClick={() => router.push('/auth')}
+                        onClick={() => router.push('/auth/signup')}
                     >
                         Sign Up
                     </Button>
@@ -234,16 +242,18 @@ const SidebarOverlay: React.FC<{ show: boolean; onClose: () => void }> = ({ show
 interface SidebarProps {
     isCollapsed: boolean;
     toggleCollapse: () => void;
+    mobileOpen: boolean;
+    onMobileClose: () => void;
 }
 
-const Sidebar: React.FC<SidebarProps & { mobileOpen: boolean; onMobileClose: () => void }> = ({
+const Sidebar: React.FC<SidebarProps> = ({
     isCollapsed,
     toggleCollapse,
     mobileOpen,
     onMobileClose
 }) => {
     const router = useRouter();
-    const { user } = useAuth();
+    const { user, signOut } = useAuth(); // Use signOut from context
 
     // Define navigation items for logged-in and logged-out users
     const loggedOutItems = [
@@ -261,6 +271,8 @@ const Sidebar: React.FC<SidebarProps & { mobileOpen: boolean; onMobileClose: () 
         { icon: Users, label: 'Community', path: '/dashboard/community' },
         { icon: Shield, label: 'Security', path: '/dashboard/security' },
         { icon: HelpCircle, label: 'Support', path: '/dashboard/support' },
+         // Add Logout to sidebar for logged-in users
+        { icon: LogOut, label: 'Logout', path: '/logout' } // Using /logout as a placeholder path
     ];
 
     // Determine which items to show
@@ -277,7 +289,7 @@ const Sidebar: React.FC<SidebarProps & { mobileOpen: boolean; onMobileClose: () 
                     "bg-secondary text-secondary-foreground flex flex-col transition-width duration-300 shadow-md h-full z-30",
                     isCollapsed ? 'w-16' : 'w-64',
                     "hidden sm:flex",
-                    "flex-shrink-0" // Added flex-shrink-0
+                    "flex-shrink-0"
                 )}
             >
                 <div className="flex items-center justify-between p-4">
@@ -310,13 +322,37 @@ const Sidebar: React.FC<SidebarProps & { mobileOpen: boolean; onMobileClose: () 
                         </Tooltip>
                     </TooltipProvider>
                 </div>
-                <div className={cn("p-4", isCollapsed && "hidden")}> {/* Added conditional hidden */}
+                <div className={cn("p-4", isCollapsed && "hidden")}>
                     <Input type="text" placeholder="Search..." className="bg-secondary-foreground/10 border-none text-secondary-foreground" />
                 </div>
                 <nav className="flex-1 p-4">
                     <ul className="space-y-2">
                         {navigationItems.map((item) => {
                             const isActive = currentPath === item.path || (currentPath.startsWith(item.path) && item.path !== '/');
+
+                            // Handle Logout separately in sidebar navigation
+                            if (item.path === '/logout') {
+                                return (
+                                     <li key={item.path}>
+                                        <Button
+                                            variant="ghost"
+                                            className={cn(
+                                                "w-full justify-start transition-colors",
+                                                isCollapsed ? "px-2" : "px-4",
+                                                 "hover:bg-white hover:text-[#5e17eb] text-secondary-foreground"
+                                            )}
+                                            onClick={() => signOut()} // Call signOut on click
+                                        >
+                                            <item.icon className={cn(
+                                                "h-4 w-4",
+                                                isCollapsed ? "mr-0" : "mr-2"
+                                            )} />
+                                            {!isCollapsed && <span>{item.label}</span>}
+                                        </Button>
+                                     </li>
+                                );
+                            }
+
                             return (
                                 <li key={item.path}>
                                     <TooltipProvider>
@@ -391,6 +427,29 @@ const Sidebar: React.FC<SidebarProps & { mobileOpen: boolean; onMobileClose: () 
                     <ul className="space-y-2">
                         {navigationItems.map((item) => {
                             const isActive = currentPath === item.path || (currentPath.startsWith(item.path) && item.path !== '/');
+
+                             // Handle Logout separately in mobile sidebar navigation
+                            if (item.path === '/logout') {
+                                return (
+                                     <li key={item.path}>
+                                        <Button
+                                            variant="ghost"
+                                            className={cn(
+                                                "w-full justify-start transition-colors",
+                                                "hover:bg-white hover:text-[#5e17eb] text-secondary-foreground"
+                                            )}
+                                            onClick={() => {
+                                                signOut(); // Call signOut on click
+                                                onMobileClose(); // Close sidebar on logout
+                                            }}
+                                        >
+                                            <item.icon className="h-4 w-4 mr-2" />
+                                            <span>{item.label}</span>
+                                        </Button>
+                                     </li>
+                                );
+                            }
+
                             return (
                                 <li key={item.path}>
                                     <Button
@@ -431,18 +490,27 @@ const HeaderSidebarLayout: React.FC<HeaderSidebarLayoutProps> = ({ children }) =
     const [searchResults, setSearchResults] = useState<any[]>([]);
     const { user } = useAuth();
     const router = useRouter();
-    const [walletBalance, setWalletBalance] = useState(0);
-    const [commissionBalance, setCommissionBalance] = useState(0);
+    const [walletBalance, setWalletBalance] = useState<number | string>(0); // Allow string for formatted currency
+    const [commissionBalance, setCommissionBalance] = useState<number | string>(0); // Allow string for formatted currency
     const [kycStatus, setKycStatus] = useState<'pending' | 'verified' | 'unverified'>('unverified');
     const [membershipTier, setMembershipTier] = useState('BASIC');
 
     const toggleCollapse = () => setIsCollapsed(!isCollapsed);
 
     useEffect(() => {
-        setWalletBalance(1800);
-        setCommissionBalance(500);
-    }, []);
+        // TODO: Fetch actual wallet and commission balances from backend/Firestore
+        // Consider using a real-time listener if you want balances to update dynamically
+        setWalletBalance(1800); // Placeholder
+        setCommissionBalance(500); // Placeholder
 
+        // TODO: Fetch actual KYC status and membership tier from backend/Firestore
+        // Consider using a real-time listener for user profile data
+        // setKycStatus(...); // Placeholder
+        // setMembershipTier(...); // Placeholder
+
+    }, []); // Empty dependency array means this runs once on mount
+
+    // TODO: Implement actual search functionality
     const handleSearch = (event: React.ChangeEvent<HTMLInputElement>) => {
         setSearchTerm(event.target.value);
         const mockResults = [
@@ -465,7 +533,11 @@ const HeaderSidebarLayout: React.FC<HeaderSidebarLayoutProps> = ({ children }) =
         } else {
             document.body.style.overflow = '';
         }
-    }, [mobileSidebarOpen]);
+         // Cleanup function to re-enable scroll when component unmounts
+        return () => {
+            document.body.style.overflow = '';
+        };
+    }, [mobileSidebarOpen]); // Re-run effect when mobileSidebarOpen changes
 
     return (
         <div className="flex h-screen">
@@ -478,7 +550,7 @@ const HeaderSidebarLayout: React.FC<HeaderSidebarLayoutProps> = ({ children }) =
             />
             {/* Overlay for mobile sidebar */}
             <SidebarOverlay show={mobileSidebarOpen} onClose={() => setMobileSidebarOpen(false)} />
-            <div className="flex-1 flex flex-col overflow-hidden"> {/* Added overflow-hidden */}
+            <div className="flex-1 flex flex-col overflow-hidden">
                 <Header
                     walletBalance={walletBalance}
                     commissionBalance={commissionBalance}
@@ -490,8 +562,12 @@ const HeaderSidebarLayout: React.FC<HeaderSidebarLayoutProps> = ({ children }) =
                     onMobileMenuClick={() => setMobileSidebarOpen(true)}
                     isSidebarCollapsed={isCollapsed}
                 />
-                <main className="flex-1 p-2 sm:p-4 overflow-auto">
-                    {children}
+                {/* Use overflow-y-auto for vertical scrolling in the main content area */}
+                <main className="flex-1 p-2 sm:p-4 overflow-y-auto">
+                    {/* Added a container for consistent page content width and centering */}
+                    <div className="container mx-auto max-w-screen-xl">
+                        {children}
+                    </div>
                 </main>
             </div>
         </div>

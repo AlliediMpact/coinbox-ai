@@ -13,7 +13,6 @@ import { Loader2 } from 'lucide-react';
 export default function AuthPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
   const [isResetMode, setIsResetMode] = useState(false);
   const [resetSent, setResetSent] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -23,9 +22,8 @@ export default function AuthPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError('');
     setIsLoading(true);
-    
+
     try {
       if (isResetMode) {
         await sendPasswordReset(email);
@@ -36,22 +34,30 @@ export default function AuthPage() {
         });
       } else {
         await signIn(email, password);
-        router.push('/dashboard');
+        // Redirect is handled within the signIn function in AuthProvider
       }
     } catch (err: any) {
+      console.error("Authentication failed:", err.message);
       const errorMessage = err.message || 'Authentication failed';
-      
+
       // Handle rate limiting error
       if (err.message?.includes('Too many login attempts')) {
-        const retryAfter = err.headers?.get('Retry-After');
-        const waitTime = retryAfter ? parseInt(retryAfter) : 900; // Default to 15 minutes
+        // Note: Rate-limiting headers might not be accessible on the client-side
+        // A server-side check or Firebase Auth's built-in protections are more robust
+        const waitTime = 900; // Default to 15 minutes if header not accessible
         toast({
           title: "Too Many Attempts",
           description: `Please try again after ${Math.ceil(waitTime / 60)} minutes`,
           variant: "destructive",
         });
-      } else {
-        setError(errorMessage);
+      } else if (err.message?.includes('Please verify your email before logging in')) {
+         toast({
+          title: "Email Not Verified",
+          description: "Please verify your email address to continue.",
+          variant: "destructive",
+        });
+      }
+      else {
         toast({
           title: "Authentication Failed",
           description: errorMessage,
@@ -71,8 +77,8 @@ export default function AuthPage() {
             {isResetMode ? 'Reset Password' : 'Login'}
           </CardTitle>
           <CardDescription>
-            {isResetMode 
-              ? 'Enter your email to receive a reset link' 
+            {isResetMode
+              ? 'Enter your email to receive a reset link'
               : 'Welcome back! Please enter your details'}
           </CardDescription>
         </CardHeader>
@@ -85,17 +91,16 @@ export default function AuthPage() {
               <p className="text-sm text-gray-500">
                 Check your email for instructions to reset your password.
               </p>
-              <Button onClick={() => setIsResetMode(false)}>
+              <Button onClick={() => {
+                 setIsResetMode(false);
+                 setResetSent(false); // Allow sending another reset if needed
+                 setEmail(''); // Clear email field
+              }}>
                 Back to Login
               </Button>
             </div>
           ) : (
             <form onSubmit={handleSubmit} className="space-y-4">
-              {error && (
-                <div className="text-sm text-red-500 font-medium">
-                  {error}
-                </div>
-              )}
               <Input
                 type="email"
                 placeholder="Email"
@@ -114,10 +119,10 @@ export default function AuthPage() {
                   disabled={isLoading}
                 />
               )}
-              <Button 
-                type="submit" 
+              <Button
+                type="submit"
                 className="w-full bg-[#193281] hover:bg-[#5e17eb]"
-                disabled={isLoading}
+                disabled={isLoading || (!isResetMode && (!email || !password)) || (isResetMode && !email)}
               >
                 {isLoading ? (
                   <>
@@ -131,15 +136,21 @@ export default function AuthPage() {
               <div className="flex justify-between text-sm">
                 <button
                   type="button"
-                  onClick={() => setIsResetMode(!isResetMode)}
+                  onClick={() => {
+                    setIsResetMode(!isResetMode);
+                    // Clear inputs when switching modes
+                    setEmail('');
+                    setPassword('');
+                    setResetSent(false);
+                  }}
                   className="text-[#193281] hover:text-[#5e17eb]"
                   disabled={isLoading}
                 >
                   {isResetMode ? 'Back to Login' : 'Forgot Password?'}
                 </button>
                 {!isResetMode && (
-                  <Link 
-                    href="/auth/signup" 
+                  <Link
+                    href="/auth/signup"
                     className="text-[#193281] hover:text-[#5e17eb]"
                   >
                     Create Account
