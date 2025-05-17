@@ -9,6 +9,14 @@ const nextConfig = {
   experimental: {
     serverActions: true,
   },
+  async rewrites() {
+    return [
+      {
+        source: '/:path*',
+        destination: `http://localhost:9004/:path*`,
+      },
+    ];
+  },
 };
 
 module.exports = nextConfig;
