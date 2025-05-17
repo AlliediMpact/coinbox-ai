@@ -1,6 +1,6 @@
 'use client';
 
-import {summarizeText} from '@/ai/flows/summarize-text-flow';
+import {summarizeText} from '@/app/actions/text-ai';
 import {Button} from '@/components/ui/button';
 import {Textarea} from '@/components/ui/textarea';
 import {useState} from 'react';
@@ -13,7 +13,7 @@ export default function SummaryComponent() {
 
   const handleSummarize = async () => {
     try {
-      const result = await summarizeText({text: text});
+      const result = await summarizeText(text);
       setSummary(result.summary);
       toast({
         title: "Summary Generated",

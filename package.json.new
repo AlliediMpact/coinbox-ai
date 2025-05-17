@@ -45,7 +45,6 @@
     "react": "18.2.0",
     "react-dom": "18.2.0",
     "react-hook-form": "7.42.0",
-    "recharts": "^2.7.2",
     "tailwind-merge": "2.1.0",
     "tailwindcss-animate": "1.0.7",
     "zod": "3.22.4"
