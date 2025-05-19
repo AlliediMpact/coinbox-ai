@@ -75,11 +75,19 @@ class PaystackService {
 
     async initializePayment(userId: string, email: string, amount: number, metadata: PaystackMetadata) {
         try {
+            // Input validation
+            if (!userId) throw new Error('User ID is required');
+            if (!email) throw new Error('Email is required');
+            if (!amount || amount <= 0) throw new Error('Valid amount is required');
+            
             // Validate amount against membership tier
             if (metadata.membershipTier) {
                 const tier = MEMBERSHIP_TIERS[metadata.membershipTier as keyof typeof MEMBERSHIP_TIERS];
                 if (!tier || amount !== tier.securityFee) {
-                    throw new Error('Invalid payment amount for selected membership tier');
+                    const error = new Error('Invalid payment amount for selected membership tier');
+                    // Log the error to our monitoring system
+                    await this.logPaymentFailure(userId, error, { amount, tierName: metadata.membershipTier });
+                    throw error;
                 }
             }
 
@@ -104,35 +112,58 @@ class PaystackService {
             );
 
             // Store payment attempt and log analytics
-            await Promise.all([
-                this.logPaymentAttempt(userId, response.data.data.reference, {
-                    amount,
-                    email,
-                    metadata,
-                    status: 'initiated'
-                }),
-                paymentMonitoring.logPaymentEvent({
-                    userId,
-                    paymentId: response.data.data.reference,
-                    eventType: 'initiate',
-                    amount,
-                    metadata
-                })
-            ]);
+            try {
+                await Promise.all([
+                    this.logPaymentAttempt(userId, response.data.data.reference, {
+                        amount,
+                        email,
+                        metadata,
+                        status: 'initiated'
+                    }),
+                    paymentMonitoring.logPaymentEvent({
+                        userId,
+                        paymentId: response.data.data.reference,
+                        eventType: 'initiate',
+                        amount,
+                        metadata
+                    })
+                ]);
+            } catch (logError) {
+                // Log but continue - logging failures shouldn't stop the payment process
+                console.error('Error logging payment attempt:', logError);
+            }
 
             return response.data;
         } catch (error) {
             // Log failure analytics
-            await paymentMonitoring.logPaymentEvent({
-                userId,
-                paymentId: 'failed_init',
-                eventType: 'failure',
-                amount,
-                errorDetails: error instanceof Error ? error.message : 'Unknown error'
-            }).catch(console.error);
+            await this.logPaymentFailure(userId, error, { amount, email });
+
+            // If this is the specific tier validation error, rethrow it
+            if (error instanceof Error && 
+                error.message === 'Invalid payment amount for selected membership tier') {
+                throw error;
+            }
 
             console.error('Payment initialization error:', error);
             throw new Error('Failed to initialize payment');
+        }
+    }
+    
+    /**
+     * Helper method to log payment failures
+     */
+    private async logPaymentFailure(userId: string, error: any, context: any) {
+        try {
+            await paymentMonitoring.logPaymentEvent({
+                userId,
+                paymentId: 'failed_init_' + new Date().getTime(),
+                eventType: 'failure',
+                amount: context.amount,
+                errorDetails: error instanceof Error ? error.message : 'Unknown error',
+                metadata: context
+            });
+        } catch (logError) {
+            console.error('Failed to log payment failure:', logError);
         }
     }
 

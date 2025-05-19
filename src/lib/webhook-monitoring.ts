@@ -12,9 +12,17 @@ class WebhookMonitoring {
         this.wss.on('connection', (ws: WebSocket) => {
             this.connectedClients.add(ws);
 
-            ws.on('close', () => {
-                this.connectedClients.delete(ws);
-            });
+            // Handle both browser WebSocket and Node.js ws package
+            if (typeof ws.on === 'function') {
+                ws.on('close', () => {
+                    this.connectedClients.delete(ws);
+                });
+            } else {
+                // For browser WebSocket or our mock
+                ws.addEventListener?.('close', () => {
+                    this.connectedClients.delete(ws);
+                });
+            }
         });
 
         // Set up Firestore listeners for real-time updates
@@ -24,34 +32,40 @@ class WebhookMonitoring {
     private setupFirestoreListeners() {
         if (!adminDb) return;
 
-        // Listen for payment events
-        adminDb.collection('payment_analytics')
-            .where('timestamp', '>=', new Date())
-            .onSnapshot(snapshot => {
-                snapshot.docChanges().forEach(change => {
-                    if (change.type === 'added') {
-                        this.broadcastEvent('payment_event', {
-                            type: 'analytics',
-                            data: {
-                                id: change.doc.id,
-                                ...change.doc.data()
+        try {
+            // Listen for payment events
+            adminDb.collection('payment_analytics')
+                .where('timestamp', '>=', new Date())
+                .onSnapshot(snapshot => {
+                    if (typeof snapshot.docChanges === 'function') {
+                        snapshot.docChanges().forEach(change => {
+                            if (change.type === 'added') {
+                                this.broadcastEvent('payment_event', {
+                                    type: 'analytics',
+                                    data: {
+                                        id: change.doc.id,
+                                        ...change.doc.data()
+                                    }
+                                });
                             }
                         });
                     }
                 });
-            });
 
-        // Listen for metric updates
-        adminDb.collection('payment_metrics')
-            .doc('global')
-            .onSnapshot(doc => {
-                if (doc.exists) {
-                    this.broadcastEvent('metric_update', {
-                        type: 'metrics',
-                        data: doc.data()
-                    });
-                }
-            });
+            // Listen for metric updates
+            adminDb.collection('payment_metrics')
+                .doc('global')
+                .onSnapshot(doc => {
+                    if (doc.exists || doc.exists === true || typeof doc.exists === 'function' && doc.exists()) {
+                        this.broadcastEvent('metric_update', {
+                            type: 'metrics',
+                            data: typeof doc.data === 'function' ? doc.data() : doc.data
+                        });
+                    }
+                });
+        } catch (error) {
+            console.error('Error setting up Firebase listeners:', error);
+        }
     }
 
     private broadcastEvent(eventType: string, data: any) {
@@ -61,11 +75,23 @@ class WebhookMonitoring {
             data
         });
 
-        this.connectedClients.forEach(client => {
-            if (client.readyState === WebSocket.OPEN) {
-                client.send(message);
+        for (const client of this.connectedClients) {
+            // Check for OPEN state (1) and prevent sending to closed connections (3)
+            if ((client as any).readyState === 1) {
+                // 1 is WebSocket.OPEN
+                try {
+                    client.send(message);
+                } catch (error) {
+                    console.error('Failed to send websocket message:', error);
+                    // Remove failed client
+                    this.connectedClients.delete(client);
+                }
+            } else if ((client as any).readyState === 3) {
+                // 3 is WebSocket.CLOSED
+                // Remove closed client from set
+                this.connectedClients.delete(client);
             }
-        });
+        }
     }
 
     public broadcastPaymentEvent(eventData: any) {

@@ -24,43 +24,67 @@ class PaymentMonitoringService {
     private readonly analyticsCollection = 'payment_analytics';
 
     async logPaymentEvent(analytics: Omit<PaymentAnalytics, 'timestamp'>) {
-        if (!adminDb) throw new Error('Firebase Admin not initialized');
+        if (!adminDb) {
+            console.warn('Firebase Admin not initialized - unable to log payment event');
+            return;
+        }
 
         try {
-            // Log the event
-            await adminDb.collection(this.analyticsCollection).add({
-                ...analytics,
-                timestamp: FieldValue.serverTimestamp()
-            });
+            // Create the collections reference
+            const analyticsCollection = adminDb.collection(this.analyticsCollection);
+            if (!analyticsCollection) {
+                console.error('Failed to access analytics collection');
+                return;
+            }
 
-            // Update metrics
-            const metricsRef = adminDb.collection(this.metricsCollection).doc('global');
-            await metricsRef.set({
-                totalAttempts: FieldValue.increment(1),
-                ...(analytics.eventType === 'success' && {
-                    successfulPayments: FieldValue.increment(1),
-                    totalAmount: FieldValue.increment(analytics.amount || 0)
-                }),
-                ...(analytics.eventType === 'failure' && {
-                    failedPayments: FieldValue.increment(1)
-                }),
-                lastUpdated: FieldValue.serverTimestamp()
-            }, { merge: true });
+            // Log the event with error handling for each operation
+            try {
+                await analyticsCollection.add({
+                    ...analytics,
+                    timestamp: FieldValue.serverTimestamp()
+                });
+            } catch (addError) {
+                console.error('Failed to add analytics document:', addError);
+            }
+
+            // Update global metrics
+            try {
+                const metricsRef = adminDb.collection(this.metricsCollection).doc('global');
+                await metricsRef.set({
+                    totalAttempts: FieldValue.increment(1),
+                    ...(analytics.eventType === 'success' && {
+                        successfulPayments: FieldValue.increment(1),
+                        totalAmount: FieldValue.increment(analytics.amount || 0)
+                    }),
+                    ...(analytics.eventType === 'failure' && {
+                        failedPayments: FieldValue.increment(1)
+                    }),
+                    lastUpdated: FieldValue.serverTimestamp()
+                }, { merge: true });
+            } catch (globalError) {
+                console.error('Failed to update global metrics:', globalError);
+            }
 
             // Update user-specific metrics
-            const userMetricsRef = adminDb.collection(this.metricsCollection)
-                .doc(`user_${analytics.userId}`);
-            await userMetricsRef.set({
-                totalAttempts: FieldValue.increment(1),
-                ...(analytics.eventType === 'success' && {
-                    successfulPayments: FieldValue.increment(1),
-                    totalAmount: FieldValue.increment(analytics.amount || 0)
-                }),
-                ...(analytics.eventType === 'failure' && {
-                    failedPayments: FieldValue.increment(1)
-                }),
-                lastUpdated: FieldValue.serverTimestamp()
-            }, { merge: true });
+            try {
+                if (analytics.userId) {
+                    const userMetricsRef = adminDb.collection(this.metricsCollection)
+                        .doc(`user_${analytics.userId}`);
+                    await userMetricsRef.set({
+                        totalAttempts: FieldValue.increment(1),
+                        ...(analytics.eventType === 'success' && {
+                            successfulPayments: FieldValue.increment(1),
+                            totalAmount: FieldValue.increment(analytics.amount || 0)
+                        }),
+                        ...(analytics.eventType === 'failure' && {
+                            failedPayments: FieldValue.increment(1)
+                        }),
+                        lastUpdated: FieldValue.serverTimestamp()
+                    }, { merge: true });
+                }
+            } catch (userError) {
+                console.error('Failed to update user metrics:', userError);
+            }
         } catch (error) {
             console.error('Error logging payment event:', error);
             // Don't throw - monitoring should not break main flow
@@ -68,34 +92,56 @@ class PaymentMonitoringService {
     }
 
     async getPaymentMetrics(userId?: string): Promise<PaymentMetrics> {
-        if (!adminDb) throw new Error('Firebase Admin not initialized');
+        // Default metrics in case of any errors
+        const defaultMetrics: PaymentMetrics = {
+            totalAttempts: 0,
+            successfulPayments: 0,
+            failedPayments: 0,
+            totalAmount: 0,
+            averageAmount: 0
+        };
+
+        if (!adminDb) {
+            console.warn('Firebase Admin not initialized - unable to get payment metrics');
+            return defaultMetrics;
+        }
 
         try {
             const docRef = userId 
                 ? adminDb.collection(this.metricsCollection).doc(`user_${userId}`)
                 : adminDb.collection(this.metricsCollection).doc('global');
 
+            if (!docRef) {
+                console.error('Failed to create document reference');
+                return defaultMetrics;
+            }
+
             const doc = await docRef.get();
-            if (!doc.exists) {
-                return {
-                    totalAttempts: 0,
-                    successfulPayments: 0,
-                    failedPayments: 0,
-                    totalAmount: 0,
-                    averageAmount: 0
-                };
+            
+            // Check if doc exists and has data
+            if (!doc || !doc.exists || typeof doc.data !== 'function') {
+                return defaultMetrics;
             }
 
             const data = doc.data() as PaymentMetrics;
+            
+            // Validate data to ensure we have all required fields
+            if (!data) {
+                return defaultMetrics;
+            }
+
             return {
-                ...data,
-                averageAmount: data.successfulPayments > 0 
+                totalAttempts: data.totalAttempts || 0,
+                successfulPayments: data.successfulPayments || 0,
+                failedPayments: data.failedPayments || 0,
+                totalAmount: data.totalAmount || 0,
+                averageAmount: data.successfulPayments && data.successfulPayments > 0 
                     ? data.totalAmount / data.successfulPayments 
                     : 0
             };
         } catch (error) {
             console.error('Error getting payment metrics:', error);
-            throw error;
+            return defaultMetrics;
         }
     }
 }
