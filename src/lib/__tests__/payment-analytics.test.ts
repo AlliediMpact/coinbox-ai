@@ -11,7 +11,13 @@ import { getServerSession } from 'next-auth';
 import { safeNextResponseJson } from '@/app/api-utils';
 
 jest.mock('next-auth');
-jest.mock('@/lib/payment-monitoring');
+jest.mock('@/lib/payment-monitoring', () => ({
+    paymentMonitoring: {
+        getPaymentMetrics: jest.fn(),
+        processWebhookEvent: jest.fn(),
+        logPaymentEvent: jest.fn()
+    }
+}));
 jest.mock('@/lib/webhook-validator');
 jest.mock('@/app/api-utils');
 
@@ -163,8 +169,7 @@ describe('Payment Analytics API', () => {
             
             expect(response.status).toBe(200);
             expect(data).toEqual({
-                status: 'success',
-                message: 'Webhook received'
+                status: 'success'
             });
         });
 

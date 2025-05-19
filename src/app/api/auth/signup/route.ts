@@ -223,9 +223,26 @@ export async function POST(request: Request) {
     const verificationLink = await auth.generateEmailVerificationLink(email, actionCodeSettings);
 
     console.log(`Generated email verification link for ${email}: ${verificationLink}`);
-    // TODO: Call actual email sending service with verificationLink
-    // Example: sendEmailService.sendVerification(email, fullName, verificationLink);
-    // For now, just log the link. You need to integrate an email sending service (e.g., SendGrid, Nodemailer, Firebase Extensions)
+    
+    // Send verification email using our email service
+    try {
+      const { emailService } = await import('@/lib/email-service');
+      await emailService.sendVerificationEmail(email, fullName, verificationLink);
+      console.log(`Verification email sent to ${email}`);
+      
+      // Also send payment confirmation
+      await emailService.sendPaymentConfirmation(
+        email, 
+        fullName, 
+        tierConfig.securityFee, 
+        membershipTier, 
+        paymentReference
+      );
+      console.log(`Payment confirmation email sent to ${email}`);
+    } catch (emailError) {
+      console.error('Failed to send verification email:', emailError);
+      // Don't fail the signup process if email sending fails
+    }
 
     // 6. Clean up the pending user document after successful creation
     await db.collection('pending_signups').doc(temporaryId).delete();

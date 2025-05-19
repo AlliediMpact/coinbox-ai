@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Input } from "@/components/ui/input";
@@ -9,6 +9,7 @@ import { useAuth } from '@/components/AuthProvider';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2 } from 'lucide-react';
+import ResendVerification from '@/components/ResendVerification';
 
 export default function AuthPage() {
   const [email, setEmail] = useState('');
@@ -16,9 +17,18 @@ export default function AuthPage() {
   const [isResetMode, setIsResetMode] = useState(false);
   const [resetSent, setResetSent] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const { signIn, sendPasswordReset } = useAuth();
+  const [showVerificationReminder, setShowVerificationReminder] = useState(false);
+  const [unverifiedEmail, setUnverifiedEmail] = useState('');
+  const { signIn, sendPasswordReset, user } = useAuth();
   const { toast } = useToast();
   const router = useRouter();
+  
+  // Redirect to dashboard if user is already authenticated
+  useEffect(() => {
+    if (user) {
+      router.push('/dashboard');
+    }
+  }, [user, router]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -50,12 +60,16 @@ export default function AuthPage() {
           description: `Please try again after ${Math.ceil(waitTime / 60)} minutes`,
           variant: "destructive",
         });
-      } else if (err.message?.includes('Please verify your email before logging in')) {
+      } else if (err.message?.includes('Please verify your email')) {
          toast({
           title: "Email Not Verified",
-          description: "Please verify your email address to continue.",
+          description: "Please verify your email to continue. Check your inbox for a verification link.",
           variant: "destructive",
+          duration: 6000, // Show longer for this important message
         });
+        // Show the verification reminder UI
+        setUnverifiedEmail(email);
+        setShowVerificationReminder(true);
       }
       else {
         toast({
@@ -92,72 +106,103 @@ export default function AuthPage() {
                 Check your email for instructions to reset your password.
               </p>
               <Button onClick={() => {
-                 setIsResetMode(false);
-                 setResetSent(false); // Allow sending another reset if needed
-                 setEmail(''); // Clear email field
+                setIsResetMode(false);
+                setResetSent(false); // Allow sending another reset if needed
+                setEmail(''); // Clear email field
               }}>
                 Back to Login
               </Button>
             </div>
           ) : (
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <Input
-                type="email"
-                placeholder="Email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-                disabled={isLoading}
-              />
-              {!isResetMode && (
+            showVerificationReminder ? (
+              <div className="space-y-4">
+                <div className="rounded-md bg-amber-50 p-4 border border-amber-200">
+                  <div className="flex">
+                    <div className="flex-shrink-0">
+                      <svg className="h-5 w-5 text-amber-400" viewBox="0 0 20 20" fill="currentColor">
+                        <path fillRule="evenodd" d="M8.485 2.495a.75.75 0 01.982 0l8.5 7.5a.75.75 0 01-.482 1.32H1.5a.75.75 0 01-.482-1.32l8.5-7.5zM4 12h12v3.75a.75.75 0 01-.75.75h-10.5a.75.75 0 01-.75-.75V12z" clipRule="evenodd" />
+                      </svg>
+                    </div>
+                    <div className="ml-3 flex-1">
+                      <p className="text-sm text-amber-800">
+                        Please check your inbox for a verification email sent to <strong>{unverifiedEmail}</strong>.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+                <ResendVerification email={unverifiedEmail} />
+                <Button
+                  variant="outline" 
+                  className="w-full mt-2"
+                  onClick={() => setShowVerificationReminder(false)}
+                >
+                  Try a different account
+                </Button>
+              </div>
+            ) : (
+              <form onSubmit={handleSubmit} className="space-y-4">
                 <Input
-                  type="password"
-                  placeholder="Password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
+                  type="email"
+                  placeholder="Email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
                   required
                   disabled={isLoading}
                 />
-              )}
-              <Button
-                type="submit"
-                className="w-full bg-[#193281] hover:bg-[#5e17eb]"
-                disabled={isLoading || (!isResetMode && (!email || !password)) || (isResetMode && !email)}
-              >
-                {isLoading ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    {isResetMode ? 'Sending...' : 'Signing in...'}
-                  </>
-                ) : (
-                  isResetMode ? 'Send Reset Link' : 'Login'
-                )}
-              </Button>
-              <div className="flex justify-between text-sm">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setIsResetMode(!isResetMode);
-                    // Clear inputs when switching modes
-                    setEmail('');
-                    setPassword('');
-                    setResetSent(false);
-                  }}
-                  className="text-[#193281] hover:text-[#5e17eb]"
-                  disabled={isLoading}
-                >
-                  {isResetMode ? 'Back to Login' : 'Forgot Password?'}
-                </button>
                 {!isResetMode && (
-                  <Link
-                    href="/auth/signup"
-                    className="text-[#193281] hover:text-[#5e17eb]"
-                  >
-                    Create Account
-                  </Link>
+                  <Input
+                    type="password"
+                    placeholder="Password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    required
+                    disabled={isLoading}
+                  />
                 )}
-              </div>
-            </form>
+                <Button
+                  type="submit"
+                  className="w-full text-white hover:bg-[#5e17eb]"
+                  style={{ 
+                    backgroundColor: '#193281', 
+                    transition: 'background-color 0.3s ease'
+                  }}
+                  disabled={isLoading || (!isResetMode && (!email || !password)) || (isResetMode && !email)}
+                >
+                  {isLoading ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      {isResetMode ? 'Sending...' : 'Signing in...'}
+                    </>
+                  ) : (
+                    isResetMode ? 'Send Reset Link' : 'Login'
+                  )}
+                </Button>
+                <div className="flex justify-between text-sm">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsResetMode(!isResetMode);
+                      // Clear inputs when switching modes
+                      setEmail('');
+                      setPassword('');
+                      setResetSent(false);
+                    }}
+                    className="text-[#193281] hover:text-[#5e17eb]"
+                    disabled={isLoading}
+                  >
+                    {isResetMode ? 'Back to Login' : 'Forgot Password?'}
+                  </button>
+                  {!isResetMode && (
+                    <Link
+                      href="/auth/signup"
+                      className="text-[#193281] hover:text-[#5e17eb]"
+                    >
+                      Create Account
+                    </Link>
+                  )}
+                </div>
+              </form>
+            )
           )}
         </CardContent>
       </Card>

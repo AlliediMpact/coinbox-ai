@@ -118,12 +118,12 @@ const HeaderSidebar: React.FC<{ children: React.ReactNode }> = ({ children }) =>
     return (
         <div className="min-h-screen bg-background">
             {/* Header */}
-            <header className="sticky top-0 z-50 w-full border-b bg-primary shadow-sm">
+            <header className="sticky top-0 z-50 w-full border-b shadow-sm" style={{ backgroundColor: '#193281' }}>
                 <div className="container flex h-16 items-center px-4">
                     {/* Mobile Menu Button */}
                     <Button
                         variant="ghost"
-                        className="mr-2 px-2 text-white hover:bg-primary-dark lg:hidden"
+                        className="mr-2 px-2 text-white hover:opacity-80 lg:hidden"
                         onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
                     >
                         <Menu className="h-6 w-6" />
@@ -178,7 +178,7 @@ const HeaderSidebar: React.FC<{ children: React.ReactNode }> = ({ children }) =>
                             <TooltipProvider>
                                 <Tooltip>
                                     <TooltipTrigger>
-                                        <div className="flex items-center text-accent">
+                                        <div className="flex items-center" style={{ color: '#cb6ce6' }}>
                                             <Share2 className="h-4 w-4 mr-1" />
                                             <span>{formatCurrency(typeof commissionBalance === 'string' ? parseFloat(commissionBalance) : commissionBalance)}</span>
                                         </div>
@@ -193,12 +193,13 @@ const HeaderSidebar: React.FC<{ children: React.ReactNode }> = ({ children }) =>
                         {/* Notifications */}
                         <DropdownMenu>
                             <DropdownMenuTrigger asChild>
-                                <Button variant="ghost" className="relative text-white hover:bg-primary-dark">
+                                <Button variant="ghost" className="relative text-white hover:opacity-80">
                                     <Bell className="h-5 w-5" />
                                     {notifications?.length > 0 && (
                                         <Badge
                                             variant="default"
-                                            className="absolute -top-2 -right-2 bg-accent text-primary"
+                                            className="absolute -top-2 -right-2" 
+                                            style={{ backgroundColor: '#cb6ce6', color: '#193281' }}
                                         >
                                             {notifications.length}
                                         </Badge>
@@ -259,16 +260,17 @@ const HeaderSidebar: React.FC<{ children: React.ReactNode }> = ({ children }) =>
                 {/* Sidebar */}
                 <aside
                     className={cn(
-                        "fixed inset-y-0 left-0 z-40 w-64 transform bg-primary transition-transform duration-200 ease-in-out lg:translate-x-0 lg:static lg:inset-auto lg:w-64",
+                        "fixed inset-y-0 left-0 z-40 w-64 transform transition-transform duration-200 ease-in-out lg:translate-x-0 lg:static lg:inset-auto lg:w-64",
                         isMobileMenuOpen ? "translate-x-0" : "-translate-x-full"
                     )}
+                    style={{ backgroundColor: '#193281' }}
                 >
                     <nav className="mt-16 lg:mt-0 p-4 space-y-2">
                         {navigationItems.map((item) => (
                             <Button
                                 key={item.href}
                                 variant="ghost"
-                                className="w-full justify-start text-white hover:bg-primary-dark"
+                                className="w-full justify-start text-white hover:opacity-80"
                                 onClick={() => {
                                     router.push(item.href);
                                     setIsMobileMenuOpen(false);

@@ -10,7 +10,8 @@ import {
   sendPasswordResetEmail,
   confirmPasswordReset,
   applyActionCode,
-  reload
+  reload,
+  sendEmailVerification
 } from 'firebase/auth';
 import { app } from '@/lib/firebase';
 import {
@@ -213,33 +214,28 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
     setLoading(true); // Indicate loading during sign-in process
     try {
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
-      // The onAuthStateChanged listener will handle setting the user state and redirection
-      // We check email verification status in the onAuthStateChanged listener after signIn
-      // Or, it's often better to check emailVerified right after successful sign-in
-       if (!userCredential.user.emailVerified) {
-           // Sign out the user immediately if email is not verified
-           await signOut(auth);
-           setLoading(false);
-           // Throw an error that can be caught by the caller (e.g., on the login page)
-           throw new Error('Please verify your email before logging in.');
-       }
-
-      // Custom session cookie creation is likely not needed if relying on Firebase Auth persistence
-      // const idToken = await userCredential.user.getIdToken();
-      // await createSessionCookie(idToken);
-      // localStorage.setItem(PERSISTENCE_KEY, JSON.stringify({
-      //   uid: userCredential.user.uid,
-      //   timestamp: Date.now()
-      // }));
-
-      // The onAuthStateChanged listener will handle setting the user state and potentially redirecting.
-      // It's often cleaner to handle the redirect in the component that calls signIn,
-      // but the current setup in auth/page.tsx expects AuthProvider to handle it.
-      // Let's keep the router.push here for now to match the existing flow.
-      // router.push('/dashboard');
-      // No need to push here, onAuthStateChanged should react and the component handles navigation
-
-      // set loading to false is handled by onAuthStateChanged
+      
+      // Check if email is verified 
+      if (!userCredential.user.emailVerified) {
+        // Sign out the user immediately if email is not verified
+        await signOut(auth);
+        setLoading(false);
+        
+        // Generate a new verification email before showing error
+        try {
+          await sendEmailVerification(userCredential.user);
+          console.log('New verification email sent');
+          throw new Error('Please verify your email before logging in. A new verification link has been sent.');
+        } catch (verificationError) {
+          console.error('Failed to send verification email:', verificationError);
+          throw new Error('Please verify your email before logging in. Check your inbox for the verification link.');
+        }
+      }
+      
+      // If email is verified, user will be set by onAuthStateChanged
+      // Navigation will be handled by onAuthStateChanged or directly by the component
+      
+      // setLoading(false) will be handled by onAuthStateChanged
 
     } catch (error: any) {
       setLoading(false); // Stop loading on error

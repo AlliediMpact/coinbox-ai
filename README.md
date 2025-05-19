@@ -96,6 +96,6 @@ To provide an innovative, user-friendly, and secure digital marketplace where us
 
 ## Style & UX Guidelines
 - Clean, card-based layouts.
-- Brand Colors: #193281, #5e17eb and #5e17eb, black and white.
+- Brand Colors: #193281, #5e17eb and #cb6ce6, black and white.
 - Simple, outlined icons for actions and categories.
 - Mobile-first but fully responsive and accessible design.

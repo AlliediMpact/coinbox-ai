@@ -1,5 +1,8 @@
 import admin from "firebase-admin";
 import { getApps } from 'firebase-admin/app';
+import { cert } from 'firebase-admin/app';
+import * as fs from 'fs';
+import * as path from 'path';
 
 interface FirebaseAdminConfig {
   projectId: string;
@@ -14,17 +17,38 @@ let adminDb: admin.firestore.Firestore | null = null;
 function getAdminConfig(): FirebaseAdminConfig {
   const projectId = process.env.FIREBASE_PROJECT_ID;
   const clientEmail = process.env.FIREBASE_CLIENT_EMAIL;
-  const privateKey = process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n');
+  let privateKey = process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n');
   const databaseURL = process.env.FIREBASE_DATABASE_URL;
+  const privateKeyPath = process.env.FIREBASE_PRIVATE_KEY_PATH;
 
-  if (!projectId || !clientEmail || !privateKey || !databaseURL) {
-    throw new Error('Missing Firebase Admin configuration. Please check your environment variables.');
+  // If direct private key is not available, try to load from file path
+  if (!privateKey && privateKeyPath) {
+    try {
+      // Check if the path is absolute or relative
+      const keyPath = path.isAbsolute(privateKeyPath) 
+        ? privateKeyPath 
+        : path.join(process.cwd(), privateKeyPath);
+      
+      if (fs.existsSync(keyPath)) {
+        const serviceAccount = JSON.parse(fs.readFileSync(keyPath, 'utf8'));
+        privateKey = serviceAccount.private_key;
+        // If project ID or client email are missing, get them from file too
+        if (!projectId) projectId = serviceAccount.project_id;
+        if (!clientEmail) clientEmail = serviceAccount.client_email;
+      }
+    } catch (error) {
+      console.error('Error loading Firebase private key from file:', error);
+    }
+  }
+
+  if (!projectId || !clientEmail || (!privateKey && !privateKeyPath) || !databaseURL) {
+    throw new Error('Missing Firebase Admin configuration. Check your environment variables or private key file.');
   }
 
   return {
     projectId,
     clientEmail,
-    privateKey,
+    privateKey: privateKey || '',
     databaseURL
   };
 }

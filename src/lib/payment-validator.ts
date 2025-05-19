@@ -1,3 +1,4 @@
+import fetch from 'node-fetch';
 import { adminDb } from '@/lib/firebase-admin';
 import { FieldValue } from 'firebase-admin/firestore';
 
@@ -7,6 +8,85 @@ interface PaymentAttempt {
     lastAttempt: Date;
 }
 
+interface PaystackVerificationResponse {
+    status: boolean;
+    message: string;
+    data: {
+        amount: number;
+        currency: string;
+        transaction_date: string;
+        status: string;
+        reference: string;
+        metadata: any;
+        customer: {
+            email: string;
+        }
+    }
+}
+
+/**
+ * Validates a payment reference with Paystack API
+ * @param reference Payment reference from Paystack
+ * @param expectedAmountKobo Expected amount in kobo (cents)
+ * @returns Success status and error message if applicable
+ */
+export async function validatePaymentServer(reference: string, expectedAmountKobo: number): 
+    Promise<{success: boolean, error?: string}> {
+    
+    try {
+        // Verify the payment with Paystack API
+        const secretKey = process.env.PAYSTACK_SECRET_KEY;
+        if (!secretKey) {
+            console.error('Missing Paystack secret key');
+            return { success: false, error: 'Payment service configuration error' };
+        }
+
+        const response = await fetch(
+            `https://api.paystack.co/transaction/verify/${reference}`,
+            {
+                method: 'GET',
+                headers: {
+                    'Authorization': `Bearer ${secretKey}`,
+                    'Content-Type': 'application/json'
+                }
+            }
+        );
+
+        if (!response.ok) {
+            const errorText = await response.text();
+            console.error('Paystack verification error:', errorText);
+            return { success: false, error: 'Payment verification failed' };
+        }
+
+        const result = await response.json() as PaystackVerificationResponse;
+
+        // Check payment status
+        if (!result.status || result.data.status !== 'success') {
+            return { success: false, error: 'Payment was not successful' };
+        }
+
+        // Check payment amount
+        if (result.data.amount !== expectedAmountKobo) {
+            console.warn(`Payment amount mismatch: expected ${expectedAmountKobo}, got ${result.data.amount}`);
+            return { 
+                success: false, 
+                error: `Payment amount mismatch: expected R${expectedAmountKobo/100}, got R${result.data.amount/100}` 
+            };
+        }
+
+        // Payment verification successful
+        return { success: true };
+    } catch (error) {
+        console.error('Payment validation error:', error);
+        return { success: false, error: 'Error validating payment' };
+    }
+}
+
+/**
+ * Validates payment attempt frequency to prevent abuse
+ * @param userId User ID or temporary ID for rate limiting
+ * @returns Whether the attempt is allowed
+ */
 export async function validatePaymentAttempt(userId: string): Promise<boolean> {
     if (!adminDb) throw new Error('Firebase Admin not initialized');
 

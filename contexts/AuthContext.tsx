@@ -1,35 +1,6 @@
-import { createContext, useContext, useEffect, useState } from 'react';
-import { auth } from '@/config/firebase';
-import { onAuthStateChanged, User } from 'firebase/auth';
+// Re-export from the main AuthProvider to avoid duplicates
+import { AuthProvider as Provider, useAuth } from '@/components/AuthProvider';
 
-interface AuthContextType {
-  user: User | null;
-  loading: boolean;
-}
-
-const AuthContext = createContext<AuthContextType>({
-  user: null,
-  loading: true,
-});
-
-export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [user, setUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
-      setUser(user);
-      setLoading(false);
-    });
-
-    return unsubscribe;
-  }, []);
-
-  return (
-    <AuthContext.Provider value={{ user, loading }}>
-      {!loading && children}
-    </AuthContext.Provider>
-  );
-}
-
-export const useAuth = () => useContext(AuthContext);
+export const AuthProvider = Provider;
+export { useAuth };
+// This file now just re-exports from the main AuthProvider component

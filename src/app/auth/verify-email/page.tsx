@@ -6,7 +6,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { useAuth } from '@/components/AuthProvider';
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, CheckCircle, XCircle, RefreshCw } from 'lucide-react';
+import { Loader2, CheckCircle, XCircle } from 'lucide-react';
+import ResendVerification from '@/components/ResendVerification';
 
 export default function VerifyEmailPage() {
     const [verifying, setVerifying] = useState(true);
@@ -50,21 +51,7 @@ export default function VerifyEmailPage() {
         verifyEmailAddress();
     }, [oobCode, verifyEmail, router, toast]);
 
-    const handleResendVerification = async () => {
-        try {
-            await resendVerificationEmail();
-            toast({
-                title: "Verification Email Sent",
-                description: "Please check your inbox for the new verification link.",
-            });
-        } catch (error: any) {
-            toast({
-                title: "Failed to Resend",
-                description: error.message || 'Failed to resend verification email',
-                variant: "destructive",
-            });
-        }
-    };
+    // Using our ResendVerification component instead
 
     return (
         <div className="flex items-center justify-center min-h-screen bg-background">
@@ -108,14 +95,7 @@ export default function VerifyEmailPage() {
                                     </p>
                                 </div>
                                 <div className="flex flex-col space-y-2 w-full">
-                                    <Button 
-                                        onClick={handleResendVerification}
-                                        className="w-full"
-                                        variant="outline"
-                                    >
-                                        <RefreshCw className="mr-2 h-4 w-4" />
-                                        Resend Verification Email
-                                    </Button>
+                                    <ResendVerification />
                                     <Button 
                                         onClick={() => router.push('/auth')}
                                         className="w-full"
