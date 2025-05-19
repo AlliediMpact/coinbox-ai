@@ -1,3 +1,16 @@
+// Mock window and other browser APIs first
+const { TextEncoder, TextDecoder } = require('util');
+global.TextEncoder = TextEncoder;
+global.TextDecoder = TextDecoder;
+global.crypto = require('crypto').webcrypto;
+
+// Mock fetch API
+const fetch = require('node-fetch');
+global.fetch = fetch;
+global.Request = fetch.Request;
+global.Response = fetch.Response;
+global.Headers = fetch.Headers;
+
 import '@testing-library/jest-dom';
 
 // Mock window crypto for UUID generation
@@ -101,20 +114,54 @@ jest.mock('firebase/firestore', () => ({
 }));
 
 // Mock Firebase Admin
+const mockFirestore = {
+  collection: jest.fn().mockReturnValue({
+    doc: jest.fn().mockReturnValue({
+      get: jest.fn().mockResolvedValue({
+        exists: true,
+        data: () => ({
+          id: 'mock-doc-id',
+          timestamp: new Date(),
+          role: 'admin'
+        })
+      }),
+      set: jest.fn().mockResolvedValue(true),
+      update: jest.fn().mockResolvedValue(true)
+    }),
+    orderBy: jest.fn().mockReturnThis(),
+    limit: jest.fn().mockReturnThis(),
+    where: jest.fn().mockReturnThis(),
+    get: jest.fn().mockResolvedValue({
+      docs: [{
+        id: 'mock-doc-1',
+        data: () => ({
+          userId: 'test-user-1',
+          amount: 1000,
+          status: 'success'
+        })
+      }]
+    }),
+    onSnapshot: jest.fn((callback) => {
+      callback({
+        docChanges: () => [{
+          type: 'added',
+          doc: {
+            id: 'mock-doc-1',
+            data: () => ({
+              userId: 'test-user-1',
+              amount: 1000,
+              status: 'success'
+            })
+          }
+        }]
+      });
+      return () => {};
+    })
+  })
+};
+
 jest.mock('@/lib/firebase-admin', () => ({
-  adminDb: {
-    collection: jest.fn(() => mockFirestoreOperations),
-    doc: jest.fn(() => mockFirestoreOperations),
-    onSnapshot: jest.fn(() => () => {}),
-    get: jest.fn(() => Promise.resolve({
-      exists: true,
-      data: () => ({
-        id: 'mock-doc-id',
-        timestamp: new Date(),
-        data: 'mock-data'
-      })
-    }))
-  }
+  adminDb: mockFirestore
 }));
 
 // Mock Firebase Auth
@@ -178,45 +225,28 @@ jest.mock('@paystack/inline-js', () => {
 process.env.PAYSTACK_SECRET_KEY = 'test_sk_123';
 process.env.NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY = 'test_pk_123';
 
-// Mock window and other browser APIs
-Object.defineProperty(global, 'window', {
-  value: {
-    fetch: global.fetch,
-    TextEncoder: global.TextEncoder,
-    TextDecoder: global.TextDecoder,
-    crypto: global.crypto,
-  }
-});
 
-// Mock Next.js Request/Response
-import { Request, Response, Headers, fetch } from 'undici';
-Object.defineProperty(global, 'Request', { value: Request });
-Object.defineProperty(global, 'Response', { value: Response });
-Object.defineProperty(global, 'Headers', { value: Headers });
-Object.defineProperty(global, 'fetch', { value: fetch });
 
 // Mock next-auth
+const mockSession = {
+  user: {
+    id: 'admin-user-123',
+    email: 'admin@example.com',
+    name: 'Admin User',
+    role: 'admin'
+  }
+};
+
 jest.mock('next-auth', () => ({
-  getServerSession: jest.fn(() => Promise.resolve({
-    user: {
-      id: 'mock-user-id',
-      email: 'test@example.com',
-      name: 'Test User'
-    }
-  }))
+  getServerSession: jest.fn(() => Promise.resolve(mockSession))
 }));
 
 jest.mock('next-auth/react', () => ({
   useSession: jest.fn(() => ({
-    data: {
-      user: {
-        id: 'mock-user-id',
-        email: 'test@example.com',
-        name: 'Test User'
-      }
-    },
-    status: 'authenticated'
+    data: mockSession,
+    status: 'authenticated',
+    update: jest.fn()
   })),
-  signIn: jest.fn(),
-  signOut: jest.fn()
+  signIn: jest.fn(() => Promise.resolve({ ok: true })),
+  signOut: jest.fn(() => Promise.resolve({ ok: true }))
 }));

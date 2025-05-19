@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { paymentMonitoring } from '@/lib/payment-monitoring';
 import { adminDb } from '@/lib/firebase-admin';
 import { getServerSession } from 'next-auth';
+import { validatePaystackWebhook } from '@/lib/webhook-validator';
 
 // Helper function to check admin status
 async function isAdmin(userId: string) {
@@ -15,6 +16,18 @@ export async function GET(request: NextRequest) {
     try {
         const searchParams = new URL(request.url).searchParams;
         const userId = searchParams.get('userId');
+        const type = searchParams.get('type') || 'all';
+
+        // Get session for auth check
+        const session = await getServerSession();
+        
+        // Only allow admins to view other users' data
+        if (userId && (!session?.user || (session.user.id !== userId && !(await isAdmin(session.user.id))))) {
+            return NextResponse.json(
+                { error: 'Unauthorized' },
+                { status: 403 }
+            );
+        }
 
         // Get metrics
         const metrics = await paymentMonitoring.getPaymentMetrics(userId || undefined);
@@ -52,7 +65,16 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
     try {
-        const payload = await request.json();
+        // Clone request for reading body twice (once for validation, once for processing)
+        const clone = request.clone();
+        const body = await clone.text();
+        const payload = JSON.parse(body);
+
+        // Validate webhook signature
+        if (!validatePaystackWebhook(request, body)) {
+            console.error('Invalid webhook signature');
+            return NextResponse.json({ error: 'Invalid signature' }, { status: 401 });
+        }
         
         await paymentMonitoring.logPaymentEvent({
             userId: payload.data.metadata.userId,

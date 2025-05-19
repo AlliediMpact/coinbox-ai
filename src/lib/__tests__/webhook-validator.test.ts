@@ -7,7 +7,24 @@ describe('WebhookValidator', () => {
     const mockBody = JSON.stringify({
         event: 'charge.success',
         data: {
-            reference: 'test_ref_123'
+            id: 123456,
+            reference: 'test_ref_123',
+            amount: 550000, // 5,500 in minor units
+            currency: 'ZAR',
+            channel: 'card',
+            status: 'success',
+            paid_at: '2025-05-19T15:00:00.000Z',
+            created_at: '2025-05-19T14:59:00.000Z',
+            metadata: {
+                userId: 'test_user_123',
+                membershipTier: 'Basic',
+                payment_type: 'membership_fee'
+            },
+            customer: {
+                id: 987654,
+                email: 'test@example.com',
+                name: 'Test User'
+            }
         }
     });
 
@@ -22,41 +39,43 @@ describe('WebhookValidator', () => {
 
     describe('validatePaystackWebhook', () => {
         it('should validate webhook signature correctly', () => {
-            // Generate a valid signature
             const expectedHash = crypto
                 .createHmac('sha512', mockSecretKey)
                 .update(mockBody)
                 .digest('hex');
 
-            const mockRequest = {
+            const mockRequest = new NextRequest('http://localhost:3000', {
+                method: 'POST',
+                body: mockBody,
                 headers: {
-                    get: jest.fn().mockReturnValue(expectedHash)
+                    'x-paystack-signature': expectedHash
                 }
-            } as unknown as NextRequest;
+            });
 
             const result = validatePaystackWebhook(mockRequest, mockBody);
             expect(result).toBe(true);
-            expect(mockRequest.headers.get).toHaveBeenCalledWith('x-paystack-signature');
         });
 
         it('should reject invalid signatures', () => {
             const invalidHash = 'invalid_hash';
-            const mockRequest = {
+            const mockRequest = new NextRequest('http://localhost:3000', {
+                method: 'POST',
+                body: mockBody,
                 headers: {
-                    get: jest.fn().mockReturnValue(invalidHash)
+                    'x-paystack-signature': invalidHash
                 }
-            } as unknown as NextRequest;
+            });
 
             const result = validatePaystackWebhook(mockRequest, mockBody);
             expect(result).toBe(false);
         });
 
         it('should handle missing signature header', () => {
-            const mockRequest = {
-                headers: {
-                    get: jest.fn().mockReturnValue(null)
-                }
-            } as unknown as NextRequest;
+            const mockRequest = new NextRequest('http://localhost:3000', {
+                method: 'POST',
+                body: mockBody
+                // No signature header
+            });
 
             const result = validatePaystackWebhook(mockRequest, mockBody);
             expect(result).toBe(false);
@@ -65,22 +84,26 @@ describe('WebhookValidator', () => {
         it('should handle missing secret key', () => {
             delete process.env.PAYSTACK_SECRET_KEY;
 
-            const mockRequest = {
+            const mockRequest = new NextRequest('http://localhost:3000', {
+                method: 'POST',
+                body: mockBody,
                 headers: {
-                    get: jest.fn().mockReturnValue('some_hash')
+                    'x-paystack-signature': 'some_hash'
                 }
-            } as unknown as NextRequest;
+            });
 
             const result = validatePaystackWebhook(mockRequest, mockBody);
             expect(result).toBe(false);
         });
 
         it('should handle malformed signatures gracefully', () => {
-            const mockRequest = {
+            const mockRequest = new NextRequest('http://localhost:3000', {
+                method: 'POST',
+                body: mockBody,
                 headers: {
-                    get: jest.fn().mockReturnValue('not-a-hex-string-!')
+                    'x-paystack-signature': 'not-a-hex-string-!'
                 }
-            } as unknown as NextRequest;
+            });
 
             const result = validatePaystackWebhook(mockRequest, mockBody);
             expect(result).toBe(false);
@@ -158,5 +181,4 @@ describe('WebhookValidator', () => {
             expect(response?.status).toBe(400);
         });
     });
-});
 });

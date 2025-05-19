@@ -5,10 +5,19 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { paymentMonitoring } from '@/lib/payment-monitoring';
 import { validatePaystackWebhook } from '@/lib/webhook-validator';
+import { adminDb } from '@/lib/firebase-admin';
 import * as routes from '@/app/api/payment/analytics/route';
+import { getServerSession } from 'next-auth';
 
+jest.mock('next-auth');
 jest.mock('@/lib/payment-monitoring');
 jest.mock('@/lib/webhook-validator');
+jest.mock('@/lib/firebase-admin');
+
+// Mock the session
+(getServerSession as jest.Mock).mockImplementation(() => Promise.resolve({
+    user: { id: 'admin-user-id', email: 'admin@example.com', role: 'admin' }
+}));
 
 describe('Payment Analytics API', () => {
     beforeEach(() => {
