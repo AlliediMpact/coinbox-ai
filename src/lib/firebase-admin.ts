@@ -1,54 +1,58 @@
 import admin from "firebase-admin";
+import { getApps } from 'firebase-admin/app';
+
+interface FirebaseAdminConfig {
+  projectId: string;
+  clientEmail: string;
+  privateKey: string;
+  databaseURL: string;
+}
 
 let adminAuth: admin.auth.Auth | null = null;
 let adminDb: admin.firestore.Firestore | null = null;
 
+function getAdminConfig(): FirebaseAdminConfig {
+  const projectId = process.env.FIREBASE_PROJECT_ID;
+  const clientEmail = process.env.FIREBASE_CLIENT_EMAIL;
+  const privateKey = process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n');
+  const databaseURL = process.env.FIREBASE_DATABASE_URL;
+
+  if (!projectId || !clientEmail || !privateKey || !databaseURL) {
+    throw new Error('Missing Firebase Admin configuration. Please check your environment variables.');
+  }
+
+  return {
+    projectId,
+    clientEmail,
+    privateKey,
+    databaseURL
+  };
+}
+
 // This ensures the code only runs on the server
 if (typeof window === 'undefined') {
-  if (!admin.apps.length) {
-    console.log("Attempting to initialize Firebase Admin SDK using GOOGLE_APPLICATION_CREDENTIALS...");
-
-    const databaseURL = process.env.FIREBASE_DATABASE_URL;
-    // GOOGLE_APPLICATION_CREDENTIALS should be set in your environment/`.env.local`
-    const googleCredentialsPath = process.env.GOOGLE_APPLICATION_CREDENTIALS;
-
-    console.log("Firebase Admin Config:");
-    console.log(`  GOOGLE_APPLICATION_CREDENTIALS: ${googleCredentialsPath}`);
-    console.log(`  databaseURL: ${databaseURL}`);
-
-    if (!googleCredentialsPath) {
-        console.error("Firebase Admin SDK initialization failed: GOOGLE_APPLICATION_CREDENTIALS environment variable is not set.");
-         // You might want to throw an error here to prevent further execution
-        // throw new Error("Missing GOOGLE_APPLICATION_CREDENTIALS");
-    } else {
-         try {
-             // Initialize using GOOGLE_APPLICATION_CREDENTIALS environment variable
-             // The Admin SDK will automatically load the service account file
-            admin.initializeApp({
-              credential: admin.credential.application(), // Use application default credentials
-              databaseURL: databaseURL,
-            });
-             console.log("Firebase Admin SDK initialized successfully using GOOGLE_APPLICATION_CREDENTIALS.");
-         } catch (error) {
-             console.error("Firebase Admin SDK initialization error:", error);
-              // Re-throw the error to surface it clearly during startup
-             throw error;
-         }
+  if (!getApps().length) {
+    try {
+      const config = getAdminConfig();
+      admin.initializeApp({
+        credential: admin.credential.cert({
+          projectId: config.projectId,
+          clientEmail: config.clientEmail,
+          privateKey: config.privateKey,
+        }),
+        databaseURL: config.databaseURL,
+      });
+      console.log("Firebase Admin SDK initialized successfully.");
+    } catch (error) {
+      console.error("Firebase Admin SDK initialization error:", error);
+      throw error;
     }
   }
 
   if (admin.apps.length) {
-     // Check if the app was successfully initialized before getting auth and db
-     const defaultApp = admin.app(); // Get the default app instance
-     if (defaultApp) {
-        adminAuth = admin.auth(defaultApp);
-        adminDb = admin.firestore(defaultApp);
-         console.log("Firebase Admin auth and db instances obtained.");
-     } else {
-         console.error("Firebase Admin app not initialized, cannot get auth or db instances.");
-     }
-  } else {
-       console.error("Firebase Admin app did not initialize.");
+    const app = admin.app();
+    adminAuth = admin.auth(app);
+    adminDb = admin.firestore(app);
   }
 }
 

@@ -40,10 +40,10 @@ const HomePageContent = () => {
         <div className="flex flex-col items-center justify-center h-screen">
             {/* Hero Image */}
             <Image
-                src="/assets/hero-image.jpg" // Replace with your actual image path
+                src="/assets/coinbox-ai.png"
                 alt="CoinBox Connect Hero"
-                width={1200}
-                height={600}
+                width={600}
+                height={300}
                 className="rounded-lg shadow-xl mb-8"
             />
 

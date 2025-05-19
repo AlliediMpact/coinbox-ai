@@ -1,7 +1,7 @@
-import { NextResponse } from 'next/server'
-import type { NextRequest } from 'next/server'
-import { getFirestore, doc, getDoc, setDoc, updateDoc } from "firebase/firestore";
-import { getAuth } from "firebase/auth";
+import { NextResponse } from 'next/server';
+import type { NextRequest } from 'next/server';
+import { adminDb, adminAuth } from "@/lib/firebase-admin";
+import { FieldValue } from 'firebase-admin/firestore';
 
 interface RateLimitRecord {
   count: number;
@@ -17,19 +17,25 @@ const AUTH_WINDOW = 15 * 60 * 1000; // 15 minutes in milliseconds
 const FLAG_THRESHOLD = 3; // Number of times to exceed limit before flagging account
 
 export async function rateLimit(req: NextRequest) {
+  if (!adminDb) {
+    console.error('Firebase Admin not initialized');
+    return false;
+  }
+
   try {
     const ip = req.ip || 'unknown';
-    const auth = getAuth();
-    const db = getFirestore();
     let userId = null;
 
     // Try to get userId from session if available
     try {
       const session = req.cookies.get('session')?.value;
       if (session) {
-        userId = JSON.parse(Buffer.from(session.split('.')[1], 'base64').toString()).uid;
+        const decodedToken = await adminAuth?.verifySessionCookie(session);
+        userId = decodedToken?.uid;
       }
-    } catch {}
+    } catch (error) {
+      console.error('Session verification error:', error);
+    }
 
     // Determine request type and corresponding limits
     const isPaymentRequest = req.nextUrl.pathname.includes('/api/payment') || 
@@ -38,73 +44,48 @@ export async function rateLimit(req: NextRequest) {
                          req.nextUrl.pathname.includes('/api/auth/login');
     
     if (isPaymentRequest || isAuthRequest) {
-      const rateLimitRef = doc(db, 'rateLimits', `${ip}-${isAuthRequest ? 'auth' : 'payment'}`);
-      const rateLimitDoc = await getDoc(rateLimitRef);
+      const rateLimitRef = adminDb.collection('rateLimits').doc(`${ip}-${isAuthRequest ? 'auth' : 'payment'}`);
+      const rateLimitDoc = await rateLimitRef.get();
       const now = Date.now();
       const timeWindow = isAuthRequest ? AUTH_WINDOW : PAYMENT_WINDOW;
       const attemptLimit = isAuthRequest ? AUTH_ATTEMPT_LIMIT : PAYMENT_ATTEMPT_LIMIT;
 
       let record: RateLimitRecord;
 
-      if (rateLimitDoc.exists()) {
+      if (rateLimitDoc.exists) {
         record = rateLimitDoc.data() as RateLimitRecord;
         
-        // Reset if window has expired
+        // Reset if outside time window
         if (now - record.firstAttempt > timeWindow) {
           record = {
             count: 1,
             firstAttempt: now,
             lastAttempt: now,
-            flaggedCount: 0
+            flaggedCount: record.flaggedCount || 0
           };
         } else {
-          // Increment count within window
+          // Increment within window
           record.count++;
           record.lastAttempt = now;
-        }
 
-        // Check if limit exceeded
-        if (record.count > attemptLimit) {
-          // Log suspicious activity
-          await setDoc(doc(db, 'suspiciousActivity', `${ip}-${now}`), {
-            ip,
-            userId,
-            type: isAuthRequest ? 'auth_attempt_limit_exceeded' : 'payment_attempt_limit_exceeded',
-            timestamp: now,
-            attempts: record.count,
-            window: timeWindow
-          });
-
-          // Increment flag count
-          record.flaggedCount = (record.flaggedCount || 0) + 1;
-
-          // Flag user account if threshold exceeded
-          if (userId && record.flaggedCount >= FLAG_THRESHOLD) {
-            await setDoc(doc(db, 'flaggedUsers', userId), {
-              userId,
-              flaggedAt: now,
-              reason: `Repeated ${isAuthRequest ? 'authentication' : 'payment'} attempt limit exceeded`,
-              ip,
-              flaggedCount: record.flaggedCount
-            }, { merge: true });
-          }
-
-          await setDoc(rateLimitRef, record);
-
-          return new NextResponse(JSON.stringify({
-            error: isAuthRequest ? 
-              'Too many login attempts. Please try again later.' : 
-              'Too many payment attempts. Please try again later.'
-          }), {
-            status: 429,
-            headers: {
-              'Content-Type': 'application/json',
-              'Retry-After': String(Math.ceil((record.firstAttempt + timeWindow - now) / 1000))
+          // Check if limit exceeded
+          if (record.count > attemptLimit) {
+            record.flaggedCount = (record.flaggedCount || 0) + 1;
+            
+            // If repeatedly exceeding limits, flag the account/IP
+            if (record.flaggedCount >= FLAG_THRESHOLD && userId) {
+              await adminDb.collection('flaggedAccounts').doc(userId).set({
+                ip,
+                flaggedAt: FieldValue.serverTimestamp(),
+                reason: `Exceeded ${isAuthRequest ? 'auth' : 'payment'} rate limit ${FLAG_THRESHOLD} times`
+              }, { merge: true });
             }
-          });
+
+            await rateLimitRef.set(record);
+            return false;
+          }
         }
       } else {
-        // First attempt
         record = {
           count: 1,
           firstAttempt: now,
@@ -113,14 +94,13 @@ export async function rateLimit(req: NextRequest) {
         };
       }
 
-      // Update rate limit record
-      await setDoc(rateLimitRef, record);
+      await rateLimitRef.set(record);
+      return true;
     }
 
-    // Continue with the request
-    return NextResponse.next();
+    return true;
   } catch (error) {
     console.error('Rate limiting error:', error);
-    return NextResponse.next();
+    return true; // Allow request through on error, but log it
   }
 }
