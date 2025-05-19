@@ -1,8 +1,22 @@
-import { getFirestore, doc, setDoc, updateDoc, getDoc, runTransaction } from 'firebase/firestore';
+import { 
+    getFirestore, 
+    doc as firestoreDoc,
+    setDoc, 
+    updateDoc, 
+    getDoc,
+    runTransaction as firestoreTransaction,
+    collection,
+    addDoc,
+    query,
+    where,
+    orderBy,
+    getDocs,
+    DocumentReference,
+    Timestamp
+} from 'firebase/firestore';
 import { getTierConfig, MembershipTierType } from './membership-tiers';
 import { getRiskAssessment } from '@/ai/flows/risk-assessment-flow';
 import { db } from './firebase';
-import { collection, addDoc, query, where, orderBy, getDocs, runTransaction, doc, DocumentReference, Timestamp } from 'firebase/firestore';
 import { paystackService } from './paystack-service';
 
 interface TransactionResult {

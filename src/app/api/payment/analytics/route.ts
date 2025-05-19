@@ -13,23 +13,8 @@ async function isAdmin(userId: string) {
 
 export async function GET(request: NextRequest) {
     try {
-        // Get user session
-        const session = await getServerSession();
-        if (!session?.user) {
-            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-        }
-
         const searchParams = new URL(request.url).searchParams;
         const userId = searchParams.get('userId');
-        const type = searchParams.get('type') || 'all';
-
-        // Check permissions
-        if (userId && userId !== session.user.id) {
-            const isAdminUser = await isAdmin(session.user.id);
-            if (!isAdminUser) {
-                return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
-            }
-        }
 
         // Get metrics
         const metrics = await paymentMonitoring.getPaymentMetrics(userId || undefined);
@@ -59,7 +44,29 @@ export async function GET(request: NextRequest) {
     } catch (error) {
         console.error('Payment analytics error:', error);
         return NextResponse.json(
-            { error: 'Internal server error' },
+            { error: 'Failed to fetch payment metrics' },
+            { status: 500 }
+        );
+    }
+}
+
+export async function POST(request: NextRequest) {
+    try {
+        const payload = await request.json();
+        
+        await paymentMonitoring.logPaymentEvent({
+            userId: payload.data.metadata.userId,
+            paymentId: payload.data.reference,
+            eventType: 'webhook',
+            amount: payload.data.amount / 100,
+            metadata: payload.data.metadata
+        });
+
+        return NextResponse.json({ status: 'success' });
+    } catch (error) {
+        console.error('Webhook processing error:', error);
+        return NextResponse.json(
+            { error: 'Failed to process webhook event' },
             { status: 500 }
         );
     }
