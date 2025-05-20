@@ -1,5 +1,33 @@
-import { adminDb, adminAuth } from './firebase-admin';
-import { FieldValue, Timestamp } from 'firebase-admin/firestore';
+// Conditionally import admin dependencies to support both client and server
+let adminDb: any = null;
+let adminAuth: any = null;
+let FieldValue: any = null;
+let Timestamp: any = null;
+
+if (typeof window === 'undefined') {
+  // Server-side
+  const admin = require('./firebase-admin');
+  const firestore = require('firebase-admin/firestore');
+  adminDb = admin.adminDb;
+  adminAuth = admin.adminAuth;
+  FieldValue = firestore.FieldValue;
+  Timestamp = firestore.Timestamp;
+} else {
+  // Client-side - use browser-compatible stubs
+  const browserAdmin = require('./firebase-admin-browser');
+  adminDb = browserAdmin.adminDb;
+  adminAuth = browserAdmin.adminAuth;
+  
+  // Mock FieldValue and Timestamp for client
+  FieldValue = {
+    serverTimestamp: () => new Date(),
+    increment: (n: number) => n
+  };
+  Timestamp = {
+    fromDate: (date: Date) => date,
+    now: () => new Date()
+  };
+}
 import { AuthEventType } from './auth-logger';
 
 interface SystemMetrics {

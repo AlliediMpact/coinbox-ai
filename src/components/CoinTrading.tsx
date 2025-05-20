@@ -11,16 +11,20 @@ import {
     orderBy, 
     DocumentData, 
     QueryDocumentSnapshot,
-    onSnapshot 
+    onSnapshot, 
+    getDoc
 } from "firebase/firestore";
 import { useAuth } from '@/components/AuthProvider';
 import { useToast } from '@/hooks/use-toast';
 import { useFormWithValidation } from '@/lib/form-utils';
+import { BaseSyntheticEvent } from 'react';
 import * as z from 'zod';
 import { TradeTicket } from '@/lib/types';
 import { TradingService } from '@/lib/trading-service';
-import { MembershipTierType } from '@/lib/membership-tiers';
+import { MembershipTierType, getTierConfig } from '@/lib/membership-tiers';
 import { formatCurrency } from '@/lib/utils';
+import { ErrorBoundary } from './ErrorBoundary';
+import TicketDetails from './TicketDetails';
 import {
     Card,
     CardContent,
@@ -75,17 +79,88 @@ export default function CoinTrading() {
     const [membershipTier, setMembershipTier] = useState<MembershipTierType>('Basic');
     const [walletBalance, setWalletBalance] = useState(0);
     const [isLoading, setIsLoading] = useState(true);
+    const [selectedTicketId, setSelectedTicketId] = useState<string | null>(null);
+    const [ticketDetailsOpen, setTicketDetailsOpen] = useState(false);
+    const [filterStatus, setFilterStatus] = useState<string>("all");
+    const [sortBy, setSortBy] = useState<string>("date-desc");
     
     const tradingService = new TradingService();
     const db = getFirestore();
 
+    // Load user membership tier and wallet data
+    const loadUserData = async () => {
+        if (!user) return;
+        
+        try {
+            setIsLoading(true);
+            
+            // Get user profile to determine membership tier
+            const userDoc = await getDoc(doc(db, "users", user.uid));
+            if (userDoc.exists()) {
+                const userData = userDoc.data();
+                setMembershipTier(userData.membershipTier || 'Basic');
+            }
+            
+            // Get wallet balance
+            const walletDoc = await getDoc(doc(db, "wallets", user.uid));
+            if (walletDoc.exists()) {
+                const walletData = walletDoc.data();
+                setWalletBalance(walletData.balance || 0);
+            }
+            
+            // Calculate escrow balance from active escrow transactions
+            const escrowQuery = query(
+                collection(db, "tickets"),
+                where("userId", "==", user.uid),
+                where("status", "==", "Escrow")
+            );
+            
+            const escrowSnapshot = await getDocs(escrowQuery);
+            let totalEscrow = 0;
+            escrowSnapshot.docs.forEach(doc => {
+                const ticket = doc.data();
+                if (ticket.escrowAmount) {
+                    totalEscrow += ticket.escrowAmount;
+                }
+            });
+            
+            setEscrowBalance(totalEscrow);
+        } catch (error) {
+            console.error("Error loading user data:", error);
+            toast({
+                title: "Error",
+                description: "Failed to load user data",
+                variant: "destructive"
+            });
+        } finally {
+            setIsLoading(false);
+        }
+    };
+    
     const { form: ticketForm, handleSubmit: handleTicketSubmit, loading: ticketLoading } = useFormWithValidation(
         ticketFormSchema,
         async (values) => {
             if (!user) throw new Error("Not authenticated");
+            
+            // Calculate interest rate based on ticket type
+            const interest = values.type === 'Invest' ? 20 : 25; // 20% for investors, 25% for borrowers
+            
+            // Get tier limits based on user's membership
+            const tierConfig = getTierConfig(membershipTier);
+            
+            // Validate amount based on ticket type and tier limits
+            if (values.type === 'Borrow' && values.amount > tierConfig.loanLimit) {
+                throw new Error(`Your ${membershipTier} tier only allows borrowing up to ${formatCurrency(tierConfig.loanLimit)}`);
+            }
+            
+            if (values.type === 'Invest' && values.amount > tierConfig.investmentLimit) {
+                throw new Error(`Your ${membershipTier} tier only allows investing up to ${formatCurrency(tierConfig.investmentLimit)}`);
+            }
+            
             const ticket = await tradingService.createTicket(user.uid, {
                 ...values,
-                membershipTier
+                membershipTier,
+                interest
             });
             setTickets(prev => [ticket, ...prev]);
             setDialogOpen(false);
@@ -222,10 +297,48 @@ export default function CoinTrading() {
         setDisputeOpen(true);
     };
 
+    const handleCancelTicket = async (ticket: TradeTicket) => {
+        setLoading(true);
+        try {
+            // Call the trading service to cancel the ticket
+            await tradingService.cancelTicket(ticket.id);
+            
+            // Update local state
+            setTickets(prev => prev.filter(t => t.id !== ticket.id));
+            
+            toast({
+                title: "Ticket Cancelled",
+                description: "The ticket has been cancelled successfully."
+            });
+        } catch (error: any) {
+            toast({
+                title: "Error",
+                description: error.message,
+                variant: "destructive"
+            });
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleOpenTicketDetails = (ticketId: string) => {
+        setSelectedTicketId(ticketId);
+        setTicketDetailsOpen(true);
+    };
+    
+    const handleCloseTicketDetails = () => {
+        setTicketDetailsOpen(false);
+        setSelectedTicketId(null);
+    };
+
     // Load initial data
     useEffect(() => {
         if (!user) return;
 
+        // Initial load of user data and wallet balances
+        loadUserData();
+
+        // Set up real-time listener for tickets
         const ticketsQuery = query(
             collection(db, "tickets"),
             where("userId", "==", user.uid),
@@ -233,14 +346,17 @@ export default function CoinTrading() {
         );
 
         const unsubscribe = onSnapshot(ticketsQuery, 
-            (snapshot) => {
-                setTickets(snapshot.docs.map(doc => ({ 
+            (snapshot: any) => {
+                setTickets(snapshot.docs.map((doc: any) => ({ 
                     id: doc.id, 
                     ...doc.data() 
                 } as TradeTicket)));
                 setIsLoading(false);
+                
+                // Refresh user data when tickets change to update balances
+                loadUserData();
             },
-            (error) => {
+            (error: any) => {
                 console.error("Error in tickets subscription:", error);
                 toast({
                     title: "Error",
@@ -345,21 +461,41 @@ export default function CoinTrading() {
                                                 className="flex items-center justify-between p-4 rounded-lg border"
                                             >
                                                 <div>
-                                                    <p className="font-medium">{ticket.type}</p>
+                                                    <p className="font-medium">{ticket.type} {ticket.type === 'Invest' ? 'Offer' : 'Request'}</p>
                                                     <p className="text-sm text-gray-500">
-                                                        {formatCurrency(ticket.amount)} • {ticket.status}
+                                                        {formatCurrency(ticket.amount)} • {ticket.interest}% interest • {ticket.status}
                                                     </p>
+                                                    {ticket.description && (
+                                                        <p className="text-xs text-gray-400 max-w-[200px] truncate">
+                                                            {ticket.description}
+                                                        </p>
+                                                    )}
+                                                    {ticket.matchedTicketId && (
+                                                        <p className="text-xs text-blue-500">
+                                                            Matched ticket #{ticket.matchedTicketId.substring(0, 8)}...
+                                                        </p>
+                                                    )}
                                                 </div>
                                                 <div className="space-x-2">
                                                     {ticket.status === 'Open' && (
-                                                        <Button
-                                                            variant="outline"
-                                                            size="sm"
-                                                            onClick={() => handleMatchTrade(ticket)}
-                                                            disabled={loading}
-                                                        >
-                                                            Find Match
-                                                        </Button>
+                                                        <>
+                                                            <Button
+                                                                variant="outline"
+                                                                size="sm"
+                                                                onClick={() => handleMatchTrade(ticket)}
+                                                                disabled={loading}
+                                                            >
+                                                                Find Match
+                                                            </Button>
+                                                            <Button
+                                                                variant="ghost"
+                                                                size="sm"
+                                                                onClick={() => handleCancelTicket(ticket)}
+                                                                disabled={loading}
+                                                            >
+                                                                Cancel
+                                                            </Button>
+                                                        </>
                                                     )}
                                                     {ticket.status === 'Escrow' && (
                                                         <>
@@ -379,6 +515,14 @@ export default function CoinTrading() {
                                                             </Button>
                                                         </>
                                                     )}
+                                                    <Button
+                                                        variant="destructive"
+                                                        size="sm"
+                                                        onClick={() => handleCancelTicket(ticket)}
+                                                        disabled={loading}
+                                                    >
+                                                        Cancel
+                                                    </Button>
                                                 </div>
                                             </div>
                                         ))}
@@ -425,6 +569,24 @@ export default function CoinTrading() {
                                 </Button>
                             </div>
                         </form>
+                    </DialogContent>
+                </Dialog>
+
+                {/* Ticket Details Dialog */}
+                <Dialog open={ticketDetailsOpen} onOpenChange={setTicketDetailsOpen}>
+                    <DialogContent>
+                        <DialogHeader>
+                            <DialogTitle>Ticket Details</DialogTitle>
+                            <DialogDescription>
+                                Detailed information about your ticket.
+                            </DialogDescription>
+                        </DialogHeader>
+                        {selectedTicketId && (
+                            <TicketDetails 
+                                ticketId={selectedTicketId} 
+                                onClose={handleCloseTicketDetails} 
+                            />
+                        )}
                     </DialogContent>
                 </Dialog>
             </Card>

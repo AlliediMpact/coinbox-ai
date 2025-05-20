@@ -26,7 +26,7 @@ export interface EscrowTransaction {
     releasedAt?: Date;
 }
 
-export interface DisputeRequest {
+export interface Dispute {
     id: string;
     ticketId: string;
     userId: string;
@@ -36,4 +36,12 @@ export interface DisputeRequest {
     createdAt: Date;
     resolvedAt?: Date;
     resolution?: string;
+}
+
+// Input type for creating a dispute
+export interface DisputeRequest {
+    ticketId: string;
+    userId: string;
+    reason: string;
+    evidence?: string;
 }

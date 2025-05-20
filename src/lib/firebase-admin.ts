@@ -15,8 +15,8 @@ let adminAuth: admin.auth.Auth | null = null;
 let adminDb: admin.firestore.Firestore | null = null;
 
 function getAdminConfig(): FirebaseAdminConfig {
-  const projectId = process.env.FIREBASE_PROJECT_ID;
-  const clientEmail = process.env.FIREBASE_CLIENT_EMAIL;
+  let projectId = process.env.FIREBASE_PROJECT_ID;
+  let clientEmail = process.env.FIREBASE_CLIENT_EMAIL;
   let privateKey = process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n');
   const databaseURL = process.env.FIREBASE_DATABASE_URL;
   const privateKeyPath = process.env.FIREBASE_PRIVATE_KEY_PATH;

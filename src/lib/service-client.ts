@@ -1,5 +1,16 @@
 import { db } from './firebase';
-import { doc, getDoc, updateDoc, collection, query, where, getDocs, DocumentData, QueryConstraint } from 'firebase/firestore';
+import { 
+  doc, 
+  getDoc, 
+  updateDoc, 
+  collection, 
+  addDoc,
+  query, 
+  where, 
+  getDocs, 
+  DocumentData, 
+  QueryConstraint
+} from 'firebase/firestore';
 
 export class ServiceClient {
   protected async getDocument<T extends DocumentData>(path: string): Promise<T | null> {
@@ -9,6 +20,25 @@ export class ServiceClient {
     } catch (error) {
       console.error(`Error fetching document at ${path}:`, error);
       throw new Error('Failed to fetch document');
+    }
+  }
+
+  protected async createDocument<T extends DocumentData>(
+    collectionPath: string, 
+    data: Omit<T, 'id'>
+  ): Promise<T> {
+    try {
+      const collectionRef = collection(db, collectionPath);
+      const docRef = await addDoc(collectionRef, {
+        ...data,
+        createdAt: data.createdAt || new Date(),
+        updatedAt: new Date()
+      });
+      
+      return { id: docRef.id, ...data } as T;
+    } catch (error) {
+      console.error(`Error creating document in ${collectionPath}:`, error);
+      throw new Error('Failed to create document');
     }
   }
 

@@ -11,10 +11,11 @@ const nextConfig = {
   },
   transpilePackages: ['firebase', 'firebase-admin', '@firebase'],
   async rewrites() {
+    const port = process.env.PORT || 9004;
     return [
       {
         source: '/:path*',
-        destination: `http://localhost:9004/:path*`,
+        destination: `http://localhost:${port}/:path*`,
       },
     ];
   },
@@ -32,6 +33,8 @@ const nextConfig = {
             if (err.code === 'EADDRINUSE') {
               console.log(`Port ${port} is in use, trying ${port + 1}...`);
               startServer(port + 1);
+            } else {
+              console.error('WebSocket server error:', err);
             }
           });
           
@@ -40,8 +43,8 @@ const nextConfig = {
           });
         };
         
-        // Start with port 9005
-        startServer(9005);
+        // Start with port 9006 instead of 9005 (which seems to be in use)
+        startServer(9006);
       } catch (error) {
         console.error('Failed to start WebSocket server:', error);
       }
@@ -51,9 +54,12 @@ const nextConfig = {
     if (!isServer) {
       config.resolve.fallback = {
         ...config.resolve.fallback,
-        net: false, // Provide an empty module
+        net: false,
         tls: false,
         fs: false,
+        child_process: false,
+        dns: false,
+        dgram: false,
         crypto: require.resolve('crypto-browserify'),
         stream: require.resolve('stream-browserify'),
         http: require.resolve('stream-http'),
@@ -61,9 +67,9 @@ const nextConfig = {
         zlib: require.resolve('browserify-zlib'),
         path: require.resolve('path-browserify'),
         os: require.resolve('os-browserify/browser'),
-        buffer: require.resolve('buffer/'),
+        buffer: require.resolve('buffer/')
       };
-      
+
       // Add buffer polyfill
       config.plugins.push(
         new (require('webpack').ProvidePlugin)({

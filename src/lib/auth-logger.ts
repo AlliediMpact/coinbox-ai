@@ -1,8 +1,14 @@
 'use client';
 
-import { adminDb } from '@/lib/firebase-admin';
 import { auth as clientAuth } from '@/lib/firebase';
 import { onAuthStateChanged, User } from 'firebase/auth';
+
+// Dynamically import admin components only on server
+let adminDb: any = null;
+if (typeof window === 'undefined') {
+  const admin = require('./firebase-admin');
+  adminDb = admin.adminDb;
+}
 
 /**
  * Event types for auth logging

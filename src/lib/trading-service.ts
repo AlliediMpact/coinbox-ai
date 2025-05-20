@@ -1,9 +1,9 @@
-import { getFirestore, doc, collection, addDoc, updateDoc, query, getDocs, runTransaction } from 'firebase/firestore';
+import { getFirestore, doc, collection, query, getDocs, runTransaction, getDoc } from 'firebase/firestore';
 import { TradeTicket, EscrowTransaction, DisputeRequest } from './types';
 import { validateLoanAmount, validateInvestmentAmount, getTierConfig } from './membership-tiers';
-import { getRiskAssessment } from '@/ai/flows/risk-assessment-flow';
 import { ServiceClient } from './service-client';
 import { orderBy, where as firestoreWhere } from 'firebase/firestore';
+import { getRiskAssessment } from './risk-assessment';
 
 export class TradingService extends ServiceClient {
     private db = getFirestore();
@@ -27,7 +27,45 @@ export class TradingService extends ServiceClient {
             orderBy('createdAt', 'asc')
         ]);
 
-        return matches[0] || null;
+        // If no matches, return null
+        if (matches.length === 0) {
+            return null;
+        }
+        
+        // For each potential match, assess the risk
+        const matchesWithRisk = await Promise.all(
+            matches.map(async (match) => {
+                try {
+                    // Get risk assessment for this potential match
+                    const riskAssessment = await this.assessRisk(ticket.userId, match.userId);
+                    
+                    // Return match with risk score
+                    return {
+                        match,
+                        riskScore: riskAssessment
+                    };
+                } catch (error) {
+                    console.error("Error assessing risk:", error);
+                    // If risk assessment fails, assign a high risk score
+                    return {
+                        match,
+                        riskScore: 80
+                    };
+                }
+            })
+        );
+        
+        // Sort by risk score (lowest risk first)
+        matchesWithRisk.sort((a, b) => a.riskScore - b.riskScore);
+        
+        // If the best match is too risky (above 80), reject the match
+        if (matchesWithRisk[0].riskScore > 80) {
+            console.log(`Match rejected due to high risk score: ${matchesWithRisk[0].riskScore}`);
+            return null;
+        }
+        
+        // Return the least risky match
+        return matchesWithRisk[0].match;
     }
 
     async createEscrow(ticket: TradeTicket, matchedTicket: TradeTicket): Promise<void> {
@@ -83,24 +121,50 @@ export class TradingService extends ServiceClient {
         });
     }
 
-    private async assessRisk(userId1: string, userId2: string): Promise<number> {
-        // Get user profiles and history
-        const [user1Doc, user2Doc] = await Promise.all([
-            doc(this.db, 'users', userId1).get(),
-            doc(this.db, 'users', userId2).get()
-        ]);
-
-        const user1Data = user1Doc.data();
-        const user2Data = user2Doc.data();
-
-        // Use AI risk assessment
-        const riskScore = await getRiskAssessment({
-            userId: userId1,
-            counterpartyId: userId2,
-            userProfile: user1Data,
-            counterpartyProfile: user2Data
+    async cancelTicket(ticketId: string): Promise<void> {
+        // First, check if the ticket is available for cancellation
+        const ticket = await this.getDocument<TradeTicket>(`tickets/${ticketId}`);
+        
+        if (!ticket) {
+            throw new Error('Ticket not found');
+        }
+        
+        if (ticket.status !== 'Open') {
+            throw new Error('Only open tickets can be cancelled');
+        }
+        
+        // Update the ticket status to cancelled
+        await this.updateDocument(`tickets/${ticketId}`, {
+            status: 'Cancelled',
+            updatedAt: new Date()
         });
+    }
 
-        return riskScore.riskScore;
+    private async assessRisk(userId1: string, userId2: string): Promise<number> {
+        try {
+            // Get user profiles from Firestore
+            const user1Doc = await getDoc(doc(this.db, 'users', userId1));
+            const user2Doc = await getDoc(doc(this.db, 'users', userId2));
+            
+            const user1Data = user1Doc.exists() ? user1Doc.data() : null;
+            const user2Data = user2Doc.exists() ? user2Doc.data() : null;
+            
+            // Use our risk assessment module
+            const riskResult = await getRiskAssessment({
+                userId: userId1,
+                counterpartyId: userId2,
+                userProfile: user1Data,
+                counterpartyProfile: user2Data
+            });
+            
+            console.log(`Risk assessment for transaction between ${userId1} and ${userId2}:`, 
+                riskResult.riskScore, riskResult.riskLevel, riskResult.factors);
+                
+            return riskResult.riskScore;
+        } catch (error) {
+            console.error("Error during risk assessment:", error);
+            // Default to medium-high risk if assessment fails
+            return 60;
+        }
     }
 }

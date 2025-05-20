@@ -1,6 +1,19 @@
-import fetch from 'node-fetch';
-import { adminDb } from '@/lib/firebase-admin';
-import { FieldValue } from 'firebase-admin/firestore';
+// Conditionally import server-side dependencies
+let fetch: any;
+let adminDb: any;
+let FieldValue: any;
+
+if (typeof window === 'undefined') {
+  // Server-side only imports
+  fetch = require('node-fetch').default;
+  const admin = require('./firebase-admin');
+  adminDb = admin.adminDb;
+  const firestore = require('firebase-admin/firestore');
+  FieldValue = firestore.FieldValue;
+} else {
+  // Browser-side stubs
+  console.warn('Payment validator should only be used on the server!');
+}
 
 interface PaymentAttempt {
     count: number;

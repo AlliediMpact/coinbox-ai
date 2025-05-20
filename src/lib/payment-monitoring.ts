@@ -1,5 +1,38 @@
-import { adminDb } from './firebase-admin';
-import { FieldValue } from 'firebase-admin/firestore';
+// Use different implementations based on environment
+let isServer = typeof window === 'undefined';
+let adminDb: any = null;
+let FieldValue: any = null;
+
+// Create browser-compatible stubs for client-side
+if (!isServer) {
+  // Browser environment - create mock implementations
+  adminDb = {
+    collection: () => ({
+      doc: () => ({
+        set: async () => console.log('Mock: Document set operation'),
+        update: async () => console.log('Mock: Document update operation')
+      }),
+      add: async () => ({ id: 'mock-id' })
+    })
+  };
+  
+  FieldValue = {
+    serverTimestamp: () => new Date(),
+    increment: (num: number) => num
+  };
+}
+// Server-side initialization - only runs in Node.js environment
+else {
+  try {
+    // Dynamic import to avoid client-side issues
+    const admin = require('./firebase-admin');
+    const firestore = require('firebase-admin/firestore');
+    adminDb = admin.adminDb;
+    FieldValue = firestore.FieldValue;
+  } catch (e) {
+    console.error('Failed to import firebase-admin in payment-monitoring:', e);
+  }
+}
 
 interface PaymentMetrics {
     totalAttempts: number;
@@ -24,8 +57,9 @@ class PaymentMonitoringService {
     private readonly analyticsCollection = 'payment_analytics';
 
     async logPaymentEvent(analytics: Omit<PaymentAnalytics, 'timestamp'>) {
-        if (!adminDb) {
-            console.warn('Firebase Admin not initialized - unable to log payment event');
+        // Check if we're in a browser environment or adminDb is not available
+        if (!isServer || !adminDb) {
+            console.warn('Browser environment or Firebase Admin not initialized - skipping payment event logging');
             return;
         }
 
@@ -101,8 +135,9 @@ class PaymentMonitoringService {
             averageAmount: 0
         };
 
-        if (!adminDb) {
-            console.warn('Firebase Admin not initialized - unable to get payment metrics');
+        // Check if we're in a browser environment or adminDb is not available
+        if (!isServer || !adminDb) {
+            console.warn('Browser environment or Firebase Admin not initialized - returning default payment metrics');
             return defaultMetrics;
         }
 

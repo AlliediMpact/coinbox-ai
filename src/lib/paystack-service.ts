@@ -10,10 +10,29 @@ let FieldValue: any = null;
 // This will only execute on the server
 if (typeof window === 'undefined') {
   // Server-side only imports
-  const admin = require('./firebase-admin');
-  const firestore = require('firebase-admin/firestore');
-  adminDb = admin.adminDb;
-  FieldValue = firestore.FieldValue;
+  try {
+    const admin = require('./firebase-admin');
+    const firestore = require('firebase-admin/firestore');
+    adminDb = admin.adminDb;
+    FieldValue = firestore.FieldValue;
+  } catch (e) {
+    console.error('Failed to import firebase-admin in paystack-service:', e);
+  }
+} else {
+  // Browser environment - create mock implementations
+  adminDb = {
+    collection: () => ({
+      doc: () => ({
+        set: async () => console.log('Mock: Document set operation'),
+        update: async () => console.log('Mock: Document update operation')
+      })
+    })
+  };
+  
+  FieldValue = {
+    serverTimestamp: () => new Date(),
+    increment: (num: number) => num
+  };
 }
 
 interface PaystackConfig {

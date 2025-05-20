@@ -98,9 +98,15 @@ To provide an innovative, user-friendly, and secure digital marketplace where us
 - End-to-end testing support
 - Security testing harness
 
+### Technical Notes
+- Firebase Admin v11.11.1 is used for compatibility with Langchain
+- Authentication system works in both client and server environments
+- Real-time monitoring via WebSocket on adjustable ports
+
 For detailed documentation, see:
 - [Administrator Authentication Guide](./docs/admin-authentication-guide.md)
 - [User MFA Guide](./docs/user-mfa-guide.md)
+- [Authentication System Fixes](./docs/authentication-system-fixes.md)
 
 ### Revenue Model
 - Transaction Fees: R10 per transaction.
