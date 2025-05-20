@@ -11,6 +11,27 @@ To provide an innovative, user-friendly, and secure digital marketplace where us
 
 ---
 
+## Implemented Features
+
+### 1. Authentication System
+- Multi-factor authentication for enhanced security
+- Email verification and password recovery
+- User role-based access control
+- JWT token-based authentication flow
+
+### 2. P2P Trading System
+- Create and manage invest/borrow tickets
+- Automatic matching of lenders and borrowers
+- Escrow system for transaction security
+- Interest rate calculation based on transaction type
+- Ticket status tracking (Open, Escrow, Completed, Disputed, Cancelled)
+- Detailed ticket view with full transaction information
+- Filter and sort functionality for trade tickets
+- Transaction history tracking for all trading activities
+- Risk assessment for transaction matching
+
+---
+
 ## Business Model & How It Works
 
 ### Step 1: Choose & Buy a Membership Package

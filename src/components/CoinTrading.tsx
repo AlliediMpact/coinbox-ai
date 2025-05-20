@@ -12,7 +12,8 @@ import {
     DocumentData, 
     QueryDocumentSnapshot,
     onSnapshot, 
-    getDoc
+    getDoc,
+    addDoc
 } from "firebase/firestore";
 import { useAuth } from '@/components/AuthProvider';
 import { useToast } from '@/hooks/use-toast';
@@ -157,12 +158,24 @@ export default function CoinTrading() {
                 throw new Error(`Your ${membershipTier} tier only allows investing up to ${formatCurrency(tierConfig.investmentLimit)}`);
             }
             
+            // Calculate potential escrow amount including interest
+            const potentialEscrowAmount = values.amount + (values.amount * (interest / 100));
+            
+            // Validate that user has enough funds for escrow if they're investing
+            if (values.type === 'Invest' && potentialEscrowAmount > walletBalance) {
+                throw new Error(`Insufficient funds for potential escrow. You need at least ${formatCurrency(potentialEscrowAmount)} in your wallet.`);
+            }
+            
             const ticket = await tradingService.createTicket(user.uid, {
                 ...values,
                 membershipTier,
                 interest
             });
             setTickets(prev => [ticket, ...prev]);
+            
+            // Track the ticket creation
+            await trackTransactionHistory(ticket, "Create Ticket");
+            
             setDialogOpen(false);
         },
         { successMessage: "Ticket created successfully" }
@@ -172,17 +185,51 @@ export default function CoinTrading() {
         disputeFormSchema,
         async (values) => {
             if (!disputeDetails.ticketId || !user) throw new Error("Invalid dispute");
+            
+            const ticket = tickets.find(t => t.id === disputeDetails.ticketId);
+            if (!ticket) throw new Error("Ticket not found");
+            
             await tradingService.createDispute({
                 ticketId: disputeDetails.ticketId,
                 userId: user.uid,
                 ...values
             });
+            
+            // Track the dispute creation
+            await trackTransactionHistory(ticket, "Create Dispute", values.reason);
+            
             setDisputeOpen(false);
         },
         { successMessage: "Dispute filed successfully" }
     );
 
-    // ...existing loadUserData function...
+    // Filter and sort tickets
+    const getFilteredAndSortedTickets = () => {
+        // First filter tickets
+        const filteredTickets = filterStatus === "all" 
+            ? tickets 
+            : tickets.filter(ticket => ticket.status === filterStatus);
+            
+        // Then sort them
+        return [...filteredTickets].sort((a, b) => {
+            switch(sortBy) {
+                case "date-asc":
+                    return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
+                case "date-desc":
+                    return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+                case "amount-asc":
+                    return a.amount - b.amount;
+                case "amount-desc":
+                    return b.amount - a.amount;
+                case "interest-asc":
+                    return a.interest - b.interest;
+                case "interest-desc":
+                    return b.interest - a.interest;
+                default:
+                    return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+            }
+        });
+    };
 
     const handleMatchTrade = async (ticket: TradeTicket) => {
         if (!user) return;
@@ -241,6 +288,9 @@ export default function CoinTrading() {
                 setWalletBalance(prev => prev - ticketEscrowAmount);
                 setEscrowBalance(prev => prev + ticketEscrowAmount);
 
+                // Track transaction history
+                await trackTransactionHistory(ticket, "Match Trade", `Matched with ticket ${match.id}`);
+
                 toast({
                     title: "Match Found",
                     description: "Funds are now in escrow."
@@ -277,6 +327,9 @@ export default function CoinTrading() {
                 setEscrowBalance(prev => prev - ticket.escrowAmount!);
             }
 
+            // Track transaction history
+            await trackTransactionHistory(ticket, "Confirm Trade");
+
             toast({
                 title: "Trade Completed",
                 description: "The trade has been completed successfully."
@@ -306,6 +359,9 @@ export default function CoinTrading() {
             // Update local state
             setTickets(prev => prev.filter(t => t.id !== ticket.id));
             
+            // Track transaction history
+            await trackTransactionHistory(ticket, "Cancel Ticket");
+
             toast({
                 title: "Ticket Cancelled",
                 description: "The ticket has been cancelled successfully."
@@ -329,6 +385,32 @@ export default function CoinTrading() {
     const handleCloseTicketDetails = () => {
         setTicketDetailsOpen(false);
         setSelectedTicketId(null);
+    };
+
+    const trackTransactionHistory = async (ticket: TradeTicket, action: string, details?: string) => {
+        if (!user) return;
+        
+        try {
+            const historyEntry = {
+                ticketId: ticket.id,
+                userId: user.uid,
+                action,
+                details: details || '',
+                timestamp: new Date(),
+                ticketType: ticket.type,
+                amount: ticket.amount,
+                interest: ticket.interest,
+                status: ticket.status
+            };
+            
+            // Add the history entry to Firestore
+            await addDoc(collection(db, "transactionHistory"), historyEntry);
+            
+            // Log the action
+            console.log(`Transaction history tracked: ${action} for ticket ${ticket.id}`);
+        } catch (error) {
+            console.error("Error tracking transaction history:", error);
+        }
     };
 
     // Load initial data
@@ -450,15 +532,46 @@ export default function CoinTrading() {
                             </div>
 
                             <div className="space-y-4">
-                                <h3 className="font-semibold">Your Active Tickets</h3>
+                                <div className="flex justify-between items-center mb-2">
+                                    <h3 className="font-semibold">Your Active Tickets</h3>
+                                    <div className="flex space-x-2">
+                                        <Select onValueChange={setFilterStatus} defaultValue="all">
+                                            <SelectTrigger className="w-[130px]">
+                                                <SelectValue placeholder="Filter" />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                <SelectItem value="all">All Tickets</SelectItem>
+                                                <SelectItem value="Open">Open</SelectItem>
+                                                <SelectItem value="Escrow">In Escrow</SelectItem>
+                                                <SelectItem value="Completed">Completed</SelectItem>
+                                                <SelectItem value="Cancelled">Cancelled</SelectItem>
+                                            </SelectContent>
+                                        </Select>
+                                        <Select onValueChange={setSortBy} defaultValue="date-desc">
+                                            <SelectTrigger className="w-[130px]">
+                                                <SelectValue placeholder="Sort" />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                <SelectItem value="date-desc">Newest First</SelectItem>
+                                                <SelectItem value="date-asc">Oldest First</SelectItem>
+                                                <SelectItem value="amount-desc">Highest Amount</SelectItem>
+                                                <SelectItem value="amount-asc">Lowest Amount</SelectItem>
+                                                <SelectItem value="interest-desc">Highest Interest</SelectItem>
+                                                <SelectItem value="interest-asc">Lowest Interest</SelectItem>
+                                            </SelectContent>
+                                        </Select>
+                                    </div>
+                                </div>
+                                <p className="text-xs text-gray-500 mb-4">Click on any ticket to view full details</p>
                                 {tickets.length === 0 ? (
                                     <p className="text-sm text-gray-500">No active tickets found.</p>
                                 ) : (
                                     <div className="space-y-2">
-                                        {tickets.map((ticket) => (
+                                        {getFilteredAndSortedTickets().map((ticket) => (
                                             <div
                                                 key={ticket.id}
-                                                className="flex items-center justify-between p-4 rounded-lg border"
+                                                className="flex items-center justify-between p-4 rounded-lg border hover:bg-gray-50 dark:hover:bg-gray-800 cursor-pointer"
+                                                onClick={() => handleOpenTicketDetails(ticket.id)}
                                             >
                                                 <div>
                                                     <p className="font-medium">{ticket.type} {ticket.type === 'Invest' ? 'Offer' : 'Request'}</p>
@@ -476,7 +589,7 @@ export default function CoinTrading() {
                                                         </p>
                                                     )}
                                                 </div>
-                                                <div className="space-x-2">
+                                                <div className="space-x-2" onClick={(e) => e.stopPropagation()}>
                                                     {ticket.status === 'Open' && (
                                                         <>
                                                             <Button
@@ -515,14 +628,6 @@ export default function CoinTrading() {
                                                             </Button>
                                                         </>
                                                     )}
-                                                    <Button
-                                                        variant="destructive"
-                                                        size="sm"
-                                                        onClick={() => handleCancelTicket(ticket)}
-                                                        disabled={loading}
-                                                    >
-                                                        Cancel
-                                                    </Button>
                                                 </div>
                                             </div>
                                         ))}
@@ -574,17 +679,14 @@ export default function CoinTrading() {
 
                 {/* Ticket Details Dialog */}
                 <Dialog open={ticketDetailsOpen} onOpenChange={setTicketDetailsOpen}>
-                    <DialogContent>
-                        <DialogHeader>
-                            <DialogTitle>Ticket Details</DialogTitle>
-                            <DialogDescription>
-                                Detailed information about your ticket.
-                            </DialogDescription>
-                        </DialogHeader>
+                    <DialogContent className="max-w-2xl">
                         {selectedTicketId && (
                             <TicketDetails 
                                 ticketId={selectedTicketId} 
-                                onClose={handleCloseTicketDetails} 
+                                onClose={handleCloseTicketDetails}
+                                onConfirm={handleConfirmTrade}
+                                onDispute={handleOpenDispute}
+                                onCancel={handleCancelTicket}
                             />
                         )}
                     </DialogContent>
