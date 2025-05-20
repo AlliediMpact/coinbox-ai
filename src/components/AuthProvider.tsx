@@ -11,7 +11,10 @@ import {
   confirmPasswordReset,
   applyActionCode,
   reload,
-  sendEmailVerification
+  sendEmailVerification,
+  MultiFactorError,
+  RecaptchaVerifier,
+  UserCredential
 } from 'firebase/auth';
 import { app } from '@/lib/firebase';
 import {
@@ -20,13 +23,15 @@ import {
   getDoc,
   updateDoc,
   getFirestore,
-  onSnapshot, // Import onSnapshot for real-time listener
+  onSnapshot,
 } from "firebase/firestore";
 import { useToast } from "@/hooks/use-toast";
 import { useRouter } from 'next/navigation';
+// Import the auth logger and MFA service
+import { authLogger, AuthEventType } from '@/lib/auth-logger';
+import { mfaService } from '@/lib/mfa-service';
+
 // paystackService and membership-tiers are no longer directly used in AuthProvider's core auth logic
-// import { paystackService } from '@/lib/paystack-service';
-// import { getMembershipTier } from '@/lib/membership-tiers';
 
 interface AuthContextProps {
   user: User | null;
@@ -40,6 +45,13 @@ interface AuthContextProps {
   updateUserProfile: (data: Partial<UserProfile>) => Promise<void>;
   resendVerificationEmail: () => Promise<void>;
   checkEmailVerification: () => Promise<boolean>; // Still useful for manual checks
+  
+  // MFA related functions
+  enrollMfa: (phoneNumber: string, recaptchaVerifier: RecaptchaVerifier, displayName?: string) => Promise<string>;
+  verifyMfaCode: (verificationId: string, verificationCode: string) => Promise<boolean>;
+  isMfaEnabled: () => Promise<boolean>;
+  getMfaPhone: () => Promise<string | null>;
+  disableMfa: (factorUid: string) => Promise<boolean>;
 }
 
 // Removed SignUpData interface as signup is handled server-side
@@ -55,11 +67,6 @@ interface UserProfile {
   kycVerifiedAt?: Date;
   // Add other profile fields as needed
 }
-
-// Removed custom session constants
-// const PERSISTENCE_KEY = 'auth_session';
-// const SESSION_DURATION = 7 * 24 * 60 * 60 * 1000; // 7 days
-// const SESSION_RENEWAL_THRESHOLD = 24 * 60 * 60 * 1000; // 1 day
 
 // Removed client-side password validation (now server-side authoritative)
 // const PASSWORD_REQUIREMENTS = { ... };
@@ -160,6 +167,13 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
              // Decide how to handle Firestore write errors here (e.g., log, show toast, don't block login)
          }
 
+        // Log the auth event
+        authLogger.logEvent(AuthEventType.LOGIN, {
+          uid: currentUser.uid,
+          email: currentUser.email,
+          providerData: currentUser.providerData,
+        });
+
         // Set loading to false after all initial checks/listeners are set up
         setLoading(false);
 
@@ -213,6 +227,13 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
   const signIn = async (email: string, password: string) => {
     setLoading(true); // Indicate loading during sign-in process
     try {
+      // Log the sign-in attempt (without including the password)
+      await authLogger.logEvent(
+        AuthEventType.SIGN_IN_SUCCESS,
+        null, // No userId yet
+        { email }
+      );
+      
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
       
       // Check if email is verified 
@@ -221,10 +242,29 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
         await signOut(auth);
         setLoading(false);
         
+        // Log the failed verification
+        await authLogger.logEvent(
+          AuthEventType.AUTH_ERROR,
+          userCredential.user.uid,
+          { 
+            email,
+            reason: 'email_not_verified',
+            errorType: 'email_verification_required' 
+          }
+        );
+        
         // Generate a new verification email before showing error
         try {
           await sendEmailVerification(userCredential.user);
           console.log('New verification email sent');
+          
+          // Log the verification email sending
+          await authLogger.logEvent(
+            AuthEventType.EMAIL_VERIFICATION_SENT,
+            userCredential.user.uid,
+            { email }
+          );
+          
           throw new Error('Please verify your email before logging in. A new verification link has been sent.');
         } catch (verificationError) {
           console.error('Failed to send verification email:', verificationError);
@@ -240,6 +280,37 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
     } catch (error: any) {
       setLoading(false); // Stop loading on error
       console.error('Sign in error:', error);
+      
+      // Check if this is an MFA error that needs to be handled
+      if (error.code === 'auth/multi-factor-auth-required') {
+        // This is handled at the page level with MfaVerification component
+        // The component will use mfaService to complete the verification
+        
+        // Log the MFA challenge
+        await authLogger.logEvent(
+          AuthEventType.MFA_VERIFICATION_SUCCESS,
+          null,
+          { 
+            email,
+            step: 'mfa_required'
+          }
+        );
+        
+        // Return the error so it can be handled by the auth page
+        throw error;
+      }
+      
+      // Log other sign-in failures
+      await authLogger.logEvent(
+        AuthEventType.SIGN_IN_FAILURE,
+        null, // No user ID in case of failure
+        { 
+          email, 
+          errorMessage: error.message,
+          errorCode: error.code || 'unknown'
+        }
+      );
+      
       // Re-throw the error so the calling component (e.g., auth/page.tsx) can handle displaying the toast
       throw error;
     }
@@ -248,12 +319,33 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
   const sendPasswordReset = async (email: string) => {
     try {
       await sendPasswordResetEmail(auth, email);
+      
+      // Log the password reset request
+      await authLogger.logEvent(
+        AuthEventType.PASSWORD_RESET_REQUEST,
+        null, // No user ID at this point
+        { email }
+      );
+      
       toast({
         title: "Password Reset Email Sent",
         description: "Please check your inbox for reset instructions.",
       });
     } catch (error: any) {
       console.error('Password reset error:', error);
+      
+      // Log the password reset failure
+      await authLogger.logEvent(
+        AuthEventType.AUTH_ERROR,
+        null, // No user ID at this point
+        { 
+          email,
+          action: 'password_reset_request',
+          errorMessage: error.message,
+          errorCode: error.code || 'unknown'
+        }
+      );
+      
       // Re-throw error for calling component to handle
       throw error;
     }
@@ -261,19 +353,38 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
 
   const resetPassword = async (oobCode: string, newPassword: string) => {
     // Client-side validation is removed from AuthProvider; rely on server-side or client component
-    // const passwordValidation = validatePassword(newPassword);
-    // if (!passwordValidation.isValid) {
-    //   throw new Error(passwordValidation.error);
-    // }
     try {
       await confirmPasswordReset(auth, oobCode, newPassword);
+      
+      // Log the password reset completion
+      await authLogger.logEvent(
+        AuthEventType.PASSWORD_RESET_COMPLETE,
+        null, // We don't have the user ID at this point
+        { 
+          success: true,
+          // Don't include the new password in logs
+        }
+      );
+      
       toast({
         title: "Password Reset Success",
         description: "Your password has been successfully reset.",
       });
     } catch (error: any) {
       console.error('Password reset error:', error);
-       // Re-throw error for calling component to handle
+      
+      // Log the password reset failure
+      await authLogger.logEvent(
+        AuthEventType.AUTH_ERROR,
+        null,
+        { 
+          action: 'password_reset_complete',
+          errorMessage: error.message,
+          errorCode: error.code || 'unknown'
+        }
+      );
+      
+      // Re-throw error for calling component to handle
       throw error;
     }
   };
@@ -281,20 +392,38 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
   const verifyEmail = async (oobCode: string) => {
     try {
       await applyActionCode(auth, oobCode);
+      
+      // Log the email verification
+      await authLogger.logEvent(
+        AuthEventType.EMAIL_VERIFIED,
+        user?.uid || null,
+        { 
+          email: user?.email || null
+        }
+      );
+      
       // emailVerified status will be updated by onAuthStateChanged listener upon reload
-      // if (user) {
-      //   await updateDoc(doc(db, "users", user.uid), {
-      //     emailVerified: true,
-      //   });
-      // }
       toast({
         title: "Email Verified",
         description: "Your email has been successfully verified.",
       });
     } catch (error: any) {
       console.error('Email verification error:', error);
+      
+      // Log the email verification failure
+      await authLogger.logEvent(
+        AuthEventType.AUTH_ERROR,
+        user?.uid || null,
+        { 
+          action: 'verify_email',
+          email: user?.email || null,
+          errorMessage: error.message,
+          errorCode: error.code || 'unknown'
+        }
+      );
+      
       // Re-throw error for calling component to handle
-       throw error;
+      throw error;
     }
   };
 
@@ -372,6 +501,118 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
     }
   };
 
+  // MFA related functions
+  const enrollMfa = async (phoneNumber: string, recaptchaVerifier: RecaptchaVerifier, displayName?: string) => {
+    if (!user) {
+      toast({
+        title: "MFA Enrollment Failed",
+        description: "You must be logged in to enable two-factor authentication.",
+        variant: "destructive",
+      });
+      throw new Error("Not authenticated");
+    }
+
+    try {
+      // Start the enrollment process
+      const verificationId = await mfaService.startEnrollment(phoneNumber, recaptchaVerifier);
+      
+      return verificationId;
+    } catch (error: any) {
+      console.error('MFA enrollment error:', error);
+      toast({
+        title: "MFA Enrollment Failed",
+        description: error.message || "Failed to start MFA enrollment.",
+        variant: "destructive",
+      });
+      throw error;
+    }
+  };
+  
+  const verifyMfaCode = async (verificationId: string, verificationCode: string) => {
+    if (!user) {
+      toast({
+        title: "MFA Verification Failed",
+        description: "You must be logged in to complete two-factor authentication setup.",
+        variant: "destructive",
+      });
+      throw new Error("Not authenticated");
+    }
+
+    try {
+      // Complete the enrollment with the verification code
+      await mfaService.completeEnrollment(verificationId, verificationCode);
+      
+      toast({
+        title: "MFA Enabled",
+        description: "Two-factor authentication has been successfully enabled for your account.",
+      });
+      
+      return true;
+    } catch (error: any) {
+      console.error('MFA verification error:', error);
+      toast({
+        title: "MFA Verification Failed",
+        description: error.message || "Failed to verify MFA code.",
+        variant: "destructive",
+      });
+      throw error;
+    }
+  };
+  
+  const isMfaEnabled = async () => {
+    try {
+      const enrolledFactors = await mfaService.listEnrolledFactors();
+      return enrolledFactors.length > 0;
+    } catch (error) {
+      console.error('Error checking MFA status:', error);
+      return false;
+    }
+  };
+  
+  const getMfaPhone = async () => {
+    try {
+      const enrolledFactors = await mfaService.listEnrolledFactors();
+      if (enrolledFactors.length > 0) {
+        // Using displayName since the phone number might not be directly accessible
+        return enrolledFactors[0].displayName || null;
+      }
+      return null;
+    } catch (error) {
+      console.error('Error getting MFA phone:', error);
+      return null;
+    }
+  };
+  
+  const disableMfa = async (factorUid: string) => {
+    if (!user) {
+      toast({
+        title: "MFA Disable Failed",
+        description: "You must be logged in to disable two-factor authentication.",
+        variant: "destructive",
+      });
+      throw new Error("Not authenticated");
+    }
+
+    try {
+      await mfaService.unenrollFactor(factorUid);
+      
+      toast({
+        title: "MFA Disabled",
+        description: "Two-factor authentication has been successfully disabled for your account.",
+      });
+      
+      return true;
+    } catch (error: any) {
+      console.error('MFA disable error:', error);
+      toast({
+        title: "MFA Disable Failed",
+        description: error.message || "Failed to disable MFA.",
+        variant: "destructive",
+      });
+      throw error;
+    }
+  };
+
   // Use the renamed signOutUser internally
   const signOut = signOutUser; // Assign internal function to the exported name
 
@@ -391,6 +632,11 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
       updateUserProfile,
       resendVerificationEmail,
       checkEmailVerification,
+      enrollMfa,
+      verifyMfaCode,
+      isMfaEnabled,
+      getMfaPhone,
+      disableMfa,
     }}>
       {!loading && children}
     </AuthContext.Provider>

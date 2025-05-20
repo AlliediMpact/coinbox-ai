@@ -71,6 +71,37 @@ To provide an innovative, user-friendly, and secure digital marketplace where us
 - Mobile-friendly dashboard.
 - Future: Mobile app, cross-border transactions, fiat-to-coin, blockchain integration.
 
+## Authentication & Security System
+
+### Multi-Factor Authentication (MFA)
+- SMS-based two-factor authentication
+- Enhanced account security for sensitive operations
+- Optional but highly recommended for all accounts
+
+### Rate Limiting
+- Protection against brute force attacks
+- IP-based and account-based rate limiting
+- Customizable thresholds for different operations
+
+### Comprehensive Logging
+- Detailed audit trails of all authentication events
+- Real-time security monitoring
+- Exportable logs for compliance purposes
+
+### Admin Authentication Management
+- User account control and monitoring
+- Security event monitoring dashboard
+- Authentication logs review and analysis
+
+### Testing Tools
+- Integrated testing utilities for developers
+- End-to-end testing support
+- Security testing harness
+
+For detailed documentation, see:
+- [Administrator Authentication Guide](./docs/admin-authentication-guide.md)
+- [User MFA Guide](./docs/user-mfa-guide.md)
+
 ### Revenue Model
 - Transaction Fees: R10 per transaction.
 - Membership Fees: One-time security deposit.

@@ -1,21 +1,27 @@
-import { useAuth } from '@/components/AuthProvider';
-import { useRouter } from 'next/navigation';
-import { useEffect } from 'react';
 import { Loader2 } from 'lucide-react';
+import { useAuthRequired } from '@/hooks/use-auth-required';
 
-export function ProtectedRoute({ children }: { children: React.ReactNode }) {
-  const { user, loading } = useAuth();
-  const router = useRouter();
+interface ProtectedRouteProps {
+  children: React.ReactNode;
+  requireVerified?: boolean;
+  redirectTo?: string;
+  verificationRedirectTo?: string;
+}
 
-  useEffect(() => {
-    // Redirect to login if not authenticated and not loading
-    if (!loading && !user) {
-      router.push(process.env.NEXT_PUBLIC_AUTH_SIGNIN_PAGE || '/auth');
-    }
-  }, [user, loading, router]);
+export function ProtectedRoute({ 
+  children, 
+  requireVerified = true,
+  redirectTo = '/auth',
+  verificationRedirectTo = '/auth/verify-email'
+}: ProtectedRouteProps) {
+  const { isAuthorized, isLoading } = useAuthRequired({
+    requireVerified,
+    redirectTo,
+    verificationRedirectTo
+  });
 
   // Show loading indicator while checking auth
-  if (loading) {
+  if (isLoading) {
     return (
       <div className="flex items-center justify-center h-screen">
         <div className="flex flex-col items-center space-y-4">
@@ -26,9 +32,9 @@ export function ProtectedRoute({ children }: { children: React.ReactNode }) {
     );
   }
 
-  // If not authenticated, don't render children
-  if (!user) return null;
+  // If not authorized (not authenticated or email not verified when required), don't render children
+  if (!isAuthorized) return null;
 
-  // If authenticated, render children
+  // If authorized, render children
   return <>{children}</>;
 }

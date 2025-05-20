@@ -40,8 +40,8 @@ export async function rateLimit(req: NextRequest) {
     // Determine request type and corresponding limits
     const isPaymentRequest = req.nextUrl.pathname.includes('/api/payment') || 
                             req.nextUrl.pathname.includes('/auth/payment-callback');
-    const isAuthRequest = req.nextUrl.pathname.includes('/auth/signin') || 
-                         req.nextUrl.pathname.includes('/api/auth/login');
+    const isAuthRequest = req.nextUrl.pathname.includes('/api/auth') || 
+                         req.nextUrl.pathname.includes('/auth/');
     
     if (isPaymentRequest || isAuthRequest) {
       const rateLimitRef = adminDb.collection('rateLimits').doc(`${ip}-${isAuthRequest ? 'auth' : 'payment'}`);

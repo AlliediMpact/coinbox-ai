@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useAuth } from '@/components/AuthProvider';
 import { useToast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
+import AdminAuthPanel from '@/components/AdminAuthPanel';
 import {
   Card,
   CardHeader,
@@ -45,6 +46,12 @@ import {
   TooltipTrigger,
   TooltipContent,
 } from '@/components/ui/tooltip';
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from '@/components/ui/tabs';
 import {
   Pagination,
   PaginationPrevious,
@@ -201,7 +208,7 @@ export default function AdminDashboard() {
                   <PaginationLink onClick={() => setCurrentPage(n + 1)}>{n + 1}</PaginationLink>
                 </PaginationItem>
               ))}
-              <PaginationNext onClick={() => setCurrentPage(p => p + 1)}>
+              <PaginationNext onClick={() => setCurrentPage(p => setCurrentPage(p + 1))}>
                 <ArrowRight />
               </PaginationNext>
             </Pagination>
@@ -402,6 +409,10 @@ export default function AdminDashboard() {
           </Table>
         </CardContent>
       </Card>
+
+      {/* Authentication Management Panel */}
+      {/* Import and use the newly created AdminAuthPanel component */}
+      <AdminAuthPanel />
     </div>
   );
 }

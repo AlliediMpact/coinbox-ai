@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Input } from "@/components/ui/input";
@@ -10,6 +10,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { useToast } from "@/hooks/use-toast";
 import { Loader2 } from 'lucide-react';
 import ResendVerification from '@/components/ResendVerification';
+import MfaVerification from '@/components/MfaVerification';
+import { RecaptchaVerifier } from 'firebase/auth';
 
 export default function AuthPage() {
   const [email, setEmail] = useState('');
@@ -19,6 +21,10 @@ export default function AuthPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [showVerificationReminder, setShowVerificationReminder] = useState(false);
   const [unverifiedEmail, setUnverifiedEmail] = useState('');
+  // Add states for MFA handling
+  const [mfaError, setMfaError] = useState<any>(null);
+  const [mfaInProgress, setMfaInProgress] = useState(false);
+
   const { signIn, sendPasswordReset, user } = useAuth();
   const { toast } = useToast();
   const router = useRouter();
@@ -50,6 +56,14 @@ export default function AuthPage() {
       console.error("Authentication failed:", err.message);
       const errorMessage = err.message || 'Authentication failed';
 
+      // Check if this is an MFA error
+      if (err.code === 'auth/multi-factor-auth-required') {
+        // Handle MFA challenge
+        setMfaError(err);
+        setMfaInProgress(true);
+        return; // Don't show other error messages
+      }
+      
       // Handle rate limiting error
       if (err.message?.includes('Too many login attempts')) {
         // Note: Rate-limiting headers might not be accessible on the client-side
@@ -79,8 +93,32 @@ export default function AuthPage() {
         });
       }
     } finally {
-      setIsLoading(false);
+      if (!mfaInProgress) {
+        setIsLoading(false);
+      }
     }
+  };
+
+  // Handle MFA verification success
+  const handleMfaSuccess = (userCredential: any) => {
+    setMfaInProgress(false);
+    setMfaError(null);
+    setIsLoading(false);
+    
+    toast({
+      title: "Authentication Successful",
+      description: "Two-factor authentication verified successfully.",
+    });
+    
+    // The onAuthStateChanged in AuthProvider will handle redirects
+    router.push('/dashboard');
+  };
+
+  // Handle MFA verification cancellation
+  const handleMfaCancel = () => {
+    setMfaInProgress(false);
+    setMfaError(null);
+    setIsLoading(false);
   };
 
   return (
@@ -88,16 +126,26 @@ export default function AuthPage() {
       <Card className="w-[400px]">
         <CardHeader className="space-y-2">
           <CardTitle className="text-2xl">
-            {isResetMode ? 'Reset Password' : 'Login'}
+            {mfaInProgress ? 'Two-Factor Authentication' : 
+              (isResetMode ? 'Reset Password' : 'Login')}
           </CardTitle>
           <CardDescription>
-            {isResetMode
-              ? 'Enter your email to receive a reset link'
-              : 'Welcome back! Please enter your details'}
+            {mfaInProgress ? 'Enter the verification code sent to your phone' :
+              (isResetMode
+                ? 'Enter your email to receive a reset link'
+                : 'Welcome back! Please enter your details')
+            }
           </CardDescription>
         </CardHeader>
         <CardContent>
-          {resetSent ? (
+          {mfaInProgress && mfaError ? (
+            <MfaVerification 
+              error={mfaError}
+              phoneNumber={email} // Pass the email as a reference to the user
+              onSuccess={handleMfaSuccess}
+              onCancel={handleMfaCancel}
+            />
+          ) : resetSent ? (
             <div className="text-center space-y-4">
               <p className="text-lg text-[#193281] font-semibold">
                 Password reset link sent!
@@ -203,6 +251,15 @@ export default function AuthPage() {
                 </div>
               </form>
             )
+          )}
+          {/* MFA Verification Component */}
+          {mfaInProgress && mfaError && (
+            <MfaVerification
+              error={mfaError}
+              onSuccess={handleMfaSuccess}
+              onCancel={handleMfaCancel}
+              email={email} // Pass email to MFA component
+            />
           )}
         </CardContent>
       </Card>

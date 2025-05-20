@@ -1,0 +1,16 @@
+{
+  "testUser": {
+    "email": "test@example.com",
+    "password": "testPassword123",
+    "phoneNumber": "+15555555555"
+  },
+  "adminUser": {
+    "email": "admin@example.com",
+    "password": "adminPassword123"
+  },
+  "testEnvironment": {
+    "apiEndpoint": "http://localhost:3000/api",
+    "skipMfa": true,
+    "mockServices": false
+  }
+}

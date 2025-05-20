@@ -95,16 +95,33 @@ export async function POST(request: Request) {
     // Expecting temporaryId, password, and paymentReference from the client
     const { temporaryId, password, paymentReference } = await request.json();
 
+    // Import validation utilities
+    const { validationError } = await import('@/app/api-utils');
+    
     // Validate required fields from the request body
-    if (!temporaryId || !password || !paymentReference) {
-      return NextResponse.json({ error: 'Missing required fields in request body.' }, { status: 400 });
+    const validationErrors: Record<string, string[]> = {};
+    
+    if (!temporaryId) {
+      validationErrors.temporaryId = ['Temporary ID is required'];
+    }
+    if (!password) {
+      validationErrors.password = ['Password is required'];
+    }
+    if (!paymentReference) {
+      validationErrors.paymentReference = ['Payment reference is required'];
+    }
+    
+    if (Object.keys(validationErrors).length > 0) {
+      return validationError(validationErrors);
     }
 
     // 1. Fetch the pending user data using the temporaryId
     const pendingUserDoc = await db.collection('pending_signups').doc(temporaryId).get();
 
     if (!pendingUserDoc.exists) {
-      return NextResponse.json({ error: 'Invalid or expired registration attempt. Please start again.' }, { status: 400 });
+      return validationError({
+        temporaryId: ['Invalid or expired registration attempt. Please start again.']
+      });
     }
 
     const pendingUserData = pendingUserDoc.data();
@@ -114,7 +131,9 @@ export async function POST(request: Request) {
     if (pendingUserData?.expiresAt && pendingUserData.expiresAt < Date.now()) {
          // Clean up expired document (optional, could be done by a separate cleanup job)
          // await db.collection('pending_signups').doc(temporaryId).delete();
-         return NextResponse.json({ error: 'Registration attempt expired. Please start again.' }, { status: 400 });
+         return validationError({
+           session: ['Registration attempt expired. Please start again.']
+         });
     }
 
 
@@ -122,39 +141,59 @@ export async function POST(request: Request) {
     const { fullName, email, phone, referralCode, membershipTier } = pendingUserData as any; // Cast to any for now, define interfaces later
 
     // Re-validate essential data from the fetched document (defense in depth)
-     if (!fullName || !email || !phone || !membershipTier) {
-         console.error(`Incomplete pending user data for ID ${temporaryId}`);
-          // Clean up potentially corrupt document
-         // await db.collection('pending_signups').doc(temporaryId).delete();
-         return NextResponse.json({ error: 'Incomplete registration data. Please start again.' }, { status: 500 });
-     }
-
+    const missingFields: string[] = [];
+    if (!fullName) missingFields.push('fullName');
+    if (!email) missingFields.push('email');
+    if (!phone) missingFields.push('phone');
+    if (!membershipTier) missingFields.push('membershipTier');
+    
+    if (missingFields.length > 0) {
+        console.error(`Incomplete pending user data for ID ${temporaryId}. Missing: ${missingFields.join(', ')}`);
+        // Clean up potentially corrupt document
+        // await db.collection('pending_signups').doc(temporaryId).delete();
+        
+        const { internalError } = await import('@/app/api-utils');
+        return internalError(
+          new Error(`Incomplete registration data: missing ${missingFields.join(', ')}`)
+        );
+    }
 
     // Password validation (using the provided password)
     const passwordValidation = validatePasswordServer(password);
     if (!passwordValidation.isValid) {
-      return NextResponse.json({ error: passwordValidation.error }, { status: 400 });
+      return validationError({
+        password: [passwordValidation.error || 'Invalid password']
+      });
     }
 
     // Membership tier validation and get expected amount
-     const tierConfig = MEMBERSHIP_TIERS_CONFIG[membershipTier as keyof typeof MEMBERSHIP_TIERS_CONFIG];
-     if (!tierConfig) {
-         // This should ideally not happen if validation passed in create-pending-user, but check anyway
-         console.error(`Invalid membership tier in pending data for ID ${temporaryId}: ${membershipTier}`);
-          // Clean up potentially corrupt document
-         // await db.collection('pending_signups').doc(temporaryId).delete();
-         return NextResponse.json({ error: 'Invalid membership tier in registration data.' }, { status: 500 });
-     }
+    const tierConfig = MEMBERSHIP_TIERS_CONFIG[membershipTier as keyof typeof MEMBERSHIP_TIERS_CONFIG];
+    if (!tierConfig) {
+        // This should ideally not happen if validation passed in create-pending-user, but check anyway
+        console.error(`Invalid membership tier in pending data for ID ${temporaryId}: ${membershipTier}`);
+        // Clean up potentially corrupt document
+        // await db.collection('pending_signups').doc(temporaryId).delete();
+        
+        const { internalError } = await import('@/app/api-utils');
+        return internalError(
+          new Error(`Invalid membership tier: ${membershipTier}`)
+        );
+    }
     const expectedAmountKobo = tierConfig.securityFee * 100; // Convert R to kobo/cents
 
 
+    const { ApiErrorType, createErrorResponse } = await import('@/app/api-utils');
+    
     // **Crucial Step: Implement server-side payment reference validation**
     const paymentValidationResult = await validatePaymentServer(paymentReference, expectedAmountKobo);
     if (!paymentValidationResult.success) {
-         // Return the specific payment validation error
-        return NextResponse.json({ error: paymentValidationResult.error || 'Payment validation failed.' }, { status: 400 });
+        // Return the specific payment validation error with proper type
+        return createErrorResponse(
+            ApiErrorType.PAYMENT_REQUIRED, 
+            paymentValidationResult.error || 'Payment validation failed',
+            'payment_validation_failed'
+        );
     }
-
 
     // Check if user already exists (less likely now with create-pending-user check, but still defensive)
     try {
@@ -162,7 +201,12 @@ export async function POST(request: Request) {
         // If no error, user exists - clean up pending doc and return error
         console.warn(`Attempted to complete registration for existing email: ${email} (Pending ID: ${temporaryId})`);
         await db.collection('pending_signups').doc(temporaryId).delete(); // Clean up
-        return NextResponse.json({ error: 'The email address is already in use by another account.' }, { status: 400 });
+        
+        return createErrorResponse(
+            ApiErrorType.CONFLICT,
+            'The email address is already in use by another account',
+            'email_already_exists'
+        );
     } catch (error: any) {
         // Expected error if user does NOT exist, proceed with creation
         if (error.code !== 'auth/user-not-found') {
@@ -254,28 +298,55 @@ export async function POST(request: Request) {
 
   } catch (error: any) {
     console.error('Signup API error:', error);
+    
+    const { ApiErrorType, createErrorResponse, internalError } = await import('@/app/api-utils');
 
     // Handle specific Firebase Auth errors
     if (error.code === 'auth/email-already-exists') {
       // This case should be rare now due to the check before pending creation,
       // but handle defensively. Clean up pending doc if it exists.
-      if (temporaryId) {
-           db.collection('pending_signups').doc(temporaryId).delete().catch(console.error); // Clean up asynchronously
+      try {
+        const { temporaryId } = await request.json();
+        if (temporaryId) {
+          db.collection('pending_signups').doc(temporaryId).delete().catch(console.error); // Clean up asynchronously
+        }
+      } catch (cleanupError) {
+        console.error('Error during cleanup of pending signup:', cleanupError);
       }
-      return NextResponse.json({ error: 'The email address is already in use by another account.' }, { status: 400 });
+      
+      return createErrorResponse(
+        ApiErrorType.CONFLICT,
+        'The email address is already in use by another account',
+        'email_already_exists'
+      );
     }
+    
     if (error.code === 'auth/invalid-password') {
-         return NextResponse.json({ error: 'The password is not strong enough.' }, { status: 400 });
+      return createErrorResponse(
+        ApiErrorType.VALIDATION_ERROR,
+        'The password is not strong enough',
+        'invalid_password'
+      );
     }
-     if (error.code === 'auth/invalid-email') {
-         return NextResponse.json({ error: 'The email address is not valid.' }, { status: 400 });
-     }
-     // Catch other potential errors during Firebase operations (Firestore, etc.)
-     if (error.code) {
-        return NextResponse.json({ error: `Firebase error: ${error.code}` }, { status: 500 });
-     }
+    
+    if (error.code === 'auth/invalid-email') {
+      return createErrorResponse(
+        ApiErrorType.VALIDATION_ERROR,
+        'The email address is not valid',
+        'invalid_email'
+      );
+    }
+    
+    // Catch other potential errors during Firebase operations (Firestore, etc.)
+    if (error.code) {
+      return createErrorResponse(
+        ApiErrorType.INTERNAL_ERROR,
+        `Firebase error: ${error.code}`,
+        error.code
+      );
+    }
 
-
-    return NextResponse.json({ error: error.message || 'An unexpected error occurred during signup completion.' }, { status: 500 });
+    // For all other unexpected errors
+    return internalError(error);
   }
 }
