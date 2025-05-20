@@ -11,10 +11,10 @@ echo "Date: $(date)"
 echo
 
 # Check if test configuration exists
-if [ ! -f "../src/test-config.json" ]; then
+if [ ! -f "./src/test-config.json" ]; then
   echo "❌ Error: test-config.json not found."
   echo "Please create a test configuration file by copying and modifying the example:"
-  echo "cp ../src/test-config.example.json ../src/test-config.json"
+  echo "cp ./src/test-config.example.json ./src/test-config.json"
   exit 1
 fi
 

@@ -96,11 +96,13 @@ To provide an innovative, user-friendly, and secure digital marketplace where us
 ### Testing Tools
 - Integrated testing utilities for developers
 - End-to-end testing support
-- Security testing harness
+- Comprehensive security testing harness with automated and manual test scenarios
+- Test utilities for simulating authentication attacks and validating defenses
 
 For detailed documentation, see:
 - [Administrator Authentication Guide](./docs/admin-authentication-guide.md)
 - [User MFA Guide](./docs/user-mfa-guide.md)
+- [Security Testing Harness](./docs/security-testing-harness.md)
 
 ### Revenue Model
 - Transaction Fees: R10 per transaction.

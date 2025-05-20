@@ -103,7 +103,7 @@ describe('Authentication Integration Tests', () => {
       });
       
       // Submit the form
-      fireEvent.click(screen.getByRole('button', { name: /sign in/i }));
+      fireEvent.click(screen.getByRole('button', { name: /login/i }));
       
       // Assertions
       await waitFor(() => {
@@ -135,7 +135,7 @@ describe('Authentication Integration Tests', () => {
       });
       
       // Submit the form
-      fireEvent.click(screen.getByRole('button', { name: /sign in/i }));
+      fireEvent.click(screen.getByRole('button', { name: /login/i }));
       
       // Assertions
       await waitFor(() => {
@@ -207,7 +207,7 @@ describe('Authentication Integration Tests', () => {
         target: { value: 'password123' },
       });
       
-      fireEvent.click(screen.getByRole('button', { name: /sign in/i }));
+      fireEvent.click(screen.getByRole('button', { name: /login/i }));
       
       // Assertions
       await waitFor(() => {
