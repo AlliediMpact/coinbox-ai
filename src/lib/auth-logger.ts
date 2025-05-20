@@ -32,6 +32,35 @@ export enum AuthEventType {
  * Service for logging authentication events
  */
 export const authLogger = {
+  // Event subscribers
+  _subscribers: [] as ((event: any) => void)[],
+
+  /**
+   * Subscribe to auth events
+   * @param callback Function to be called when events occur
+   * @returns Unsubscribe function
+   */
+  subscribeToEvents(callback: (event: any) => void) {
+    this._subscribers.push(callback);
+    return () => {
+      this._subscribers = this._subscribers.filter(sub => sub !== callback);
+    };
+  },
+
+  /**
+   * Notify all subscribers about an event
+   * @param eventData The event data
+   */
+  _notifySubscribers(eventData: any) {
+    this._subscribers.forEach(callback => {
+      try {
+        callback(eventData);
+      } catch (error) {
+        console.error('Error in auth event subscriber:', error);
+      }
+    });
+  },
+
   /**
    * Log an authentication event
    */
@@ -52,6 +81,9 @@ export const authLogger = {
         ...clientInfo,
         ...metadata
       };
+      
+      // Notify subscribers
+      this._notifySubscribers(logData);
       
       // If we're on the server and have the admin SDK
       if (isServer && adminDb) {

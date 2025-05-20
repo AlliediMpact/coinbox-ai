@@ -1,8 +1,20 @@
 import { MembershipTier, MEMBERSHIP_TIERS } from './membership-tiers';
 import axios from 'axios';
-import { adminDb } from './firebase-admin';
-import { FieldValue } from 'firebase-admin/firestore';
+// Import firebase admin differently based on environment
 import { paymentMonitoring } from './payment-monitoring';
+
+// Dynamic imports to prevent issues on client-side
+let adminDb: any = null;
+let FieldValue: any = null;
+
+// This will only execute on the server
+if (typeof window === 'undefined') {
+  // Server-side only imports
+  const admin = require('./firebase-admin');
+  const firestore = require('firebase-admin/firestore');
+  adminDb = admin.adminDb;
+  FieldValue = firestore.FieldValue;
+}
 
 interface PaystackConfig {
     publicKey: string;

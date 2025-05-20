@@ -1,137 +1,205 @@
-# CoinBox Authentication Security Testing Harness
+# CoinBox Security Testing Harness
 
-This document describes the security testing harness built into the CoinBox authentication system to ensure its robustness and security.
+This document provides a comprehensive guide to the CoinBox authentication security testing harness and how to use it to verify the security of the authentication system.
+
+## Table of Contents
+
+1. [Overview](#overview)
+2. [Testing Framework](#testing-framework)
+3. [Test Types](#test-types)
+4. [Running Tests](#running-tests)
+5. [Interpreting Results](#interpreting-results)
+6. [Troubleshooting](#troubleshooting)
+7. [Extending the Testing Framework](#extending-the-testing-framework)
 
 ## Overview
 
-The security testing harness is a comprehensive set of tools and utilities designed to validate the authentication system's security features, identify vulnerabilities, and ensure compliance with security best practices. It allows developers and security testers to simulate various attack scenarios and verify that the system's defenses are functioning correctly.
+The CoinBox Security Testing Harness is designed to verify the robustness and security of the authentication system. It tests various aspects of security including:
 
-## Components
+- Authentication flow integrity
+- Rate limiting functionality
+- Multi-factor authentication (MFA)
+- Authentication event logging
+- Security monitoring
 
-### 1. Authentication Testing Utilities (`/src/lib/auth-test-utils.ts`)
+The testing harness consists of automated tests, manual testing utilities, and documentation to help ensure that all security measures are functioning correctly.
 
-Core utilities for testing various authentication scenarios:
+## Testing Framework
 
-- `testStandardLogin`: Tests normal login flow
-- `testRateLimiting`: Tests brute force protection by making multiple failed login attempts
-- `testAuthLogging`: Tests that authentication events are properly logged
-- `checkMfaStatus`: Verifies MFA configuration status
+The testing framework uses the following technologies:
 
-### 2. End-to-End Testing (`/src/tests/auth-e2e-utils.ts` and `/src/tests/auth.e2e.spec.ts`)
+- **Jest**: Unit and integration testing
+- **Playwright**: End-to-end testing
+- **Node.js Scripts**: Specialized security tests
+- **Bash Scripts**: Test orchestration
 
-Playwright-based tests that simulate real user interactions:
+Test files are located in the following locations:
 
-- Authentication flow testing (login, logout)
-- MFA enrollment and verification flow
-- Rate limiting verification
-- Security event generation and monitoring
+- `/src/tests/auth-integration.test.tsx`: Integration tests for authentication components
+- `/src/tests/auth.e2e.spec.ts`: End-to-end tests for authentication flows
+- `/src/tests/rate-limit-test.js`: Rate limiting tests
+- `/src/tests/auth-logging-test.js`: Authentication logging tests
+- `/scripts/test-auth-system.sh`: Test orchestration script
+- `/src/scripts/run-auth-tests.js`: Interactive testing utility
 
-### 3. Integration Tests (`/src/tests/auth-integration.test.tsx`)
+## Test Types
 
-Unit/integration tests covering:
+### Integration Tests
 
-- Authentication provider functionality
-- MFA service operations
-- Authentication logging
-- Administrative panel functionality
-
-### 4. Authentication Testing Page (`/src/app/dashboard/test-auth/page.tsx`)
-
-An interactive UI for manual testing with tabs for:
+Integration tests focus on the interaction between components and verify that the authentication system functions correctly as a whole. These tests include:
 
 - Standard login flow testing
-- Rate limiting testing
-- Authentication event logging testing
-- MFA status checking and enrollment testing
+- Failed login handling
+- MFA enrollment and verification
+- Authentication context and state management
 
-## Security Scenarios Tested
+### End-to-End Tests
 
-The harness tests against the following security scenarios:
+End-to-end tests simulate real user interactions with the authentication system. These tests require a running application and verify the complete user experience. They include:
 
-### Brute Force Protection
+- Login flow from the UI
+- MFA flow from the UI
+- Account management functionality
+- Rate limiting from a user perspective
 
-- Multiple failed login attempts from same IP
-- Multiple failed attempts for same user from different IPs
-- Distributed login attempts
-- Password reset request flooding
+### Security Tests
 
-### MFA Security
+Specialized security tests focus on specific security aspects:
 
-- Verification code bypass attempts
-- Session hijacking prevention
-- MFA enrollment security
-- Phone number validation
+- **Rate Limiting Tests**: Verify that the system properly limits authentication attempts to prevent brute force attacks
+- **Logging Tests**: Ensure that all authentication events are properly logged for audit and monitoring purposes
+- **MFA Tests**: Verify the security of the multi-factor authentication implementation
 
-### Authentication Logging
+## Running Tests
 
-- Comprehensive event capturing
-- Log tampering detection
-- Suspicious activity patterns
-- Administrative action auditing
+### Prerequisites
 
-### Account Security
+1. Make sure you have Node.js and npm installed
+2. Create a test configuration file by copying the example:
+   ```
+   cp /workspaces/coinbox-ai/src/test-config.example.json /workspaces/coinbox-ai/src/test-config.json
+   ```
+3. Update the test configuration with appropriate test credentials
 
-- Account lockout functionality
-- Password policy enforcement
-- Session management
-- Permission boundary testing
+### Using the Interactive Testing Utility
 
-## Using the Security Testing Harness
+The easiest way to run tests is using the interactive testing utility:
 
-### For Developers
-
-1. Use the test utilities in your development workflow:
-
-```typescript
-import { testRateLimiting, testAuthLogging } from '@/lib/auth-test-utils';
-
-// Test rate limiting
-const results = await testRateLimiting('user@example.com', 'password', 10);
-console.log(results);
+```bash
+node src/scripts/run-auth-tests.js
 ```
 
-2. Run the automated test suite:
+This will display a menu with various testing options:
 
+1. Run All Authentication Tests
+2. Test Standard Login Flow
+3. Test Rate Limiting
+4. Test MFA Functionality
+5. Test Authentication Logging
+6. Start Auth Test UI
+7. Run Security Tests
+8. Exit
+
+### Running Specific Tests
+
+You can also run specific tests directly:
+
+#### Integration Tests
 ```bash
 npm test -- --testPathPattern=src/tests/auth
 ```
 
-3. Use the testing page at `/dashboard/test-auth` for manual verification.
-
-### For Security Auditors
-
-1. Run the security test script:
-
+#### Rate Limiting Tests
 ```bash
-./scripts/test-auth-system.sh
+node src/tests/rate-limit-test.js
 ```
 
-2. Use the admin authentication panel to review security events and logs.
+#### Authentication Logging Tests
+```bash
+node src/tests/auth-logging-test.js
+```
 
-3. Review the rate limiting configuration in the authentication settings.
+#### All Security Tests
+```bash
+bash scripts/test-auth-system.sh all
+```
 
-## Security Testing Best Practices
+#### End-to-End Tests
+```bash
+npx playwright test src/tests/auth.e2e.spec.ts
+```
 
-When using the security testing harness:
+## Interpreting Results
 
-1. **Use isolated environments**: Never run security tests against production.
+### Integration Test Results
 
-2. **Document test results**: Keep detailed records of security test outcomes.
+Integration tests will output detailed results indicating which tests passed and which failed. Failed tests will include error messages and stack traces to help identify the issue.
 
-3. **Regular testing**: Run security tests after every significant authentication code change.
+### Rate Limiting Test Results
 
-4. **Combine automated and manual testing**: Some security issues require human judgment.
+The rate limiting test will attempt multiple authentication requests and report whether rate limiting was properly triggered. A successful test will show:
 
-5. **Update tests**: Keep the security test scenarios updated with new threat models.
+```
+✅ Rate limiting detected! Test passed.
+```
 
-## Extending the Security Testing Harness
+### Authentication Logging Test Results
 
-The harness is designed to be extensible. To add new security tests:
+The authentication logging test will output the logged events and indicate whether the events were properly recorded. A successful test will show:
 
-1. Add new test methods to `auth-test-utils.ts`
-2. Create new integration tests in the test directory
-3. Update the test-auth page with new testing scenarios
-4. Document the new tests and their purpose
+```
+Login/Logout Events: ✅ Passed
+User Management Events: ✅ Passed
+✅ All authentication logging tests passed.
+```
+
+## Troubleshooting
+
+### Common Issues
+
+#### Tests Failing Due to Firebase Configuration
+
+If tests fail due to Firebase connection issues:
+1. Check that your test-config.json file has valid Firebase credentials
+2. Verify that the test user account exists and has the correct permissions
+
+#### Rate Limiting Tests Not Detecting Limits
+
+If rate limiting tests are not detecting limits:
+1. Verify that rate limiting is properly configured in the Firebase project
+2. Try increasing the number of attempts in the rate limiting test
+
+#### MFA Tests Failing
+
+MFA tests may require manual intervention:
+1. For end-to-end MFA tests, you'll need to manually solve reCAPTCHA challenges
+2. For verification code tests, you'll need access to the phone number receiving the SMS
+
+### Getting Help
+
+If you encounter issues that you cannot resolve:
+1. Check the Firebase documentation for authentication settings
+2. Review the test logs for specific error messages
+3. Contact the security team for assistance
+
+## Extending the Testing Framework
+
+### Adding New Tests
+
+To add new authentication security tests:
+
+1. Create a new test file in the `/src/tests/` directory
+2. Add the test logic using the appropriate testing framework
+3. Update the test orchestration script to include the new test
+4. Document the new test in this guide
+
+### Modifying Existing Tests
+
+When modifying existing tests:
+
+1. Ensure backward compatibility with existing test reports
+2. Update any affected documentation
+3. Verify that all tests still pass after your changes
 
 ---
 

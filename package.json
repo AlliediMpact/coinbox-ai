@@ -10,9 +10,7 @@
     "clean": "rm -rf .next node_modules package-lock.json",
     "test": "jest",
     "test:watch": "jest --watch",
-    "test:coverage": "jest --coverage",
-    "test:auth": "node src/scripts/run-auth-tests.js",
-    "security:auth": "bash scripts/test-auth-system.sh"
+    "test:coverage": "jest --coverage"
   },
   "dependencies": {
     "@google/generative-ai": "0.1.3",
