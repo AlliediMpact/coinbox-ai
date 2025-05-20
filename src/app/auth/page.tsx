@@ -1,27 +1,17 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import Link from 'next/link';
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
+import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '@/components/AuthProvider';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { useToast } from "@/hooks/use-toast";
-import { Loader2 } from 'lucide-react';
 import ResendVerification from '@/components/ResendVerification';
 import MfaVerification from '@/components/MfaVerification';
-import { RecaptchaVerifier } from 'firebase/auth';
+import AuthFlipCard from '@/components/AuthFlipCard';
+import { Loader2 } from 'lucide-react';
 
 export default function AuthPage() {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [isResetMode, setIsResetMode] = useState(false);
-  const [resetSent, setResetSent] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
   const [showVerificationReminder, setShowVerificationReminder] = useState(false);
   const [unverifiedEmail, setUnverifiedEmail] = useState('');
-  // Add states for MFA handling
   const [mfaError, setMfaError] = useState<any>(null);
   const [mfaInProgress, setMfaInProgress] = useState(false);
 
@@ -121,62 +111,73 @@ export default function AuthPage() {
     setIsLoading(false);
   };
 
+  // Handle MFA required
+  const handleMfaRequired = (error: any) => {
+    setMfaInProgress(true);
+    setMfaError(error);
+  };
+  
+  // Handle verification reminder
+  const handleVerificationReminder = (email: string) => {
+    setShowVerificationReminder(true);
+    setUnverifiedEmail(email);
+  };
+
   return (
-    <div className="flex items-center justify-center min-h-screen bg-background p-4">
-      <Card className="w-[400px]">
-        <CardHeader className="space-y-2">
-          <CardTitle className="text-2xl">
-            {mfaInProgress ? 'Two-Factor Authentication' : 
-              (isResetMode ? 'Reset Password' : 'Login')}
-          </CardTitle>
-          <CardDescription>
-            {mfaInProgress ? 'Enter the verification code sent to your phone' :
-              (isResetMode
-                ? 'Enter your email to receive a reset link'
-                : 'Welcome back! Please enter your details')
-            }
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          {mfaInProgress && mfaError ? (
+    <div className="flex flex-col items-center justify-center min-h-screen bg-gradient-to-b from-white to-neutral-lightest p-4">
+      <motion.div 
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+        className="w-full max-w-md mb-8"
+      >
+        <h1 className="text-3xl font-bold text-center mb-2 bg-gradient-to-r from-primary-blue to-primary-purple bg-clip-text text-transparent">
+          Allied iMpact Coin Box
+        </h1>
+        <p className="text-center text-neutral-dark">
+          Your trusted P2P financial platform
+        </p>
+      </motion.div>
+      
+      <AnimatePresence mode="wait">
+        {mfaInProgress && mfaError ? (
+          <motion.div
+            key="mfa"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            transition={{ duration: 0.3 }}
+          >
             <MfaVerification 
               error={mfaError}
-              phoneNumber={email} // Pass the email as a reference to the user
+              phoneNumber={unverifiedEmail} // Using email as a reference
               onSuccess={handleMfaSuccess}
               onCancel={handleMfaCancel}
             />
-          ) : resetSent ? (
-            <div className="text-center space-y-4">
-              <p className="text-lg text-[#193281] font-semibold">
-                Password reset link sent!
-              </p>
-              <p className="text-sm text-gray-500">
-                Check your email for instructions to reset your password.
-              </p>
-              <Button onClick={() => {
-                setIsResetMode(false);
-                setResetSent(false); // Allow sending another reset if needed
-                setEmail(''); // Clear email field
-              }}>
-                Back to Login
-              </Button>
-            </div>
-          ) : (
-            showVerificationReminder ? (
-              <div className="space-y-4">
-                <div className="rounded-md bg-amber-50 p-4 border border-amber-200">
-                  <div className="flex">
-                    <div className="flex-shrink-0">
-                      <svg className="h-5 w-5 text-amber-400" viewBox="0 0 20 20" fill="currentColor">
-                        <path fillRule="evenodd" d="M8.485 2.495a.75.75 0 01.982 0l8.5 7.5a.75.75 0 01-.482 1.32H1.5a.75.75 0 01-.482-1.32l8.5-7.5zM4 12h12v3.75a.75.75 0 01-.75.75h-10.5a.75.75 0 01-.75-.75V12z" clipRule="evenodd" />
-                      </svg>
-                    </div>
-                    <div className="ml-3 flex-1">
-                      <p className="text-sm text-amber-800">
-                        Please check your inbox for a verification email sent to <strong>{unverifiedEmail}</strong>.
-                      </p>
-                    </div>
+          </motion.div>
+        ) : showVerificationReminder ? (
+          <motion.div
+            key="verification"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            transition={{ duration: 0.3 }}
+            className="w-full max-w-md"
+          >
+            <div className="bg-white p-6 rounded-lg shadow-lg border-2 border-primary-purple/20">
+              <div className="rounded-md bg-amber-50 p-4 mb-4 border border-amber-200">
+                <div className="flex">
+                  <div className="flex-shrink-0">
+                    <svg className="h-5 w-5 text-amber-400" viewBox="0 0 20 20" fill="currentColor">
+                      <path fillRule="evenodd" d="M8.485 2.495a.75.75 0 01.982 0l8.5 7.5a.75.75 0 01-.482 1.32H1.5a.75.75 0 01-.482-1.32l8.5-7.5zM4 12h12v3.75a.75.75 0 01-.75.75h-10.5a.75.75 0 01-.75-.75V12z" clipRule="evenodd" />
+                    </svg>
                   </div>
+                  <div className="ml-3 flex-1">
+                    <p className="text-sm text-amber-800">
+                      Please verify your email address <strong>{unverifiedEmail}</strong> to continue.
+                    </p>
+                  </div>
+                </div>
                 </div>
                 <ResendVerification email={unverifiedEmail} />
                 <Button

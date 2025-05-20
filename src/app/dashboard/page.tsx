@@ -3,6 +3,7 @@
 import { useAuth } from '@/components/AuthProvider';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
+import { motion } from 'framer-motion';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Coins, Home as HomeIcon, ReferralCode, Share2, Shield, Users, Wallet } from 'lucide-react';
@@ -55,153 +56,317 @@ export default function Dashboard() {
     return <div>Redirecting to Authentication...</div>;
   }
 
+  // Animation variants
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: {
+        when: "beforeChildren",
+        staggerChildren: 0.1
+      }
+    }
+  };
+  
+  const cardVariants = {
+    hidden: { y: 20, opacity: 0 },
+    visible: { 
+      y: 0, 
+      opacity: 1,
+      transition: {
+        type: "spring",
+        damping: 15,
+        stiffness: 300
+      }
+    },
+    hover: { 
+      y: -5, 
+      scale: 1.02,
+      boxShadow: "0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)"
+    }
+  };
+
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen p-4 dashboard">
-      <h1 className="text-3xl font-bold mb-6">Dashboard</h1>
-      <p className="text-lg mb-4">Welcome, {user.email}!</p>
+    <motion.div 
+      className="flex flex-col items-center justify-center min-h-screen p-4 dashboard"
+      initial="hidden"
+      animate="visible"
+      variants={containerVariants}
+    >
+      <motion.h1 
+        className="text-3xl font-bold mb-6"
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+      >
+        Dashboard
+      </motion.h1>
+      
+      <motion.p 
+        className="text-lg mb-4"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 0.2, duration: 0.5 }}
+      >
+        Welcome, {user.email}!
+      </motion.p>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 w-full max-w-5xl">
 
         {/* Wallet Balance Card */}
-        <Card className="shadow-lg hover:shadow-xl transition-shadow duration-300">
-          <CardHeader>
-            <CardTitle className="text-xl font-semibold">Wallet Balance</CardTitle>
-            <CardDescription className="text-gray-500">Your current coin holdings</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
-                Total Balance: {walletBalance !== null ? `R${walletBalance}` : "Loading..."}
-            </div>
-          </CardContent>
-        </Card>
+        <motion.div
+          variants={cardVariants}
+          whileHover="hover"
+          transition={{ duration: 0.3 }}
+        >
+          <Card className="h-full border-l-4 border-primary-blue">
+            <CardHeader>
+              <CardTitle className="text-xl font-semibold flex items-center">
+                <Wallet className="mr-2 h-5 w-5 text-primary-blue" />
+                Wallet Balance
+              </CardTitle>
+              <CardDescription className="text-gray-500">Your current coin holdings</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold bg-gradient-to-r from-primary-blue to-primary-purple bg-clip-text text-transparent">
+                  Total Balance: {walletBalance !== null ? `R${walletBalance}` : "Loading..."}
+              </div>
+            </CardContent>
+          </Card>
+        </motion.div>
 
         {/* Quick Actions Card */}
-        <Card className="shadow-lg hover:shadow-xl transition-shadow duration-300">
-          <CardHeader>
-            <CardTitle className="text-xl font-semibold">Quick Actions</CardTitle>
-            <CardDescription className="text-gray-500">Access key features quickly</CardDescription>
-          </CardHeader>
-          <CardContent className="flex flex-col sm:flex-row gap-3">
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                   <Button onClick={() => router.push('/dashboard/trading')}>Invest</Button>
-                </TooltipTrigger>
-                <TooltipContent>
+        <motion.div
+          variants={cardVariants}
+          whileHover="hover"
+          transition={{ duration: 0.3 }}
+        >
+          <Card className="h-full border-l-4 border-accent">
+            <CardHeader>
+              <CardTitle className="text-xl font-semibold flex items-center">
+                <Coins className="mr-2 h-5 w-5 text-accent" />
+                Quick Actions
+              </CardTitle>
+              <CardDescription className="text-gray-500">Access key features quickly</CardDescription>
+            </CardHeader>
+            <CardContent className="flex flex-wrap gap-3">
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                      <Button onClick={() => router.push('/dashboard/trading')} className="bg-gradient-to-r from-primary-blue to-primary-purple">
+                        <Coins className="mr-2 h-4 w-4" />
+                        Invest
+                      </Button>
+                    </motion.div>
+                  </TooltipTrigger>
+                  <TooltipContent>
                     Invest coins
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                   <Button onClick={() => router.push('/dashboard/trading')}>Borrow</Button>
-                </TooltipTrigger>
-                <TooltipContent>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                      <Button onClick={() => router.push('/dashboard/trading')} variant="outline">
+                        <Wallet className="mr-2 h-4 w-4" />
+                        Borrow
+                      </Button>
+                    </motion.div>
+                  </TooltipTrigger>
+                  <TooltipContent>
                     Borrow Coins
                 </TooltipContent>
               </Tooltip>
             </TooltipProvider>
-           <TooltipProvider>
+            <TooltipProvider>
               <Tooltip>
                 <TooltipTrigger asChild>
-                     <Button onClick={() => router.push('/dashboard/wallet')}>Transactions</Button>
+                  <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                    <Button onClick={() => router.push('/dashboard/wallet')} variant="secondary">
+                      <Share2 className="mr-2 h-4 w-4" />
+                      Transactions
+                    </Button>
+                  </motion.div>
                 </TooltipTrigger>
                 <TooltipContent>
-                    Manage Transactions
+                  Manage Transactions
                 </TooltipContent>
               </Tooltip>
             </TooltipProvider>
-             <TooltipProvider>
+            <TooltipProvider>
               <Tooltip>
                 <TooltipTrigger asChild>
-                      <Button onClick={() => router.push('/dashboard/referral')}>Refer a Friend</Button>
+                  <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                    <Button onClick={() => router.push('/dashboard/referral')} variant="secondary">
+                      <Users className="mr-2 h-4 w-4" />
+                      Refer a Friend
+                    </Button>
+                  </motion.div>
                 </TooltipTrigger>
                 <TooltipContent>
-                    Invite Friends
+                  Invite Friends
                 </TooltipContent>
               </Tooltip>
             </TooltipProvider>
           </CardContent>
         </Card>
+        </motion.div>
 
         {/* Recent Transactions Card */}
-        <Card className="shadow-lg hover:shadow-xl transition-shadow duration-300">
-          <CardHeader>
-            <CardTitle className="text-xl font-semibold">Recent Transactions</CardTitle>
-            <CardDescription className="text-gray-500">Your latest transactions</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <ul className="list-disc pl-5">
-              {recentTransactions.map((transaction) => (
-                <li key={transaction.id} className="py-2">
-                  {transaction.type} - {transaction.amount} - {transaction.date}
-                </li>
-              ))}
-            </ul>
-          </CardContent>
-        </Card>
+        <motion.div
+          variants={cardVariants}
+          whileHover="hover"
+          transition={{ duration: 0.3 }}
+        >
+          <Card className="h-full border-l-4 border-primary-purple">
+            <CardHeader>
+              <CardTitle className="text-xl font-semibold flex items-center">
+                <Share2 className="mr-2 h-5 w-5 text-primary-purple" />
+                Recent Transactions
+              </CardTitle>
+              <CardDescription className="text-gray-500">Your latest transactions</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <ul className="space-y-2">
+                {recentTransactions.map((transaction) => (
+                  <motion.li 
+                    key={transaction.id} 
+                    className="py-2 px-3 rounded-md border border-neutral-light flex justify-between items-center"
+                    whileHover={{ backgroundColor: 'rgba(94, 23, 235, 0.05)' }}
+                  >
+                    <div className="flex items-center">
+                      {transaction.type === 'Deposit' && <Coins className="mr-2 h-4 w-4 text-green-500" />}
+                      {transaction.type === 'Withdrawal' && <Wallet className="mr-2 h-4 w-4 text-red-500" />}
+                      {transaction.type === 'Loan' && <Shield className="mr-2 h-4 w-4 text-blue-500" />}
+                      <span>{transaction.type}</span>
+                    </div>
+                    <div className="flex flex-col items-end">
+                      <span className="font-semibold">{transaction.amount}</span>
+                      <span className="text-xs text-neutral-medium">{transaction.date}</span>
+                    </div>
+                  </motion.li>
+                ))}
+              </ul>
+              <motion.div 
+                className="mt-4 text-center"
+                whileHover={{ scale: 1.05 }}
+              >
+                <Button 
+                  variant="link" 
+                  onClick={() => router.push('/dashboard/wallet')}
+                  className="text-primary-blue"
+                >
+                  View All Transactions
+                </Button>
+              </motion.div>
+            </CardContent>
+          </Card>
+        </motion.div>
 
         {/* Risk Assessment Card */}
-        <Card className="shadow-lg hover:shadow-xl transition-shadow duration-300">
-          <CardHeader>
-            <CardTitle className="text-xl font-semibold">Risk Assessment</CardTitle>
-            <CardDescription className="text-gray-500">AI-driven risk assessment based on transaction history.</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <RiskAssessmentTool userId={user.uid} />
-          </CardContent>
-        </Card>
+        <motion.div
+          variants={cardVariants}
+          whileHover="hover"
+          transition={{ duration: 0.3 }}
+        >
+          <Card className="h-full border-l-4 border-primary-blue">
+            <CardHeader>
+              <CardTitle className="text-xl font-semibold flex items-center">
+                <Shield className="mr-2 h-5 w-5 text-primary-blue" />
+                Risk Assessment
+              </CardTitle>
+              <CardDescription className="text-gray-500">AI-driven risk assessment based on transaction history.</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <RiskAssessmentTool userId={user.uid} />
+            </CardContent>
+          </Card>
+        </motion.div>
 
         {/* Text Summarization Card */}
-        <Card className="shadow-lg hover:shadow-xl transition-shadow duration-300">
-          <CardHeader>
-            <CardTitle className="text-xl font-semibold">Text Summarization</CardTitle>
-            <CardDescription className="text-gray-500">Summarize any text using AI.</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <SummaryComponent />
-          </CardContent>
-        </Card>
+        <motion.div
+          variants={cardVariants}
+          whileHover="hover"
+          transition={{ duration: 0.3 }}
+        >
+          <Card className="h-full border-l-4 border-primary-purple">
+            <CardHeader>
+              <CardTitle className="text-xl font-semibold flex items-center">
+                <Users className="mr-2 h-5 w-5 text-primary-purple" />
+                Text Summarization
+              </CardTitle>
+              <CardDescription className="text-gray-500">Summarize any text using AI.</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <SummaryComponent />
+            </CardContent>
+          </Card>
+        </motion.div>
 
         {/* Additional Cards - Link to New Features */}
-        <Card className="shadow-lg hover:shadow-xl transition-shadow duration-300">
-          <CardHeader>
-            <CardTitle className="text-xl font-semibold">Enhanced Features</CardTitle>
-            <CardDescription className="text-gray-500">Explore more options</CardDescription>
-          </CardHeader>
-          <CardContent className="flex flex-col sm:flex-row gap-3">
+        <motion.div
+          variants={cardVariants}
+          whileHover="hover"
+          transition={{ duration: 0.3 }}
+        >
+          <Card className="h-full border-l-4 border-accent">
+            <CardHeader>
+              <CardTitle className="text-xl font-semibold flex items-center">
+                <Shield className="mr-2 h-5 w-5 text-accent" />
+                Enhanced Features
+              </CardTitle>
+              <CardDescription className="text-gray-500">Explore more options</CardDescription>
+            </CardHeader>
+            <CardContent className="flex flex-wrap gap-3">
              <TooltipProvider>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                        <Button onClick={() => router.push('/dashboard/kyc')}>KYC Verification</Button>
-                     </TooltipTrigger>
-                    <TooltipContent>
-                      Verify your identity
-                    </TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                      <Button onClick={() => router.push('/dashboard/kyc')} variant="outline" className="border-primary-purple text-primary-purple">
+                        <Shield className="mr-2 h-4 w-4" />
+                        KYC Verification
+                      </Button>
+                    </motion.div>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    Verify your identity
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
 
-             <TooltipProvider>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                       <Button onClick={() => router.push('/dashboard/support')}>Contact Support</Button>
-                     </TooltipTrigger>
-                    <TooltipContent>
-                      Need some assistance?
-                    </TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
               <TooltipProvider>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Button onClick={() => router.push('/dashboard/commissions')}>View Commissions</Button>
-                     </TooltipTrigger>
-                    <TooltipContent>
-                      See who you have referred
-                    </TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                      <Button onClick={() => router.push('/dashboard/support')} variant="outline" className="border-primary-blue text-primary-blue">
+                        <Users className="mr-2 h-4 w-4" />
+                        Contact Support
+                      </Button>
+                    </motion.div>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    Need some assistance?
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                      <Button onClick={() => router.push('/dashboard/commissions')} variant="outline" className="border-accent text-accent">
+                        <Coins className="mr-2 h-4 w-4" />
+                        View Commissions
+                      </Button>
+                    </motion.div>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    See who you have referred
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
 
           </CardContent>
         </Card>

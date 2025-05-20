@@ -1,24 +1,31 @@
 import { cookies } from 'next/headers';
 import { NextRequest, NextResponse } from 'next/server';
 import { getAuth } from 'firebase-admin/auth';
-import { initAdmin } from '@/lib/firebase-admin';
-
-// Initialize Firebase Admin
-initAdmin();
+import { adminAuth } from '@/lib/firebase-admin'; // Use adminAuth directly
+import { getUserRole } from '@/lib/auth-utils';
 
 // Set session expiration to 5 days
 const SESSION_EXPIRATION = 60 * 60 * 24 * 5 * 1000;
 
 export async function POST(request: NextRequest) {
     try {
+        if (!adminAuth) {
+            console.error('Firebase Admin SDK not initialized');
+            return new NextResponse('Server configuration error', { status: 500 });
+        }
+
         const { idToken } = await request.json();
         
         if (!idToken) {
             return new NextResponse('Missing ID token', { status: 400 });
         }
 
+        // Verify ID token to get the user ID
+        const decodedToken = await adminAuth.verifyIdToken(idToken);
+        const userId = decodedToken.uid;
+
         // Create session cookie
-        const sessionCookie = await getAuth().createSessionCookie(idToken, {
+        const sessionCookie = await adminAuth.createSessionCookie(idToken, {
             expiresIn: SESSION_EXPIRATION,
         });
 
@@ -35,15 +42,32 @@ export async function POST(request: NextRequest) {
         // Set the cookie
         cookies().set(options);
 
-        return new NextResponse(JSON.stringify({ status: 'success' }), {
+        // Get user role for response
+        const userRole = await getUserRole(userId);
+
+        return new NextResponse(JSON.stringify({ 
+            status: 'success',
+            role: userRole,
+            permissions: {
+                canModifyUsers: userRole === 'admin',
+                canViewAdminPanel: userRole === 'admin' || userRole === 'support',
+                isReadOnly: userRole === 'support'
+            }
+        }), {
             status: 200,
             headers: {
                 'Content-Type': 'application/json',
             },
         });
-    } catch (error) {
+    } catch (error: any) {
         console.error('Session creation error:', error);
-        return new NextResponse('Internal server error', { status: 500 });
+        const errorMessage = error.message || 'Internal server error';
+        return new NextResponse(JSON.stringify({ error: errorMessage }), { 
+            status: 500,
+            headers: {
+                'Content-Type': 'application/json',
+            },
+        });
     }
 }
 

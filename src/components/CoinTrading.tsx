@@ -26,6 +26,8 @@ import { MembershipTierType, getTierConfig } from '@/lib/membership-tiers';
 import { formatCurrency } from '@/lib/utils';
 import { ErrorBoundary } from './ErrorBoundary';
 import TicketDetails from './TicketDetails';
+import { motion, AnimatePresence } from "framer-motion";
+import { colors } from "@/styles/designTokens";
 import {
     Card,
     CardContent,
@@ -33,6 +35,7 @@ import {
     CardHeader,
     CardTitle,
 } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import {
     Dialog,
     DialogContent,
@@ -454,30 +457,155 @@ export default function CoinTrading() {
 
     return (
         <ErrorBoundary>
-            <Card>
-                <CardHeader>
-                    <CardTitle>P2P Trading</CardTitle>
-                    <CardDescription>Create and manage your borrow/invest tickets</CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-6">
-                    {isLoading ? (
-                        <div className="flex justify-center p-4">
-                            <span className="loading loading-spinner"></span>
+            <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5 }}
+            >
+                <Card className="overflow-hidden">
+                    <CardHeader>
+                        <div className="flex items-center justify-between">
+                            <div>
+                                <CardTitle className="flex items-center">
+                                    <svg className="mr-2 h-5 w-5 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+                                    </svg>
+                                    <span
+                                        className="bg-clip-text text-transparent"
+                                        style={{ backgroundImage: `linear-gradient(90deg, ${colors.primary.blue} 0%, ${colors.primary.purple} 100%)` }}
+                                    >
+                                        P2P Trading
+                                    </span>
+                                </CardTitle>
+                                <CardDescription>Create and manage your borrow/invest tickets</CardDescription>
+                            </div>
+                            <motion.div 
+                                whileHover={{ scale: 1.05 }}
+                                whileTap={{ scale: 0.95 }}
+                                className="hidden sm:block"
+                            >
+                                <Badge variant="outline" className="bg-gradient-to-r from-blue-500 to-purple-600 text-white border-0">
+                                    {membershipTier} Tier
+                                </Badge>
+                            </motion.div>
                         </div>
-                    ) : (
-                        <>
-                            <div className="flex justify-between items-center">
-                                <div>
-                                    <p className="text-sm font-medium">Wallet Balance</p>
-                                    <p className="text-2xl font-bold">{formatCurrency(walletBalance)}</p>
-                                </div>
-                                <div>
-                                    <p className="text-sm font-medium">Escrow Balance</p>
-                                    <p className="text-2xl font-bold">{formatCurrency(escrowBalance)}</p>
-                                </div>
-                                <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+                    </CardHeader>
+                    <CardContent className="space-y-6">
+                        {isLoading ? (
+                            <motion.div 
+                                className="flex justify-center p-8"
+                                animate={{ 
+                                    opacity: [0.5, 1, 0.5],
+                                    scale: [0.98, 1, 0.98]
+                                }}
+                                transition={{ 
+                                    duration: 1.5, 
+                                    repeat: Infinity,
+                                    repeatType: "reverse"
+                                }}
+                            >
+                                <svg className="animate-spin h-12 w-12 text-primary" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                </svg>
+                            </motion.div>
+                        ) : (
+                            <>
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                                    <motion.div 
+                                        className="border rounded-lg p-4 bg-gradient-to-br from-white to-gray-50 shadow-sm"
+                                        whileHover={{ 
+                                            y: -5,
+                                            boxShadow: "0 12px 20px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -5px rgba(0, 0, 0, 0.04)"
+                                        }}
+                                        transition={{ type: "spring", stiffness: 300, damping: 15 }}
+                                        initial={{ opacity: 0, y: 20 }}
+                                        animate={{ opacity: 1, y: 0 }}
+                                        transition={{ duration: 0.4 }}
+                                    >
+                                        <div className="flex items-center justify-between mb-2">
+                                            <p className="text-sm font-medium text-gray-500">Wallet Balance</p>
+                                            <div className="h-8 w-8 rounded-full bg-blue-100 flex items-center justify-center">
+                                                <svg className="h-4 w-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
+                                                </svg>
+                                            </div>
+                                        </div>
+                                        <motion.p 
+                                            className="text-2xl font-bold"
+                                            initial={{ opacity: 0, scale: 0.5 }}
+                                            animate={{ opacity: 1, scale: 1 }}
+                                            transition={{ delay: 0.2 }}
+                                        >{formatCurrency(walletBalance)}</motion.p>
+                                        <p className="text-xs text-gray-500 mt-1">Available for trading</p>
+                                    </motion.div>
+                                    
+                                    <motion.div 
+                                        className="border rounded-lg p-4 bg-gradient-to-br from-white to-gray-50 shadow-sm"
+                                        whileHover={{ 
+                                            y: -5,
+                                            boxShadow: "0 12px 20px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -5px rgba(0, 0, 0, 0.04)"
+                                        }}
+                                        transition={{ type: "spring", stiffness: 300, damping: 15 }}
+                                        initial={{ opacity: 0, y: 20 }}
+                                        animate={{ opacity: 1, y: 0 }}
+                                        transition={{ duration: 0.4, delay: 0.1 }}
+                                    >
+                                        <div className="flex items-center justify-between mb-2">
+                                            <p className="text-sm font-medium text-gray-500">Escrow Balance</p>
+                                            <div className="h-8 w-8 rounded-full bg-purple-100 flex items-center justify-center">
+                                                <svg className="h-4 w-4 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                                                </svg>
+                                            </div>
+                                        </div>
+                                        <motion.p 
+                                            className="text-2xl font-bold"
+                                            initial={{ opacity: 0, scale: 0.5 }}
+                                            animate={{ opacity: 1, scale: 1 }}
+                                            transition={{ delay: 0.3 }}
+                                        >{formatCurrency(escrowBalance)}</motion.p>
+                                        <p className="text-xs text-gray-500 mt-1">In pending trades</p>
+                                    </motion.div>
+                                    
+                                    <motion.div 
+                                        className="border rounded-lg p-4 relative overflow-hidden bg-gradient-to-br from-blue-50 to-purple-50 shadow-sm"
+                                        whileHover={{ 
+                                            y: -5,
+                                            boxShadow: "0 12px 20px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -5px rgba(0, 0, 0, 0.04)"
+                                        }}
+                                        transition={{ type: "spring", stiffness: 300, damping: 15 }}
+                                        initial={{ opacity: 0, y: 20 }}
+                                        animate={{ opacity: 1, y: 0 }}
+                                        transition={{ duration: 0.4, delay: 0.2 }}
+                                    >
+                                        <div className="absolute top-0 right-0 w-16 h-16 -mt-6 -mr-6 bg-gradient-to-br from-blue-400 to-purple-500 rounded-full opacity-20"></div>
+                                        <div className="absolute bottom-0 left-0 w-24 h-24 -mb-12 -ml-12 bg-gradient-to-tr from-purple-400 to-blue-500 rounded-full opacity-10"></div>
+                                        
+                                        <div className="flex items-center justify-between mb-2 relative">
+                                            <p className="text-sm font-medium text-gray-500">Quick Actions</p>
+                                            <div className="h-8 w-8 rounded-full bg-green-100 flex items-center justify-center">
+                                                <svg className="h-4 w-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                                                </svg>
+                                            </div>
+                                        </div>
+                                        
+                                        <div className="mt-4">
+                                            <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
                                     <DialogTrigger asChild>
-                                        <Button>Create New Ticket</Button>
+                                        <motion.div
+                                            whileHover={{ scale: 1.03 }}
+                                            whileTap={{ scale: 0.97 }}
+                                            transition={{ type: "spring", stiffness: 400, damping: 17 }}
+                                        >
+                                            <Button className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white">
+                                                <svg className="mr-2 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                                                </svg>
+                                                Create New Ticket
+                                            </Button>
+                                        </motion.div>
                                     </DialogTrigger>
                                     <DialogContent>
                                         <DialogHeader>

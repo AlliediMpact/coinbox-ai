@@ -16,8 +16,13 @@ To provide an innovative, user-friendly, and secure digital marketplace where us
 ### 1. Authentication System
 - Multi-factor authentication for enhanced security
 - Email verification and password recovery
-- User role-based access control
+- User role-based access control (see [RBAC Documentation](/docs/role-based-access-control.md))
+  - Custom Firebase claims for secure role management
+  - Support for Admin, Support, and User roles with appropriate access controls
+  - Role-protected routes and components with granular permissions
+  - View-only support role with admin panel access but limited functionality
 - JWT token-based authentication flow
+- Comprehensive server and client-side role validation
 
 ### 2. P2P Trading System
 - Create and manage invest/borrow tickets

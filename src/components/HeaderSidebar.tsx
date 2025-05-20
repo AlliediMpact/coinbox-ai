@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
+import { motion, AnimatePresence } from 'framer-motion';
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -33,6 +34,7 @@ import {
     PiggyBank,
     HandCoins,
     Bell,
+    X,
 } from 'lucide-react';
 import { Card, CardContent } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
@@ -122,13 +124,31 @@ const HeaderSidebar: React.FC<{ children: React.ReactNode }> = ({ children }) =>
             <header className="sticky top-0 z-50 w-full border-b shadow-sm" style={{ backgroundColor: '#193281' }}>
                 <div className="container flex h-16 items-center px-4">
                     {/* Mobile Menu Button */}
-                    <Button
-                        variant="ghost"
-                        className="mr-2 px-2 text-white hover:opacity-80 lg:hidden"
-                        onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+                    <motion.div
+                        whileTap={{ scale: 0.95 }}
                     >
-                        <Menu className="h-6 w-6" />
-                    </Button>
+                        <Button
+                            variant="ghost"
+                            className="mr-2 px-2 text-white hover:opacity-80 lg:hidden"
+                            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+                        >
+                            <motion.div
+                                animate={{ rotate: isMobileMenuOpen ? 90 : 0 }}
+                                transition={{ duration: 0.3 }}
+                            >
+                                {isMobileMenuOpen ? (
+                                    <motion.div
+                                        initial={{ opacity: 0, rotate: 90 }}
+                                        animate={{ opacity: 1, rotate: 0 }}
+                                    >
+                                        <X className="h-6 w-6" />
+                                    </motion.div>
+                                ) : (
+                                    <Menu className="h-6 w-6" />
+                                )}
+                            </motion.div>
+                        </Button>
+                    </motion.div>
 
                     {/* Logo */}
                     <div className="flex items-center">
@@ -240,34 +260,80 @@ const HeaderSidebar: React.FC<{ children: React.ReactNode }> = ({ children }) =>
 
             {/* Sidebar and Content */}
             <div className="flex">
-                {/* Sidebar */}
-                <aside
-                    className={cn(
-                        "fixed inset-y-0 left-0 z-40 w-64 transform transition-transform duration-200 ease-in-out lg:translate-x-0 lg:static lg:inset-auto lg:w-64",
-                        isMobileMenuOpen ? "translate-x-0" : "-translate-x-full"
+                {/* Mobile Menu Backdrop */}
+                <AnimatePresence>
+                    {isMobileMenuOpen && (
+                        <motion.div 
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 0.5 }}
+                            exit={{ opacity: 0 }}
+                            className="fixed inset-0 z-30 bg-black lg:hidden"
+                            onClick={() => setIsMobileMenuOpen(false)}
+                        />
                     )}
-                    style={{ backgroundColor: '#193281' }}
-                >
+                </AnimatePresence>
+                
+                {/* Sidebar */}
+                <AnimatePresence>
+                    <motion.aside
+                        initial={{ x: -320 }}
+                        animate={{ 
+                            x: isMobileMenuOpen ? 0 : window?.innerWidth < 1024 ? -320 : 0
+                        }}
+                        transition={{ 
+                            type: "spring", 
+                            stiffness: 300, 
+                            damping: 30 
+                        }}
+                        className="fixed inset-y-0 left-0 z-40 w-64 shadow-lg lg:shadow-none lg:static lg:inset-auto"
+                        style={{ backgroundColor: '#193281' }}
+                    >
                     <nav className="mt-16 lg:mt-0 p-4 space-y-2">
                         {navigationItems.map((item) => (
-                            <Button
+                            <motion.div
                                 key={item.href}
-                                variant="ghost"
-                                className="w-full justify-start text-white hover:opacity-80"
-                                onClick={() => {
-                                    router.push(item.href);
-                                    setIsMobileMenuOpen(false);
+                                whileHover={{ 
+                                    x: 5, 
+                                    backgroundColor: 'rgba(255, 255, 255, 0.1)'
                                 }}
+                                whileTap={{ scale: 0.98 }}
+                                className="rounded-md overflow-hidden"
                             >
-                                <item.icon className="mr-2 h-4 w-4" />
-                                <span>{item.label}</span>
-                            </Button>
+                                <TooltipProvider>
+                                    <Tooltip>
+                                        <TooltipTrigger asChild>
+                                            <Button
+                                                variant="ghost"
+                                                className="w-full justify-start text-white"
+                                                onClick={() => {
+                                                    router.push(item.href);
+                                                    setIsMobileMenuOpen(false);
+                                                }}
+                                            >
+                                                <item.icon className="mr-2 h-4 w-4" />
+                                                <span>{item.label}</span>
+                                            </Button>
+                                        </TooltipTrigger>
+                                        <TooltipContent side="right">
+                                            <p>{item.description}</p>
+                                        </TooltipContent>
+                                    </Tooltip>
+                                </TooltipProvider>
+                            </motion.div>
                         ))}
                     </nav>
-                </aside>
+                    </motion.aside>
+                </AnimatePresence>
 
                 {/* Main Content */}
-                <main className="flex-1 p-4">{children}</main>
+                <motion.main 
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.5 }}
+                    className="flex-1 p-4"
+                >
+                    {children}
+                </motion.main>
             </div>
         </div>
     );

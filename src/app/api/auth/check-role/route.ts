@@ -1,46 +1,31 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { adminAuth, adminDb } from '@/lib/firebase-admin';
 import { getServerSession } from 'next-auth';
-
-// Helper function to get a user's role
-export async function getUserRole(userId: string): Promise<string | null> {
-    try {
-        // Check custom claims first
-        if (adminAuth) {
-            const user = await adminAuth.getUser(userId);
-            if (user.customClaims && user.customClaims.role) {
-                return user.customClaims.role;
-            }
-        }
-        
-        // Fallback to Firestore role field
-        if (adminDb) {
-            const userDoc = await adminDb.collection('users').doc(userId).get();
-            const userData = userDoc.data();
-            if (userData?.role) {
-                return userData.role;
-            }
-        }
-        
-        return null;
-    } catch (error) {
-        console.error('Error getting user role:', error);
-        return null;
-    }
-}
+import { getUserRole } from '@/lib/auth-utils';
 
 export async function GET(request: NextRequest) {
     try {
         const session = await getServerSession();
-        if (!session?.user?.id) {
+        if (!session?.user) {
             return NextResponse.json({ error: 'Unauthorized: No session found' }, { status: 401 });
         }
+        
+        // Get the user ID from the session
+        let userId: string | undefined;
+        if ((session.user as any).id) {
+            userId = (session.user as any).id;
+        } else if ((session.user as any).sub) {
+            userId = (session.user as any).sub;
+        }
+        
+        if (!userId) {
+            return NextResponse.json({ error: 'Unauthorized: No user ID found in session' }, { status: 401 });
+        }
 
-        const userId = session.user.id;
+        // Use the utility function to get the role
         const role = await getUserRole(userId);
         
         return NextResponse.json({ 
-            role: role || 'user',
+            role: role,
             permissions: {
                 canModifyUsers: role === 'admin',
                 canViewAdminPanel: role === 'admin' || role === 'support',

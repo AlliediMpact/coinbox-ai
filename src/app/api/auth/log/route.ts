@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
-import { adminDb } from '@/lib/firebase-admin';
+import { adminDb, adminAuth } from '@/lib/firebase-admin'; // Correct import
 import { serverAuthLogger, AuthEventType } from '@/lib/auth-logger';
-import { auth } from '@/lib/firebase-admin';
+import { hasAdminAccess } from '@/lib/auth-utils'; // Import the utility function
 
 /**
  * API endpoint for logging authentication events
@@ -9,19 +9,32 @@ import { auth } from '@/lib/firebase-admin';
  */
 export async function POST(request: Request) {
   try {
+    if (!adminAuth || !adminDb) {
+      console.error('Firebase Admin SDK not initialized');
+      return NextResponse.json({ error: 'Server configuration error' }, { status: 500 });
+    }
+    
     // Get session to verify the user is authenticated
     const sessionCookie = request.headers.get('cookie')?.split(';')
       .find(c => c.trim().startsWith('session='))?.split('=')[1];
     
     let userId = null;
     let isAuthenticated = false;
+    let isAdmin = false;
+    let isSupport = false;
     
     // Verify the session if present
     if (sessionCookie) {
       try {
-        const decodedToken = await auth.verifySessionCookie(sessionCookie);
+        const decodedToken = await adminAuth.verifySessionCookie(sessionCookie);
         userId = decodedToken.uid;
         isAuthenticated = true;
+        
+        // Check if user has admin or support role
+        if (userId) {
+          isAdmin = await hasAdminAccess(userId, true); // true = admin only
+          isSupport = !isAdmin && await hasAdminAccess(userId); // support role check
+        }
       } catch (error) {
         console.error('Invalid session cookie', error);
       }
@@ -45,10 +58,11 @@ export async function POST(request: Request) {
     }
     
     // If the client provides a userId but it doesn't match the authenticated user,
-    // and it's not an admin, reject the request
+    // only allow if user is admin or support
     if (isAuthenticated && logData.userId && logData.userId !== userId) {
-      // TODO: Check if user is admin before rejecting
-      return NextResponse.json({ error: 'User ID mismatch' }, { status: 403 });
+      if (!(isAdmin || isSupport)) {
+        return NextResponse.json({ error: 'User ID mismatch - insufficient permissions' }, { status: 403 });
+      }
     }
     
     // Get client IP address from request headers
@@ -60,8 +74,10 @@ export async function POST(request: Request) {
       ...logData,
       ipAddress,
       timestamp: new Date(),
-      // Override userId with the authenticated one if available
-      userId: isAuthenticated ? userId : logData.userId
+      // Override userId with the authenticated one if available, unless admin/support is logging for another user
+      userId: (isAuthenticated && (!logData.userId || (!isAdmin && !isSupport))) ? userId : logData.userId,
+      // Add admin tracking field if applicable
+      loggedBy: (isAdmin || isSupport) && logData.userId !== userId ? userId : undefined
     };
     
     // Log the event
