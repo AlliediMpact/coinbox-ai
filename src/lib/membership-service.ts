@@ -1,5 +1,5 @@
 import { db } from './firebase';
-import { collection, addDoc, query, where, getDocs, updateDoc, doc, getDoc, Timestamp } from 'firebase/firestore';
+import { collection, addDoc, query, where, getDocs, updateDoc, doc, getDoc, Timestamp, setDoc } from 'firebase/firestore';
 import { transactionService } from './transaction-service';
 import { notificationService } from './notification-service';
 
@@ -279,10 +279,40 @@ class MembershipService {
     return this.MEMBERSHIP_TIERS[tierId]?.benefits;
   }
 
-  async getReferralCommissionRate(userId: string): Promise<number> {
+  async getReferralCommissionRate(referrerId: string, referredTier?: string): Promise<number> {
+    const membership = await this.getUserMembership(referrerId);
+    const referrerTier = membership?.currentTier || 'basic';
+    const referredUserTier = referredTier || 'basic';
+    
+    // Commission rates based on referrer and referred tiers
+    // Higher tiers get better commission rates
+    const commissionRates: Record<string, Record<string, number>> = {
+      'basic': { 'basic': 0.01, 'ambassador': 0.015, 'vip': 0.02, 'business': 0.025 },
+      'ambassador': { 'basic': 0.015, 'ambassador': 0.02, 'vip': 0.025, 'business': 0.03 },
+      'vip': { 'basic': 0.02, 'ambassador': 0.025, 'vip': 0.03, 'business': 0.035 },
+      'business': { 'basic': 0.025, 'ambassador': 0.03, 'vip': 0.035, 'business': 0.05 }
+    };
+    
+    return commissionRates[referrerTier]?.[referredUserTier] || 0.01;
+  }
+  
+  // Get tier requirements for next tier up from current tier
+  async getNextTierRequirements(userId: string): Promise<any> {
     const membership = await this.getUserMembership(userId);
-    if (!membership) return this.MEMBERSHIP_TIERS.basic.benefits.referralCommission;
-    return this.MEMBERSHIP_TIERS[membership.currentTier].benefits.referralCommission;
+    if (!membership) return null;
+    
+    const currentTier = membership.currentTier;
+    const nextTierMap: Record<string, string> = {
+      'basic': 'ambassador',
+      'ambassador': 'vip',
+      'vip': 'business',
+      'business': 'business' // No higher tier
+    };
+    
+    const nextTier = nextTierMap[currentTier];
+    if (nextTier === currentTier) return null; // Already at highest tier
+    
+    return this.MEMBERSHIP_TIERS[nextTier]?.requirements || null;
   }
 }
 
