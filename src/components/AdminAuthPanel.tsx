@@ -18,12 +18,14 @@ import { AlertTriangle, CheckCircle, Shield, UserX, UserCheck, Lock, Unlock } fr
 import { AdminService } from '@/lib/admin-auth-service';
 import { useToast } from '@/hooks/use-toast';
 import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from './ui/pagination';
+import { useAuth } from './AuthProvider'; // Import the useAuth hook
 
 // Initialize the admin service
 const adminService = new AdminService();
 
 export default function AdminAuthPanel() {
   const { toast } = useToast();
+  const { userClaims } = useAuth(); // Get user claims from the AuthProvider
   const [activeTab, setActiveTab] = useState('users');
   const [users, setUsers] = useState<any[]>([]);
   const [securityEvents, setSecurityEvents] = useState<any[]>([]);
@@ -45,6 +47,12 @@ export default function AdminAuthPanel() {
     type: 'disable' | 'enable' | 'flag' | 'unflag';
     userId: string;
   } | null>(null);
+  
+  // Check if the user has admin or support role
+  const isAdmin = userClaims?.role === 'admin';
+  const isSupport = userClaims?.role === 'support';
+  // Only admin role can modify, support is view-only
+  const canModify = isAdmin;
 
   // Fetch users when component mounts or page/filters change
   useEffect(() => {
@@ -117,6 +125,16 @@ export default function AdminAuthPanel() {
   };
 
   const handleUserAction = async () => {
+    if (!canModify) {
+      toast({
+        title: 'Permission Denied',
+        description: 'You do not have permission to modify user accounts.',
+        variant: 'destructive',
+      });
+      setActionDialogOpen(false);
+      return;
+    }
+    
     if (!currentAction) return;
     
     try {
@@ -182,6 +200,15 @@ export default function AdminAuthPanel() {
   };
 
   const handleMarkSecurityEventReviewed = async (eventId: string, resolution: string) => {
+    if (!canModify) {
+      toast({
+        title: 'Permission Denied',
+        description: 'You do not have permission to review security events.',
+        variant: 'destructive',
+      });
+      return;
+    }
+    
     try {
       await adminService.markSecurityEventReviewed(eventId, resolution);
       toast({
@@ -230,6 +257,11 @@ export default function AdminAuthPanel() {
           <CardTitle>Authentication Management</CardTitle>
           <CardDescription>
             Manage user authentication, review security events, and monitor authentication logs
+            {isSupport && (
+              <span className="block mt-2 text-amber-500">
+                You have view-only access as a Support role
+              </span>
+            )}
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -243,6 +275,7 @@ export default function AdminAuthPanel() {
               <TabsTrigger value="users">Users</TabsTrigger>
               <TabsTrigger value="security">Security Events</TabsTrigger>
               <TabsTrigger value="logs">Authentication Logs</TabsTrigger>
+              <TabsTrigger value="roles">Role Management</TabsTrigger>
             </TabsList>
             
             {/* Users Tab */}
@@ -333,67 +366,73 @@ export default function AdminAuthPanel() {
                               >
                                 Details
                               </Button>
-                              {user.disabled ? (
-                                <Button
-                                  variant="outline"
-                                  size="sm"
-                                  onClick={() => {
-                                    setCurrentAction({
-                                      type: 'enable',
-                                      userId: user.id
-                                    });
-                                    setActionDialogOpen(true);
-                                  }}
-                                >
-                                  <UserCheck className="h-4 w-4 mr-1" />
-                                  Enable
-                                </Button>
-                              ) : (
-                                <Button
-                                  variant="outline"
-                                  size="sm"
-                                  onClick={() => {
-                                    setCurrentAction({
-                                      type: 'disable',
-                                      userId: user.id
-                                    });
-                                    setActionDialogOpen(true);
-                                  }}
-                                >
-                                  <UserX className="h-4 w-4 mr-1" />
-                                  Disable
-                                </Button>
-                              )}
-                              {user.flagged ? (
-                                <Button
-                                  variant="outline"
-                                  size="sm"
-                                  onClick={() => {
-                                    setCurrentAction({
-                                      type: 'unflag',
-                                      userId: user.id
-                                    });
-                                    setActionDialogOpen(true);
-                                  }}
-                                >
-                                  <Unlock className="h-4 w-4 mr-1" />
-                                  Unflag
-                                </Button>
-                              ) : (
-                                <Button
-                                  variant="outline"
-                                  size="sm"
-                                  onClick={() => {
-                                    setCurrentAction({
-                                      type: 'flag',
-                                      userId: user.id
-                                    });
-                                    setActionDialogOpen(true);
-                                  }}
-                                >
-                                  <Lock className="h-4 w-4 mr-1" />
-                                  Flag
-                                </Button>
+                              
+                              {canModify && (
+                                <>
+                                  {user.disabled ? (
+                                    <Button
+                                      variant="outline"
+                                      size="sm"
+                                      onClick={() => {
+                                        setCurrentAction({
+                                          type: 'enable',
+                                          userId: user.id
+                                        });
+                                        setActionDialogOpen(true);
+                                      }}
+                                    >
+                                      <UserCheck className="h-4 w-4 mr-1" />
+                                      Enable
+                                    </Button>
+                                  ) : (
+                                    <Button
+                                      variant="outline"
+                                      size="sm"
+                                      onClick={() => {
+                                        setCurrentAction({
+                                          type: 'disable',
+                                          userId: user.id
+                                        });
+                                        setActionDialogOpen(true);
+                                      }}
+                                    >
+                                      <UserX className="h-4 w-4 mr-1" />
+                                      Disable
+                                    </Button>
+                                  )}
+                                  
+                                  {user.flagged ? (
+                                    <Button
+                                      variant="outline"
+                                      size="sm"
+                                      onClick={() => {
+                                        setCurrentAction({
+                                          type: 'unflag',
+                                          userId: user.id
+                                        });
+                                        setActionDialogOpen(true);
+                                      }}
+                                    >
+                                      <Unlock className="h-4 w-4 mr-1" />
+                                      Unflag
+                                    </Button>
+                                  ) : (
+                                    <Button
+                                      variant="outline"
+                                      size="sm"
+                                      onClick={() => {
+                                        setCurrentAction({
+                                          type: 'flag',
+                                          userId: user.id
+                                        });
+                                        setActionDialogOpen(true);
+                                      }}
+                                    >
+                                      <Lock className="h-4 w-4 mr-1" />
+                                      Flag
+                                    </Button>
+                                  )}
+                                </>
                               )}
                             </div>
                           </TableCell>
@@ -405,32 +444,25 @@ export default function AdminAuthPanel() {
               </div>
               
               {totalPages > 1 && (
-                <Pagination>
-                  <PaginationContent>
-                    <PaginationItem>
-                      <PaginationPrevious 
-                        onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))} 
-                        disabled={currentPage === 1}
-                      />
-                    </PaginationItem>
-                    {Array.from({ length: totalPages }).map((_, i) => (
-                      <PaginationItem key={i}>
-                        <PaginationLink 
-                          onClick={() => setCurrentPage(i + 1)}
-                          isActive={currentPage === i + 1}
-                        >
-                          {i + 1}
-                        </PaginationLink>
-                      </PaginationItem>
-                    ))}
-                    <PaginationItem>
-                      <PaginationNext 
-                        onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
-                        disabled={currentPage === totalPages}
-                      />
-                    </PaginationItem>
-                  </PaginationContent>
-                </Pagination>
+                <div className="flex items-center justify-center space-x-2">
+                  <Button 
+                    variant="outline" 
+                    onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                    disabled={currentPage === 1}
+                  >
+                    Previous
+                  </Button>
+                  <span>
+                    Page {currentPage} of {totalPages}
+                  </span>
+                  <Button 
+                    variant="outline" 
+                    onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                    disabled={currentPage === totalPages}
+                  >
+                    Next
+                  </Button>
+                </div>
               )}
             </TabsContent>
             
@@ -474,13 +506,24 @@ export default function AdminAuthPanel() {
                             </Button>
                           </TableCell>
                           <TableCell>
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => handleMarkSecurityEventReviewed(event.id, 'Reviewed and resolved')}
-                            >
-                              Mark Reviewed
-                            </Button>
+                            {canModify ? (
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => handleMarkSecurityEventReviewed(event.id, 'Reviewed and resolved')}
+                              >
+                                Mark Reviewed
+                              </Button>
+                            ) : (
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                disabled
+                                title="Support role has view-only access"
+                              >
+                                Mark Reviewed
+                              </Button>
+                            )}
                           </TableCell>
                         </TableRow>
                       ))

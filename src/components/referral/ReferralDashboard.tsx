@@ -12,6 +12,7 @@ import { ReferralStats } from '@/components/referral/ReferralStats';
 import { ReferralList } from '@/components/referral/ReferralList';
 import { CommissionHistory } from '@/components/referral/CommissionHistory';
 import { ReferralCodeGenerator } from '@/components/referral/ReferralCodeGenerator';
+import { ReferralAnalytics } from '@/components/referral/ReferralAnalytics';
 
 export default function ReferralDashboard() {
   const { user } = useAuth();
@@ -142,9 +143,10 @@ export default function ReferralDashboard() {
       
       {/* Detailed Tabs */}
       <Tabs defaultValue="referrals" className="w-full">
-        <TabsList className="grid w-full grid-cols-2">
+        <TabsList className="grid w-full grid-cols-3">
           <TabsTrigger value="referrals">My Referrals</TabsTrigger>
           <TabsTrigger value="commissions">Commission History</TabsTrigger>
+          <TabsTrigger value="analytics">Analytics</TabsTrigger>
         </TabsList>
         
         <TabsContent value="referrals" className="mt-4">
@@ -153,6 +155,14 @@ export default function ReferralDashboard() {
         
         <TabsContent value="commissions" className="mt-4">
           <CommissionHistory commissions={commissionsHistory} />
+        </TabsContent>
+        
+        <TabsContent value="analytics" className="mt-4">
+          <ReferralAnalytics 
+            stats={referralStats} 
+            commissions={commissionsHistory} 
+            referrals={referralsList}
+          />
         </TabsContent>
       </Tabs>
     </div>

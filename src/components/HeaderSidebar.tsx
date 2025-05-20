@@ -23,7 +23,6 @@ import {
     HelpCircle,
     Menu,
     Search,
-    Bell,
     Settings,
     LogOut,
     TrendingUp,
@@ -33,6 +32,7 @@ import {
     BadgeAlert,
     PiggyBank,
     HandCoins,
+    Bell,
 } from 'lucide-react';
 import { Card, CardContent } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
@@ -44,6 +44,7 @@ import {
     TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { getMembershipTier, formatCurrency } from '@/lib/membership-tiers';
+import { ReferralNotifier } from '@/components/referral/ReferralNotifier';
 
 interface HeaderProps {
     walletBalance: number | string;
@@ -190,26 +191,8 @@ const HeaderSidebar: React.FC<{ children: React.ReactNode }> = ({ children }) =>
                             </TooltipProvider>
                         </div>
 
-                        {/* Notifications */}
-                        <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                                <Button variant="ghost" className="relative text-white hover:opacity-80">
-                                    <Bell className="h-5 w-5" />
-                                    {notifications?.length > 0 && (
-                                        <Badge
-                                            variant="default"
-                                            className="absolute -top-2 -right-2" 
-                                            style={{ backgroundColor: '#cb6ce6', color: '#193281' }}
-                                        >
-                                            {notifications.length}
-                                        </Badge>
-                                    )}
-                                </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end" className="w-80">
-                                {/* Notification items will be implemented later */}
-                            </DropdownMenuContent>
-                        </DropdownMenu>
+                        {/* Referral Notifications */}
+                        <ReferralNotifier />
 
                         {/* User Menu */}
                         <DropdownMenu>
