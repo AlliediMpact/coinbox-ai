@@ -47,6 +47,7 @@ import {
 } from "@/components/ui/tooltip";
 import { getMembershipTier, formatCurrency } from '@/lib/membership-tiers';
 import { ReferralNotifier } from '@/components/referral/ReferralNotifier';
+import { getFirestore, doc, getDoc } from 'firebase/firestore';
 
 interface HeaderProps {
     walletBalance: number | string;
@@ -70,15 +71,41 @@ const HeaderSidebar: React.FC<{ children: React.ReactNode }> = ({ children }) =>
     const [commissionBalance, setCommissionBalance] = useState('0.00');
     const [notifications, setNotifications] = useState([]);
     const [userMembership, setUserMembership] = useState<string>('Basic');
+    const [isAdmin, setIsAdmin] = useState(false);
 
     // Effect to fetch user data
     useEffect(() => {
-        if (user) {
-            // Fetch wallet balance, commission balance, and notifications
-            // This will be implemented when we work on the wallet feature
-        }
+        const checkUserAccess = async () => {
+            if (user) {
+                try {
+                    const db = getFirestore();
+                    // Check wallet balance
+                    const walletDoc = await getDoc(doc(db, "wallets", user.uid));
+                    if (walletDoc.exists()) {
+                        setWalletBalance(walletDoc.data().balance || '0.00');
+                    }
+                    
+                    // Check if user is admin
+                    const userDoc = await getDoc(doc(db, "users", user.uid));
+                    if (userDoc.exists()) {
+                        const userData = userDoc.data();
+                        setUserMembership(userData.membershipTier || 'Basic');
+                        
+                        // Check if user has admin role
+                        if (userData.role === 'admin' || userData.role === 'support') {
+                            setIsAdmin(true);
+                        }
+                    }
+                } catch (error) {
+                    console.error("Error checking user access:", error);
+                }
+            }
+        };
+        
+        checkUserAccess();
     }, [user]);
 
+    // Regular user navigation items
     const navigationItems = [
         {
             label: 'Dashboard',
@@ -99,10 +126,22 @@ const HeaderSidebar: React.FC<{ children: React.ReactNode }> = ({ children }) =>
             description: 'Manage your funds'
         },
         {
-            label: 'Risk Assessment',
+            label: 'Disputes',
+            icon: AlertCircle,
+            href: '/dashboard/disputes',
+            description: 'Manage trade disputes'
+        },
+        {
+            label: 'Security',
             icon: Shield,
+            href: '/dashboard/security',
+            description: 'Monitor account security'
+        },
+        {
+            label: 'Risk Assessment',
+            icon: BadgeAlert,
             href: '/dashboard/risk',
-            description: 'Review security status'
+            description: 'Review risk status'
         },
         {
             label: 'Referrals',
@@ -115,6 +154,34 @@ const HeaderSidebar: React.FC<{ children: React.ReactNode }> = ({ children }) =>
             icon: HelpCircle,
             href: '/dashboard/support',
             description: '24/7 customer support'
+        },
+    ];
+
+    // Admin navigation items
+    const adminNavigationItems = [
+        {
+            label: 'Admin Dashboard',
+            icon: Users,
+            href: '/dashboard/admin',
+            description: 'Admin control panel'
+        },
+        {
+            label: 'Transaction Monitoring',
+            icon: Shield,
+            href: '/dashboard/admin/transaction-monitoring',
+            description: 'Monitor suspicious transactions'
+        },
+        {
+            label: 'Dispute Management',
+            icon: AlertCircle,
+            href: '/dashboard/admin/disputes',
+            description: 'Manage user disputes'
+        },
+        {
+            label: 'User Management',
+            icon: UserIcon,
+            href: '/dashboard/admin/users',
+            description: 'Manage platform users'
         },
     ];
 
@@ -289,6 +356,7 @@ const HeaderSidebar: React.FC<{ children: React.ReactNode }> = ({ children }) =>
                         style={{ backgroundColor: '#193281' }}
                     >
                     <nav className="mt-16 lg:mt-0 p-4 space-y-2">
+                        {/* Regular navigation items */}
                         {navigationItems.map((item) => (
                             <motion.div
                                 key={item.href}
@@ -321,6 +389,49 @@ const HeaderSidebar: React.FC<{ children: React.ReactNode }> = ({ children }) =>
                                 </TooltipProvider>
                             </motion.div>
                         ))}
+
+                        {/* Admin section */}
+                        {isAdmin && (
+                            <>
+                                <div className="pt-4 pb-2">
+                                    <p className="text-xs font-semibold text-gray-400 uppercase pl-2">Admin Tools</p>
+                                    <div className="mt-1 h-px bg-gray-400/20" />
+                                </div>
+                                
+                                {adminNavigationItems.map((item) => (
+                                    <motion.div
+                                        key={item.href}
+                                        whileHover={{ 
+                                            x: 5, 
+                                            backgroundColor: 'rgba(255, 255, 255, 0.1)'
+                                        }}
+                                        whileTap={{ scale: 0.98 }}
+                                        className="rounded-md overflow-hidden"
+                                    >
+                                        <TooltipProvider>
+                                            <Tooltip>
+                                                <TooltipTrigger asChild>
+                                                    <Button
+                                                        variant="ghost"
+                                                        className="w-full justify-start text-white"
+                                                        onClick={() => {
+                                                            router.push(item.href);
+                                                            setIsMobileMenuOpen(false);
+                                                        }}
+                                                    >
+                                                        <item.icon className="mr-2 h-4 w-4" />
+                                                        <span>{item.label}</span>
+                                                    </Button>
+                                                </TooltipTrigger>
+                                                <TooltipContent side="right">
+                                                    <p>{item.description}</p>
+                                                </TooltipContent>
+                                            </Tooltip>
+                                        </TooltipProvider>
+                                    </motion.div>
+                                ))}
+                            </>
+                        )}
                     </nav>
                     </motion.aside>
                 </AnimatePresence>

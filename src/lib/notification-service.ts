@@ -4,7 +4,7 @@ import { collection, addDoc, query, where, orderBy, getDocs, updateDoc, doc, Tim
 export interface Notification {
   id?: string;
   userId: string;
-  type: 'trade_match' | 'dispute' | 'escrow_release' | 'commission' | 'kyc_status' | 'system';
+  type: 'trade_match' | 'dispute' | 'dispute_update' | 'escrow_release' | 'commission' | 'kyc_status' | 'system';
   title: string;
   message: string;
   status: 'unread' | 'read';
@@ -14,6 +14,7 @@ export interface Notification {
     disputeId?: string;
     amount?: number;
     action?: string;
+    status?: string;
   };
   createdAt: Timestamp;
   readAt?: Timestamp;
@@ -148,6 +149,80 @@ class NotificationService {
         action: 'view_kyc'
       }
     });
+  }
+
+  // Dispute-specific notification methods
+  async sendDisputeCreatedNotification(userId: string, disputeId: string, ticketId: string) {
+    return this.createNotification({
+      userId,
+      type: 'dispute',
+      title: 'Dispute Filed',
+      message: 'Your dispute has been successfully filed and will be reviewed by our team.',
+      priority: 'medium',
+      metadata: {
+        disputeId,
+        tradeId: ticketId,
+        action: 'created'
+      }
+    });
+  }
+
+  async sendDisputeStatusUpdateNotification(userId: string, disputeId: string, status: string, resolution?: string) {
+    let title: string;
+    let message: string;
+    let priority: 'low' | 'medium' | 'high' = 'medium';
+    
+    switch (status) {
+      case 'UnderReview':
+        title = 'Dispute Under Review';
+        message = 'Your dispute is now being reviewed by our support team.';
+        break;
+      case 'Resolved':
+        title = 'Dispute Resolved';
+        message = 'Your dispute has been resolved in your favor.';
+        priority = 'high';
+        break;
+      case 'Rejected':
+        title = 'Dispute Rejected';
+        message = 'Your dispute claim has been rejected.';
+        priority = 'high';
+        break;
+      default:
+        title = 'Dispute Update';
+        message = `The status of your dispute has been updated to: ${status}`;
+    }
+    
+    return this.createNotification({
+      userId,
+      type: 'dispute_update',
+      title,
+      message,
+      priority,
+      metadata: {
+        disputeId,
+        action: 'update',
+        status
+      }
+    });
+  }
+
+  async sendAdminDisputeNotification(adminIds: string[], disputeId: string, ticketId: string) {
+    const notificationPromises = adminIds.map(adminId => 
+      this.createNotification({
+        userId: adminId,
+        type: 'dispute',
+        title: 'New Dispute Filed',
+        message: 'A new user dispute requires your attention.',
+        priority: 'high',
+        metadata: {
+          disputeId,
+          tradeId: ticketId,
+          action: 'admin_review'
+        }
+      })
+    );
+    
+    return Promise.all(notificationPromises);
   }
 }
 

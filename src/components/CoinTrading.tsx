@@ -1,5 +1,13 @@
-import { useState, useEffect } from "react";
-import { 
+import { useState, useEffect, useCallback } from "react";
+import { useAuth } from "@/components/AuthProvider";
+import { useToast } from "@/hooks/use-toast";
+import { useFormWithValidation } from "@/hooks/use-form-validation";
+import { TradeTicket, Dispute } from "@/lib/types";
+import { tradingService } from "@/lib/trading-service";
+import { disputeService } from "@/lib/dispute-service";
+import { formatCurrency } from "@/lib/utils";
+import { z } from "zod";
+import {
     getFirestore, 
     doc, 
     collection, 
@@ -15,6 +23,8 @@ import {
     getDoc,
     addDoc
 } from "firebase/firestore";
+import PageLoading, { InlineLoading } from "@/components/PageLoading";
+import ContentPlaceholder from "@/components/ContentPlaceholder";
 import { useAuth } from '@/components/AuthProvider';
 import { useToast } from '@/hooks/use-toast';
 import { useFormWithValidation } from '@/lib/form-utils';
@@ -55,6 +65,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { AlertTriangle } from "lucide-react";
 
 // Form schemas
 const ticketFormSchema = z.object({
@@ -192,7 +203,8 @@ export default function CoinTrading() {
             const ticket = tickets.find(t => t.id === disputeDetails.ticketId);
             if (!ticket) throw new Error("Ticket not found");
             
-            await tradingService.createDispute({
+            // Use the dispute service instead of trading service
+            await disputeService.createDispute({
                 ticketId: disputeDetails.ticketId,
                 userId: user.uid,
                 ...values
@@ -200,6 +212,11 @@ export default function CoinTrading() {
             
             // Track the dispute creation
             await trackTransactionHistory(ticket, "Create Dispute", values.reason);
+            
+            // Update local ticket state
+            setTickets(prev => prev.map(t => 
+                t.id === disputeDetails.ticketId ? { ...t, status: 'Disputed' } : t
+            ));
             
             setDisputeOpen(false);
         },
@@ -238,11 +255,23 @@ export default function CoinTrading() {
         if (!user) return;
         
         setLoading(true);
+        // Show status toast while finding match
+        toast({
+            title: "Finding Match",
+            description: "Please wait while we find a match for your ticket...",
+        });
+        
         try {
             const match = await tradingService.findMatch(ticket);
             if (match) {
                 // Calculate escrow amount including interest
                 const ticketEscrowAmount = ticket.amount + (ticket.amount * (ticket.interest / 100));
+                
+                // Show processing toast
+                toast({
+                    title: "Match Found",
+                    description: "Processing escrow setup...",
+                });
                 
                 await runTransaction(db, async (transaction: Transaction) => {
                     const ticketRef = doc(db, "tickets", ticket.id);
@@ -317,6 +346,12 @@ export default function CoinTrading() {
 
     const handleConfirmTrade = async (ticket: TradeTicket) => {
         setLoading(true);
+        // Show confirmation progress toast
+        toast({
+            title: "Confirming Trade",
+            description: "Processing your confirmation...",
+        });
+        
         try {
             await tradingService.confirmTrade(ticket.id);
             
@@ -355,6 +390,12 @@ export default function CoinTrading() {
 
     const handleCancelTicket = async (ticket: TradeTicket) => {
         setLoading(true);
+        // Show cancellation progress toast
+        toast({
+            title: "Cancelling Ticket",
+            description: "Processing your cancellation request...",
+        });
+        
         try {
             // Call the trading service to cancel the ticket
             await tradingService.cancelTicket(ticket.id);
@@ -492,23 +533,23 @@ export default function CoinTrading() {
                     </CardHeader>
                     <CardContent className="space-y-6">
                         {isLoading ? (
-                            <motion.div 
-                                className="flex justify-center p-8"
-                                animate={{ 
-                                    opacity: [0.5, 1, 0.5],
-                                    scale: [0.98, 1, 0.98]
-                                }}
-                                transition={{ 
-                                    duration: 1.5, 
-                                    repeat: Infinity,
-                                    repeatType: "reverse"
-                                }}
-                            >
-                                <svg className="animate-spin h-12 w-12 text-primary" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                                </svg>
-                            </motion.div>
+                            <div className="relative min-h-[400px]">
+                                {/* Enhanced loading state with placeholder and visual feedback */}
+                                <div className="px-2 py-6">
+                                    <ContentPlaceholder 
+                                        type="table"
+                                        count={3}
+                                        className="mt-4"
+                                    />
+                                </div>
+                                <div className="absolute inset-0 flex items-center justify-center bg-white/60 backdrop-blur-sm">
+                                    <PageLoading 
+                                        message="Loading trading platform" 
+                                        showAfterDelay={false}
+                                        showTips={true}
+                                    />
+                                </div>
+                            </div>
                         ) : (
                             <>
                                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -650,7 +691,12 @@ export default function CoinTrading() {
                                                 <Button type="button" variant="outline" onClick={() => setDialogOpen(false)}>
                                                     Cancel
                                                 </Button>
-                                                <Button type="submit" disabled={ticketLoading}>
+                                                <Button type="submit" disabled={ticketLoading} className="relative">
+                                                    {ticketLoading && (
+                                                        <span className="absolute left-4">
+                                                            <InlineLoading />
+                                                        </span>
+                                                    )}
                                                     {ticketLoading ? 'Creating...' : 'Create Ticket'}
                                                 </Button>
                                             </div>
@@ -663,6 +709,19 @@ export default function CoinTrading() {
                                 <div className="flex justify-between items-center mb-2">
                                     <h3 className="font-semibold">Your Active Tickets</h3>
                                     <div className="flex space-x-2">
+                                        {tickets.some(t => t.status === 'Disputed') && (
+                                            <motion.div
+                                                initial={{ opacity: 0, scale: 0.7 }}
+                                                animate={{ opacity: 1, scale: 1 }}
+                                                className="px-3 py-1 mr-2 rounded-full bg-red-50 border border-red-200 text-red-600 text-xs flex items-center"
+                                            >
+                                                <AlertTriangle className="h-3 w-3 mr-1" />
+                                                <span>
+                                                    {tickets.filter(t => t.status === 'Disputed').length} Dispute{tickets.filter(t => t.status === 'Disputed').length !== 1 ? 's' : ''} Active
+                                                </span>
+                                                <a href="/dashboard/disputes" className="ml-2 underline font-medium">View</a>
+                                            </motion.div>
+                                        )}
                                         <Select onValueChange={setFilterStatus} defaultValue="all">
                                             <SelectTrigger className="w-[130px]">
                                                 <SelectValue placeholder="Filter" />
@@ -671,6 +730,7 @@ export default function CoinTrading() {
                                                 <SelectItem value="all">All Tickets</SelectItem>
                                                 <SelectItem value="Open">Open</SelectItem>
                                                 <SelectItem value="Escrow">In Escrow</SelectItem>
+                                                <SelectItem value="Disputed">Disputed</SelectItem>
                                                 <SelectItem value="Completed">Completed</SelectItem>
                                                 <SelectItem value="Cancelled">Cancelled</SelectItem>
                                             </SelectContent>
@@ -704,7 +764,10 @@ export default function CoinTrading() {
                                                 <div>
                                                     <p className="font-medium">{ticket.type} {ticket.type === 'Invest' ? 'Offer' : 'Request'}</p>
                                                     <p className="text-sm text-gray-500">
-                                                        {formatCurrency(ticket.amount)} • {ticket.interest}% interest • {ticket.status}
+                                                        {formatCurrency(ticket.amount)} • {ticket.interest}% interest • 
+                                                        <span className={ticket.status === 'Disputed' ? 'text-red-500 font-semibold' : ''}>
+                                                            {ticket.status}
+                                                        </span>
                                                     </p>
                                                     {ticket.description && (
                                                         <p className="text-xs text-gray-400 max-w-[200px] truncate">
@@ -716,6 +779,11 @@ export default function CoinTrading() {
                                                             Matched ticket #{ticket.matchedTicketId.substring(0, 8)}...
                                                         </p>
                                                     )}
+                                                    {ticket.status === 'Disputed' && (
+                                                        <p className="text-xs text-red-500">
+                                                            Under dispute review • <a href="/dashboard/disputes" className="underline hover:text-red-700">Track status</a>
+                                                        </p>
+                                                    )}
                                                 </div>
                                                 <div className="space-x-2" onClick={(e) => e.stopPropagation()}>
                                                     {ticket.status === 'Open' && (
@@ -725,8 +793,11 @@ export default function CoinTrading() {
                                                                 size="sm"
                                                                 onClick={() => handleMatchTrade(ticket)}
                                                                 disabled={loading}
+                                                                className="relative min-w-[90px]"
                                                             >
-                                                                Find Match
+                                                                {loading ? (
+                                                                    <InlineLoading message="Searching" />
+                                                                ) : "Find Match"}
                                                             </Button>
                                                             <Button
                                                                 variant="ghost"
@@ -744,8 +815,12 @@ export default function CoinTrading() {
                                                                 variant="outline"
                                                                 size="sm"
                                                                 onClick={() => handleConfirmTrade(ticket)}
+                                                                disabled={loading}
+                                                                className="relative min-w-[90px]"
                                                             >
-                                                                Confirm
+                                                                {loading ? (
+                                                                    <InlineLoading message="Confirming" />
+                                                                ) : "Confirm"}
                                                             </Button>
                                                             <Button
                                                                 variant="destructive"
@@ -797,7 +872,12 @@ export default function CoinTrading() {
                                 <Button type="button" variant="outline" onClick={() => setDisputeOpen(false)}>
                                     Cancel
                                 </Button>
-                                <Button type="submit" disabled={disputeLoading}>
+                                <Button type="submit" disabled={disputeLoading} className="relative">
+                                    {disputeLoading && (
+                                        <span className="absolute left-4">
+                                            <InlineLoading />
+                                        </span>
+                                    )}
                                     {disputeLoading ? "Submitting..." : "Submit Dispute"}
                                 </Button>
                             </div>

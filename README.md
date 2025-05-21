@@ -13,7 +13,16 @@ To provide an innovative, user-friendly, and secure digital marketplace where us
 
 ## Implemented Features
 
-### 1. Authentication System
+### 1. Security Framework
+- Advanced transaction monitoring system with real-time pattern detection
+- Operation-specific rate limiting with sliding window implementation
+- Security dashboard for both users and administrators
+- Risk assessment integration for adaptive security controls
+- Suspicious activity detection with configurable alert thresholds
+- Comprehensive security testing suite for continuous monitoring
+- See [Security Implementation Guide](/docs/security-implementation-guide.md) for details
+
+### 2. Authentication System
 - Multi-factor authentication for enhanced security
 - Email verification and password recovery
 - User role-based access control (see [RBAC Documentation](/docs/role-based-access-control.md))
