@@ -9,6 +9,14 @@ import HeaderSidebarLayout from '@/components/HeaderSidebar';
 import PageTransition from '@/components/PageTransition';
 import AppLoading from '@/components/AppLoading';
 import RouteChangeIndicator from '@/components/RouteChangeIndicator';
+import { OnboardingProvider } from '@/components/onboarding/OnboardingProvider';
+import dynamic from 'next/dynamic';
+
+// Import UserOnboarding dynamically to avoid SSR issues
+const UserOnboarding = dynamic(
+  () => import('@/components/onboarding/UserOnboarding'),
+  { ssr: false }
+);
 
 export const metadata: Metadata = {
   title: 'Allied iMpact Coin Box',
@@ -25,9 +33,10 @@ export default function RootLayout({
       <body className="antialiased">
         <ErrorBoundary>
           <AuthProvider>
-            <SidebarProvider>
-              {/* Initial App Loading Splash Screen - displayed during first load */}
-              <AppLoading minimumLoadTimeMs={3000} />
+            <OnboardingProvider>
+              <SidebarProvider>
+                {/* Initial App Loading Splash Screen - displayed during first load */}
+                <AppLoading minimumLoadTimeMs={3000} />
               
               {/* Enhanced Route Change Progress Indicator - for subsequent navigation */}
               <RouteChangeIndicator />
@@ -39,7 +48,10 @@ export default function RootLayout({
                 </PageTransition>
               </HeaderSidebarLayout>
               <Toaster />
-            </SidebarProvider>
+                {/* User onboarding guide */}
+                <UserOnboarding />
+              </SidebarProvider>
+            </OnboardingProvider>
           </AuthProvider>
         </ErrorBoundary>
       </body>

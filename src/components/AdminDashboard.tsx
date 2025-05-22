@@ -6,6 +6,7 @@ import { useAuth } from '@/components/AuthProvider';
 import { useToast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
 import AdminAuthPanel from '@/components/AdminAuthPanel';
+import ComplianceReporting from '@/components/compliance/ComplianceReporting';
 import {
   Card,
   CardHeader,
@@ -379,6 +380,31 @@ export default function AdminDashboard() {
           <p>Total KYC Verified Users: {users.filter(u => u.verified).length}</p>
           <p>Total Active Users: {users.filter(u => u.status === 'Active').length}</p>
           <p>Report Date: {format(new Date(), 'yyyy-MM-dd')}</p>
+        </CardContent>
+      </Card>
+      
+      {/* Compliance Reporting */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Compliance Reporting</CardTitle>
+          <CardDescription>Generate and manage regulatory compliance reports</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <ComplianceReporting />
+        </CardContent>
+      </Card>
+
+      {/* System Monitoring */}
+      <Card>
+        <CardHeader>
+          <CardTitle>System Monitoring & Reliability</CardTitle>
+          <CardDescription>Monitor system health and manage backups</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <p className="mb-4">Monitor system performance, review logs, manage alerts, and control backup operations.</p>
+          <Button onClick={() => window.location.href = '/admin/monitoring'}>
+            Open Monitoring Dashboard
+          </Button>
         </CardContent>
       </Card>
 

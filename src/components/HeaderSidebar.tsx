@@ -48,6 +48,7 @@ import {
 import { getMembershipTier, formatCurrency } from '@/lib/membership-tiers';
 import { ReferralNotifier } from '@/components/referral/ReferralNotifier';
 import { getFirestore, doc, getDoc } from 'firebase/firestore';
+import SiteFooter from '@/components/SiteFooter';
 
 interface HeaderProps {
     walletBalance: number | string;
@@ -446,6 +447,9 @@ const HeaderSidebar: React.FC<{ children: React.ReactNode }> = ({ children }) =>
                     {children}
                 </motion.main>
             </div>
+            
+            {/* Site Footer */}
+            <SiteFooter />
         </div>
     );
 };
