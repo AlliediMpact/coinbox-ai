@@ -1,4 +1,4 @@
-import { getFirestore, doc, collection, query, getDocs, runTransaction, getDoc } from 'firebase/firestore';
+import { getFirestore, doc, collection, query, getDocs, runTransaction, getDoc, addDoc } from 'firebase/firestore';
 import { TradeTicket, EscrowTransaction, DisputeRequest } from './types';
 import { validateLoanAmount, validateInvestmentAmount, getTierConfig } from './membership-tiers';
 import { ServiceClient } from './service-client';

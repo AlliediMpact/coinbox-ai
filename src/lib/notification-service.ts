@@ -1,41 +1,179 @@
 import { db } from './firebase';
-import { collection, addDoc, query, where, orderBy, getDocs, updateDoc, doc, Timestamp } from 'firebase/firestore';
+import { 
+  collection, 
+  addDoc, 
+  query, 
+  where, 
+  orderBy, 
+  getDocs, 
+  updateDoc, 
+  doc, 
+  Timestamp, 
+  onSnapshot, 
+  deleteDoc, 
+  limit, 
+  writeBatch,
+  DocumentData
+} from 'firebase/firestore';
+import { NotificationType, NotificationPriority, NotificationStatus, NotificationCategory } from './notification-constants';
 
 export interface Notification {
   id?: string;
   userId: string;
-  type: 'trade_match' | 'dispute' | 'dispute_update' | 'escrow_release' | 'commission' | 'kyc_status' | 'system';
+  type: NotificationType;
   title: string;
   message: string;
-  status: 'unread' | 'read';
-  priority: 'low' | 'medium' | 'high';
+  status: NotificationStatus;
+  priority: NotificationPriority;
+  category?: NotificationCategory;
   metadata?: {
     tradeId?: string;
     disputeId?: string;
     amount?: number;
     action?: string;
     status?: string;
+    paymentId?: string;
+    receiptUrl?: string;
+    imageUrl?: string;
+    link?: string;
+    expiresAt?: Timestamp;
   };
   createdAt: Timestamp;
   readAt?: Timestamp;
+  deliveredVia?: ('app' | 'email' | 'push' | 'sms')[];
 }
 
 class NotificationService {
+  // Event listeners for real-time notification updates
+  private listeners: Map<string, () => void> = new Map();
+  private fcmToken: string | null = null;
+  
+  /**
+   * Creates a new notification and delivers it through specified channels
+   */
   async createNotification(notification: Omit<Notification, 'id' | 'createdAt' | 'status'>) {
     const now = Timestamp.now();
-    return await addDoc(collection(db, 'notifications'), {
+    
+    // Add category based on type if not provided
+    if (!notification.category && notification.type) {
+      const { NOTIFICATION_CATEGORY_MAP } = await import('./notification-constants');
+      notification.category = NOTIFICATION_CATEGORY_MAP[notification.type];
+    }
+    
+    // Create the notification document
+    const notificationRef = await addDoc(collection(db, 'notifications'), {
       ...notification,
       status: 'unread',
-      createdAt: now
+      createdAt: now,
+      deliveredVia: ['app'] // Default delivery method
     });
+    
+    // Attempt to deliver via push notification if available
+    this.deliverViaPush(notification, notificationRef.id);
+    
+    return notificationRef;
   }
 
+  /**
+   * Attempts to deliver notification via push notifications
+   */
+  private async deliverViaPush(notification: Omit<Notification, 'id' | 'createdAt' | 'status'>, notificationId: string) {
+    try {
+      // Only attempt push delivery in browser environment
+      if (typeof window !== 'undefined') {
+        // Initialize messaging if not already done
+        const messaging = getMessaging();
+        
+        // Get or request notification permission
+        if (!this.fcmToken) {
+          const currentToken = await getToken(messaging);
+          if (currentToken) {
+            this.fcmToken = currentToken;
+            // Store token to user profile
+            this.saveUserFcmToken(notification.userId, currentToken);
+          }
+        }
+        
+        // Mark notification as delivered via push if successful
+        if (this.fcmToken) {
+          await updateDoc(doc(db, 'notifications', notificationId), {
+            deliveredVia: ['app', 'push']
+          });
+        }
+      }
+    } catch (error) {
+      console.error('Failed to deliver push notification:', error);
+      // Failure to deliver push should not affect other operations
+    }
+  }
+  
+  /**
+   * Save user's FCM token for future push notifications
+   */
+  private async saveUserFcmToken(userId: string, token: string) {
+    try {
+      const userRef = doc(db, 'users', userId);
+      await updateDoc(userRef, {
+        fcmTokens: {
+          [token]: true
+        }
+      });
+    } catch (error) {
+      console.error('Failed to save FCM token:', error);
+    }
+  }
+
+  /**
+   * Mark notification as read
+   */
   async markAsRead(notificationId: string) {
     const notificationRef = doc(db, 'notifications', notificationId);
     await updateDoc(notificationRef, {
       status: 'read',
       readAt: Timestamp.now()
     });
+  }
+  
+  /**
+   * Mark all notifications for a user as read
+   */
+  async markAllAsRead(userId: string) {
+    const batch = writeBatch(db);
+    const q = query(
+      collection(db, 'notifications'),
+      where('userId', '==', userId),
+      where('status', '==', 'unread')
+    );
+    
+    const snapshot = await getDocs(q);
+    if (snapshot.empty) return;
+    
+    const now = Timestamp.now();
+    snapshot.docs.forEach(doc => {
+      batch.update(doc.ref, { 
+        status: 'read',
+        readAt: now
+      });
+    });
+    
+    await batch.commit();
+  }
+  
+  /**
+   * Archive a notification
+   */
+  async archiveNotification(notificationId: string) {
+    const notificationRef = doc(db, 'notifications', notificationId);
+    await updateDoc(notificationRef, {
+      status: 'archived'
+    });
+  }
+  
+  /**
+   * Delete a notification
+   */
+  async deleteNotification(notificationId: string) {
+    await deleteDoc(doc(db, 'notifications', notificationId));
   }
 
   async getNotifications(userId: string, options: {
@@ -70,6 +208,145 @@ class NotificationService {
     } catch (error) {
       console.error('Failed to get notifications:', error);
       throw error;
+    }
+  }
+
+  /**
+   * Subscribe to real-time notification updates for a user
+   * 
+   * @param userId User ID to subscribe to notifications for
+   * @param callback Function to call when notifications change
+   * @param options Filter options
+   * @returns Unsubscribe function
+   */
+  subscribeToNotifications(userId: string, callback: (notifications: Notification[]) => void, options: {
+    status?: NotificationStatus | NotificationStatus[];
+    category?: NotificationCategory;
+    limit?: number;
+  } = {}) {
+    // Create a unique identifier for this subscription
+    const subscriptionId = `${userId}_${Date.now()}`;
+    
+    // Build query based on options
+    let q = query(
+      collection(db, 'notifications'),
+      where('userId', '==', userId),
+      orderBy('createdAt', 'desc')
+    );
+    
+    // Add status filter if provided
+    if (options.status) {
+      if (Array.isArray(options.status)) {
+        if (options.status.length === 1) {
+          q = query(q, where('status', '==', options.status[0]));
+        }
+        // For multiple status values, we'll filter in memory since Firebase doesn't support OR queries
+      } else {
+        q = query(q, where('status', '==', options.status));
+      }
+    }
+    
+    // Add category filter if provided
+    if (options.category && options.category !== 'all') {
+      q = query(q, where('category', '==', options.category));
+    }
+    
+    // Add limit if provided
+    if (options.limit) {
+      q = query(q, limit(options.limit));
+    }
+    
+    // Create the snapshot listener
+    const unsubscribe = onSnapshot(
+      q, 
+      (snapshot) => {
+        const notifications = snapshot.docs.map(docSnapshot => ({
+          id: docSnapshot.id,
+          ...docSnapshot.data()
+        } as Notification));
+        
+        // Apply in-memory filtering for complex status arrays
+        const filteredNotifications = options.status && Array.isArray(options.status) && options.status.length > 1
+          ? notifications.filter(notification => 
+              options.status!.includes(notification.status as NotificationStatus)
+            )
+          : notifications;
+        
+        callback(filteredNotifications);
+      }, 
+      (err) => {
+        console.error('Error in notification subscription:', err);
+      }
+    );
+    
+    // Store the unsubscribe function
+    this.listeners.set(subscriptionId, unsubscribe);
+    
+    // Return function to unsubscribe
+    return () => {
+      unsubscribe();
+      this.listeners.delete(subscriptionId);
+    };
+  }
+  
+  /**
+   * Get unread notification count for a user
+   * 
+   * @param userId User ID to get count for
+   * @param callback Function to call when count changes
+   * @returns Unsubscribe function
+   */
+  subscribeToUnreadCount(userId: string, callback: (count: number) => void) {
+    const q = query(
+      collection(db, 'notifications'),
+      where('userId', '==', userId),
+      where('status', '==', 'unread')
+    );
+    
+    const unsubscribe = onSnapshot(
+      q, 
+      (snapshot) => {
+        callback(snapshot.docs.length);
+      }, 
+      (err) => {
+        console.error('Error in unread count subscription:', err);
+        callback(0); // Default to 0 on error
+      }
+    );
+    
+    return unsubscribe;
+  }
+  
+  /**
+   * Clean up expired notifications 
+   * 
+   * @param userId User to clean notifications for
+   * @param olderThanDays Number of days after which to consider notifications expired
+   */
+  async cleanupExpiredNotifications(userId: string, olderThanDays = 30) {
+    try {
+      const cutoffDate = new Date();
+      cutoffDate.setDate(cutoffDate.getDate() - olderThanDays);
+      const cutoffTimestamp = Timestamp.fromDate(cutoffDate);
+      
+      const q = query(
+        collection(db, 'notifications'),
+        where('userId', '==', userId),
+        where('createdAt', '<', cutoffTimestamp),
+        where('status', 'in', ['read', 'archived'])
+      );
+      
+      const snapshot = await getDocs(q);
+      if (snapshot.docs.length === 0) return;
+      
+      const batch = writeBatch(db);
+      snapshot.docs.forEach(docSnapshot => {
+        batch.delete(doc(db, 'notifications', docSnapshot.id));
+      });
+      
+      await batch.commit();
+    } catch (err) {
+      console.error('Failed to cleanup notifications:', err);
     }
   }
 

@@ -35,6 +35,7 @@ import {
     HandCoins,
     Bell,
     X,
+    FileText,
 } from 'lucide-react';
 import { Card, CardContent } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
@@ -127,6 +128,12 @@ const HeaderSidebar: React.FC<{ children: React.ReactNode }> = ({ children }) =>
             description: 'Manage your funds'
         },
         {
+            label: 'Receipts',
+            icon: FileText,
+            href: '/dashboard/receipts',
+            description: 'View payment receipts'
+        },
+        {
             label: 'Disputes',
             icon: AlertCircle,
             href: '/dashboard/disputes',
@@ -165,6 +172,12 @@ const HeaderSidebar: React.FC<{ children: React.ReactNode }> = ({ children }) =>
             icon: Users,
             href: '/dashboard/admin',
             description: 'Admin control panel'
+        },
+        {
+            label: 'Analytics',
+            icon: TrendingUp,
+            href: '/dashboard/analytics',
+            description: 'Platform analytics and reporting'
         },
         {
             label: 'Transaction Monitoring',
