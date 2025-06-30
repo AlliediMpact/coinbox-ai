@@ -6,9 +6,10 @@ import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Coins, Home as HomeIcon, ReferralCode, Share2, Shield, Users, Wallet } from 'lucide-react';
+import { Coins, CreditCard, Home as HomeIcon, ReferralCode, Share2, Shield, Users, Wallet, BarChart3 } from 'lucide-react';
 import RiskAssessmentTool from "@/components/RiskAssessmentTool";
 import SummaryComponent from "@/components/SummaryComponent";
+import PWAInstallPrompt from "@/components/PWAInstallPrompt";
 import {
   Tooltip,
   TooltipContent,
@@ -23,7 +24,7 @@ const recentTransactions = [
 ];
 
 export default function Dashboard() {
-  const { user, signOutUser } = useAuth();
+  const { user, logout } = useAuth();
   const router = useRouter();
   const [isMounted, setIsMounted] = useState(false); // Use state to track mounting
     const [walletBalance, setWalletBalance] = useState<number | null>(null);
@@ -110,6 +111,16 @@ export default function Dashboard() {
       >
         Welcome, {user.email}!
       </motion.p>
+
+      {/* PWA Install Prompt */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, delay: 0.3 }}
+        className="w-full max-w-4xl mb-6"
+      >
+        <PWAInstallPrompt />
+      </motion.div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 w-full max-w-5xl">
 
@@ -368,15 +379,48 @@ export default function Dashboard() {
                 </Tooltip>
               </TooltipProvider>
 
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                      <Button onClick={() => router.push('/dashboard/analytics')} variant="outline" className="border-blue-500 text-blue-500">
+                        <BarChart3 className="mr-2 h-4 w-4" />
+                        Analytics
+                      </Button>
+                    </motion.div>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    View trading analytics and insights
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                      <Button onClick={() => router.push('/dashboard/payments')} variant="outline" className="border-green-500 text-green-500">
+                        <CreditCard className="mr-2 h-4 w-4" />
+                        Payments & Billing
+                      </Button>
+                    </motion.div>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    Manage payments and receipts
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+
           </CardContent>
         </Card>
+        </motion.div>
 
       </div>
 
-      <button onClick={() => signOutUser()} className="mt-8 px-6 py-3 bg-red-500 text-white rounded-md hover:bg-red-600 transition-colors duration-300">
+      <button onClick={() => logout()} className="mt-8 px-6 py-3 bg-red-500 text-white rounded-md hover:bg-red-600 transition-colors duration-300">
         Sign Out
       </button>
-    </div>
+    </motion.div>
   );
 }
 

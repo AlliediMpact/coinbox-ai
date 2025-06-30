@@ -1,8 +1,9 @@
 import { headers } from 'next/headers';
 import { NextResponse } from 'next/server';
+import { enhancedPaystackService, WebhookEvent } from '@/lib/paystack-service-enhanced';
 import { paymentValidator } from '@/lib/payment-validator';
 import { emailService } from '@/lib/email-service';
-import { adminDb } from '@/lib/firebase-admin';
+import { receiptService } from '@/lib/receipt-service';
 import crypto from 'crypto';
 
 const PAYSTACK_SECRET = process.env.PAYSTACK_SECRET_KEY;

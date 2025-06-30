@@ -1,19 +1,20 @@
 import { db } from './firebase';
 import { 
   collection, 
-  addDoc, 
+  setDoc,
+  doc as firestoreDoc,
   query, 
   where, 
   orderBy, 
   getDocs, 
   updateDoc, 
-  doc, 
-  Timestamp, 
+  serverTimestamp,
   onSnapshot, 
   deleteDoc, 
   limit, 
   writeBatch,
-  DocumentData
+  DocumentData,
+  QuerySnapshot
 } from 'firebase/firestore';
 import { NotificationType, NotificationPriority, NotificationStatus, NotificationCategory } from './notification-constants';
 
@@ -500,6 +501,33 @@ class NotificationService {
     );
     
     return Promise.all(notificationPromises);
+  }
+
+  // Send system alert for admin notifications
+  async sendSystemAlert(alertData: {
+    type: string;
+    message: string;
+    error?: string;
+    timestamp: Date;
+  }): Promise<void> {
+    try {
+      // Log the alert
+      console.error('System Alert:', alertData);
+      
+      // Save to database for admin review
+      await addDoc(collection(db, 'system_alerts'), {
+        ...alertData,
+        createdAt: Timestamp.fromDate(alertData.timestamp),
+        resolved: false
+      });
+      
+      // In a real implementation, you might also:
+      // - Send email to admin
+      // - Send Slack notification
+      // - Trigger monitoring alerts
+    } catch (error) {
+      console.error('Failed to send system alert:', error);
+    }
   }
 }
 

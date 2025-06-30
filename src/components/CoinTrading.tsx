@@ -1,11 +1,5 @@
-import { useState, useEffect, useCallback } from "react";
-import { useAuth } from "@/components/AuthProvider";
-import { useToast } from "@/hooks/use-toast";
-import { useFormWithValidation } from "@/hooks/use-form-validation";
-import { TradeTicket, Dispute } from "@/lib/types";
-import { tradingService } from "@/lib/trading-service";
-import { disputeService } from "@/lib/dispute-service";
-import { formatCurrency } from "@/lib/utils";
+import { useState, useEffect, useCallback, BaseSyntheticEvent } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import { z } from "zod";
 import {
     getFirestore, 
@@ -23,20 +17,18 @@ import {
     getDoc,
     addDoc
 } from "firebase/firestore";
-import PageLoading, { InlineLoading } from "@/components/PageLoading";
-import ContentPlaceholder from "@/components/ContentPlaceholder";
-import { useAuth } from '@/components/AuthProvider';
-import { useToast } from '@/hooks/use-toast';
-import { useFormWithValidation } from '@/lib/form-utils';
-import { BaseSyntheticEvent } from 'react';
-import * as z from 'zod';
-import { TradeTicket } from '@/lib/types';
-import { TradingService } from '@/lib/trading-service';
-import { MembershipTierType, getTierConfig } from '@/lib/membership-tiers';
-import { formatCurrency } from '@/lib/utils';
+import { useAuth } from "@/components/AuthProvider";
+import { useToast } from "@/hooks/use-toast";
+import { useFormWithValidation } from "@/lib/form-utils";
+import { TradeTicket, Dispute } from "@/lib/types";
+import { tradingService, TradingService } from "@/lib/trading-service";
+import { disputeService } from "@/lib/dispute-service";
+import { MembershipTierType, getTierConfig } from "@/lib/membership-tiers";
+import { formatCurrency } from "@/lib/utils";
 import { ErrorBoundary } from './ErrorBoundary';
 import TicketDetails from './TicketDetails';
-import { motion, AnimatePresence } from "framer-motion";
+import PageLoading, { InlineLoading } from "@/components/PageLoading";
+import ContentPlaceholder from "@/components/ContentPlaceholder";
 import { colors } from "@/styles/designTokens";
 import {
     Card,
@@ -99,7 +91,6 @@ export default function CoinTrading() {
     const [filterStatus, setFilterStatus] = useState<string>("all");
     const [sortBy, setSortBy] = useState<string>("date-desc");
     
-    const tradingService = new TradingService();
     const db = getFirestore();
 
     // Load user membership tier and wallet data
@@ -837,11 +828,11 @@ export default function CoinTrading() {
                                     </div>
                                 )}
                             </div>
-                        </>
-                    )}
-                </CardContent>
+                            </>
+                        )}
+                    </CardContent>
 
-                {/* Dispute Dialog */}
+                    {/* Dispute Dialog */}
                 <Dialog open={disputeOpen} onOpenChange={setDisputeOpen}>
                     <DialogContent>
                         <DialogHeader>
@@ -900,6 +891,7 @@ export default function CoinTrading() {
                     </DialogContent>
                 </Dialog>
             </Card>
+            </motion.div>
         </ErrorBoundary>
     );
 }

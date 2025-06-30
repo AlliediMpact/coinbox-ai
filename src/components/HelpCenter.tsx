@@ -105,7 +105,7 @@ export default function HelpCenter() {
         {
           id: 'dispute-resolution',
           title: 'Dispute Resolution Process',
-          description: 'What to do if a trade doesn't go as planned',
+          description: 'What to do if a trade does not go as planned',
           contentType: 'video',
           time: '7 min',
           path: '/videos/disputes'

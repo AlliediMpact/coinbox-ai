@@ -59,10 +59,10 @@ export default function UserOnboarding({ onComplete, disableAutoShow = false }: 
     {
       id: 'dashboard',
       title: 'Welcome to Allied iMpact Coin Box',
-      description: 'Let's get you started with the basics',
+      description: 'Let us get you started with the basics',
       icon: <User className="h-5 w-5" />,
       content: [
-        'Welcome to the Allied iMpact Coin Box platform! We'll walk you through the key features to help you get started.',
+        'Welcome to the Allied iMpact Coin Box platform! We will walk you through the key features to help you get started.',
         'The dashboard gives you an overview of your wallet balance, commissions, and recent activities.',
         'You can customize your experience by completing your profile and verifying your identity through KYC.'
       ]
@@ -107,7 +107,7 @@ export default function UserOnboarding({ onComplete, disableAutoShow = false }: 
       icon: <Share2 className="h-5 w-5" />,
       content: [
         'Share your unique referral code with friends to earn commission on their trades.',
-        'You'll receive commissions based on your membership tier when your referrals complete transactions.',
+        'You will receive commissions based on your membership tier when your referrals complete transactions.',
         'Track your referrals and earnings in the Referrals section of your dashboard.'
       ]
     }

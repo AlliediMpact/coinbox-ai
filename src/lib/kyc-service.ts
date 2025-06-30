@@ -1,7 +1,19 @@
 import { db } from './firebase';
-import { collection, addDoc, query, where, getDocs, updateDoc, doc, getDoc, Timestamp } from 'firebase/firestore';
+import { 
+  collection, 
+  query, 
+  where, 
+  getDocs, 
+  doc, 
+  setDoc,
+  DocumentReference
+} from 'firebase/firestore';
+import { getStorage, ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { notificationService } from './notification-service';
-import { getRiskAssessment } from '@/ai/flows/risk-assessment-flow';
+import { getRiskAssessment } from './risk-assessment';
+
+// Custom types for Firebase compatibility
+type Timestamp = Date;
 
 export interface KycDocument {
   id?: string;
@@ -37,6 +49,8 @@ export interface KycVerification {
 }
 
 class KycService {
+  private storage = getStorage();
+
   async initializeKyc(userId: string): Promise<KycVerification> {
     const verificationData: Omit<KycVerification, 'id'> = {
       userId,
@@ -47,44 +61,80 @@ class KycService {
         selfie: false,
         bank_statement: false
       },
-      createdAt: Timestamp.now(),
-      updatedAt: Timestamp.now()
+      createdAt: new Date(),
+      updatedAt: new Date()
     };
 
     const docRef = await addDoc(collection(db, 'kyc_verifications'), verificationData);
     return { id: docRef.id, ...verificationData };
   }
 
-  async uploadDocument(userId: string, document: Omit<KycDocument, 'id' | 'status' | 'createdAt' | 'updatedAt'>) {
-    const now = Timestamp.now();
-    
-    // Create document record
-    const docRef = await addDoc(collection(db, 'kyc_documents'), {
-      ...document,
-      status: 'pending',
-      createdAt: now,
-      updatedAt: now
-    });
+  // Document upload functionality
+  async uploadDocument(
+    userId: string, 
+    file: File, 
+    documentType: KycDocument['type'],
+    metadata?: Partial<KycDocument['metadata']>
+  ): Promise<KycDocument> {
+    try {
+      // Create storage reference
+      const fileExtension = file.name.split('.').pop();
+      const fileName = `kyc/${userId}/${documentType}_${Date.now()}.${fileExtension}`;
+      const storageRef = ref(this.storage, fileName);
 
-    // Update verification status
-    const verificationRef = await this.getVerificationByUserId(userId);
-    if (verificationRef) {
-      const verification = (await getDoc(verificationRef)).data() as KycVerification;
-      const updatedDocs = { ...verification.requiredDocuments, [document.type]: true };
-      const allDocsSubmitted = Object.values(updatedDocs).every(Boolean);
+      // Upload file
+      const snapshot = await uploadBytes(storageRef, file);
+      const downloadURL = await getDownloadURL(snapshot.ref);
 
-      await updateDoc(verificationRef, {
-        requiredDocuments: updatedDocs,
-        status: allDocsSubmitted ? 'pending_review' : 'incomplete',
-        updatedAt: now
-      });
+      // Create document record
+      const documentData: Omit<KycDocument, 'id'> = {
+        userId,
+        type: documentType,
+        status: 'pending',
+        documentUrl: downloadURL,
+        metadata,
+        createdAt: new Date(),
+        updatedAt: new Date()
+      };
 
-      if (allDocsSubmitted) {
-        await notificationService.notifyKycStatus(userId, 'pending_review');
-      }
+      // Save to Firestore
+      const docRef = doc(collection(db, 'kyc_documents'));
+      await setDoc(docRef, documentData);
+
+      // Update verification status
+      await this.updateRequiredDocuments(userId, documentType);
+
+      return { id: docRef.id, ...documentData };
+    } catch (error) {
+      console.error('Error uploading KYC document:', error);
+      throw new Error('Failed to upload document');
     }
+  }
 
-    return docRef;
+  private async updateRequiredDocuments(userId: string, documentType: KycDocument['type']) {
+    const verification = await this.getVerificationByUserId(userId);
+    if (verification) {
+      const verificationData = (await verification.get()).data() as KycVerification;
+      const updatedRequiredDocs = {
+        ...verificationData.requiredDocuments,
+        [documentType]: true
+      };
+
+      await verification.update({
+        requiredDocuments: updatedRequiredDocs,
+        status: this.calculateVerificationStatus(updatedRequiredDocs),
+        updatedAt: new Date()
+      });
+    }
+  }
+
+  private calculateVerificationStatus(requiredDocs: KycVerification['requiredDocuments']): KycVerification['status'] {
+    const completedDocs = Object.values(requiredDocs).filter(Boolean).length;
+    const totalDocs = Object.keys(requiredDocs).length;
+
+    if (completedDocs === 0) return 'incomplete';
+    if (completedDocs < totalDocs) return 'incomplete';
+    return 'pending_review';
   }
 
   async reviewDocument(documentId: string, status: 'approved' | 'rejected', notes?: string) {

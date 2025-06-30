@@ -218,7 +218,7 @@ export function formatDateForFileName() {
  * Converts Firebase timestamps to ISO string dates
  * Optimized for large datasets
  */
-export function processDateFields(data: any, dateFields: string[]) {
+export function processDateFields(data: any, dateFields: string[]): any {
   if (Array.isArray(data)) {
     // For large arrays, process in chunks to avoid call stack issues
     if (data.length > 5000) {
@@ -371,16 +371,4 @@ function fixCSVRow(row: string, expectedColumns: number): string {
   }
   
   return values.join(',');
-}
-      if (typeof value === 'object' && value.toDate && typeof value.toDate === 'function') {
-        // Firebase Timestamp
-        processed[field] = value.toDate().toISOString();
-      } else if (value instanceof Date) {
-        // JavaScript Date
-        processed[field] = value.toISOString();
-      }
-    }
-  }
-  
-  return processed;
 }

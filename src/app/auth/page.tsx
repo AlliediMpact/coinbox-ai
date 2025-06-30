@@ -251,7 +251,6 @@ export default function AuthPage() {
                   )}
                 </div>
               </form>
-            )
           )}
           {/* MFA Verification Component */}
           {mfaInProgress && mfaError && (
@@ -262,8 +261,8 @@ export default function AuthPage() {
               email={email} // Pass email to MFA component
             />
           )}
-        </CardContent>
-      </Card>
+        </motion.div>
+      </AnimatePresence>
     </div>
   );
 }

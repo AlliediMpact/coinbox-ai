@@ -1,4 +1,5 @@
-import { getFirestore, doc, collection, query, getDocs, runTransaction, getDoc, addDoc } from 'firebase/firestore';
+import { getFirestore, doc, collection, query, getDocs, runTransaction, getDoc as getDocumentByRef } from 'firebase/firestore';
+import { addDoc } from 'firebase/firestore';
 import { TradeTicket, EscrowTransaction, DisputeRequest } from './types';
 import { validateLoanAmount, validateInvestmentAmount, getTierConfig } from './membership-tiers';
 import { ServiceClient } from './service-client';
@@ -143,8 +144,8 @@ export class TradingService extends ServiceClient {
     private async assessRisk(userId1: string, userId2: string): Promise<number> {
         try {
             // Get user profiles from Firestore
-            const user1Doc = await getDoc(doc(this.db, 'users', userId1));
-            const user2Doc = await getDoc(doc(this.db, 'users', userId2));
+            const user1Doc = await getDocumentByRef(doc(this.db, 'users', userId1));
+            const user2Doc = await getDocumentByRef(doc(this.db, 'users', userId2));
             
             const user1Data = user1Doc.exists() ? user1Doc.data() : null;
             const user2Data = user2Doc.exists() ? user2Doc.data() : null;
@@ -168,3 +169,6 @@ export class TradingService extends ServiceClient {
         }
     }
 }
+
+// Export an instance of the service
+export const tradingService = new TradingService();
