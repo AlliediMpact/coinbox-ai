@@ -21,7 +21,7 @@ export default function RoleManagement() {
   const { userClaims } = useAuth();
   const [users, setUsers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [searchQuery, setSearchQuery] = useState('');
+  const [searchQuery, setSearchQuery] = useState(&apos;&apos;);
   const [filteredUsers, setFilteredUsers] = useState<any[]>([]);
   const [changeRoleDialogOpen, setChangeRoleDialogOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState<any>(null);
@@ -143,7 +143,7 @@ export default function RoleManagement() {
       toast({
         title: 'Update Failed',
         description: 'Failed to connect to the server',
-        variant: 'destructive',
+        variant: &apos;destructive&apos;,
       });
     } finally {
       setChangeRoleDialogOpen(false);
@@ -199,11 +199,11 @@ export default function RoleManagement() {
                 filteredUsers.map((user) => (
                   <TableRow key={user.id}>
                     <TableCell>
-                      <div className="font-medium">{user.fullName || 'Unnamed User'}</div>
+                      <div className="font-medium">{user.fullName || 'Unnamed User&apos;}</div>
                     </TableCell>
                     <TableCell>{user.email}</TableCell>
                     <TableCell>
-                      <Badge variant={getRoleBadgeVariant(user.role)}>{user.role || 'user'}</Badge>
+                      <Badge variant={getRoleBadgeVariant(user.role)}>{user.role || 'user&apos;}</Badge>
                     </TableCell>
                     <TableCell>
                       <Button
@@ -256,15 +256,15 @@ export default function RoleManagement() {
               
               <div className="mt-4 p-3 bg-muted rounded-md">
                 <h4 className="font-semibold mb-2">Role Permissions:</h4>
-                {selectedRole === 'admin' && (
+                {selectedRole === &apos;admin&apos; && (
                   <ul className="text-sm space-y-1">
                     <li>• Full access to admin panel and all features</li>
                     <li>• Can modify user accounts and settings</li>
-                    <li>• Can manage other users' roles</li>
+                    <li>• Can manage other users&apos; roles</li>
                     <li>• Full access to analytics and reports</li>
                   </ul>
                 )}
-                {selectedRole === 'support' && (
+                {selectedRole === &apos;support&apos; && (
                   <ul className="text-sm space-y-1">
                     <li>• View-only access to admin panel</li>
                     <li>• Can view user accounts but cannot modify them</li>
@@ -272,7 +272,7 @@ export default function RoleManagement() {
                     <li>• Read-only access to analytics and reports</li>
                   </ul>
                 )}
-                {selectedRole === 'user' && (
+                {selectedRole === &apos;user&apos; && (
                   <ul className="text-sm space-y-1">
                     <li>• Standard user permissions only</li>
                     <li>• No access to admin or management features</li>

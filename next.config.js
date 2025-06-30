@@ -43,8 +43,8 @@ const nextConfig = {
           });
         };
         
-        // Start with port 9006 instead of 9005 (which seems to be in use)
-        startServer(9006);
+        // Start with port 9007 to avoid conflicts
+        startServer(9007);
       } catch (error) {
         console.error('Failed to start WebSocket server:', error);
       }

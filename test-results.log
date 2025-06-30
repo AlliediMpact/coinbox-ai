@@ -1,0 +1,179 @@
+=== CoinBox AI Comprehensive Test Suite ===
+Started at: 2025-06-30T15:37:47.364Z
+
+1. Environment Check:
+   Current directory: /workspaces/coinbox-ai
+   Node version: v20.19.0
+   ✓ package.json exists
+   ✓ vitest.config.ts exists
+   ✓ src/tests/setup.ts exists
+
+2. Dependencies Check:
+   ✓ Dependencies verified
+
+3. TypeScript Check:
+   ⚠ TypeScript issues found: Command failed: npx tsc --noEmit
+
+4. Lint Check:
+   ⚠ Lint issues found: Command failed: npm run lint
+
+./src/app/admin/monitoring/page.tsx
+20:20  Error: `'` can be escaped with `&apos;`, `&lsquo;`, `&#39;`, `&rsquo;`.  react/no-unescaped-entities
+
+./src/app/auth/page.tsx
+254:11  Error: Parsing error: Unexpected token. Did you mean `{'}'}` or `&rbrace;`?
+
+./src/app/dashboard/admin/transaction-monitoring/page.tsx
+41:50  Error: `'` can be escaped with `&apos;`, `&lsquo;`, `&#39;`, `&rsquo;`.  react/no-unescaped-entities
+
+./src/app/dashboard/payments/page.tsx
+47:6  Warning: React Hook useEffect has a missing dependency: 'loadPaymentData'. Either include it or remove the dependency array.  react-hooks/exhaustive-deps
+
+./src/app/loading-examples/page.tsx
+116:19  Error: `'` can be escaped with `&apos;`, `&lsquo;`, `&#39;`, `&rsquo;`.  react/no-unescaped-entities
+195:68  Error: `'` can be escaped with `&apos;`, `&lsquo;`, `&#39;`, `&rsquo;`.  react/no-unescaped-entities
+
+./src/app/system-status/page.tsx
+140:21  Error: `'` can be escaped with `&apos;`, `&lsquo;`, `&#39;`, `&rsquo;`.  react/no-unescaped-entities
+
+./src/components/AdminAuthPanel.tsx
+66:6  Warning: React Hook useEffect has missing dependencies: 'fetchAuthLogs', 'fetchSecurityEvents', and 'fetchUsers'. Either include them or remove the dependency array.  react-hooks/exhaustive-deps
+
+./src/components/AdvancedAnalyticsDashboard.tsx
+62:6  Warning: React Hook useEffect has a missing dependency: 'loadAnalyticsData'. Either include it or remove the dependency array.  react-hooks/exhaustive-deps
+
+./src/components/AuthFlipCard.tsx
+198:68  Error: `'` can be escaped with `&apos;`, `&lsquo;`, `&#39;`, `&rsquo;`.  react/no-unescaped-entities
+370:23  Error: `'` can be escaped with `&apos;`, `&lsquo;`, `&#39;`, `&rsquo;`.  react/no-unescaped-entities
+
+./src/components/AuthProvider.tsx
+173:6  Warning: React Hook useEffect has a missing dependency: 'signOutUser'. Either include it or remove the dependency array.  react-hooks/exhaustive-deps
+
+./src/components/CoinTrading.tsx
+831:30  Error: Parsing error: Identifier expected.
+
+./src/components/CommissionTrackingDashboard.tsx
+52:6  Warning: React Hook useEffect has a missing dependency: 'loadCommissionData'. Either include it or remove the dependency array.  react-hooks/exhaustive-deps
+
+./src/components/KycVerification.tsx
+75:8  Warning: React Hook useEffect has a missing dependency: 'loadKYCStatus'. Either include it or remove the dependency array.  react-hooks/exhaustive-deps
+572:77  Error: `'` can be escaped with `&apos;`, `&lsquo;`, `&#39;`, `&rsquo;`.  react/no-unescaped-entities
+
+./src/components/NotificationCenter.tsx
+196:8  Warning: React Hook useEffect has a missing dependency: 'unreadCount'. Either include it or remove the dependency array.  react-hooks/exhaustive-deps
+347:48  Error: `'` can be escaped with `&apos;`, `&lsquo;`, `&#39;`, `&rsquo;`.  react/no-unescaped-entities
+347:69  Error: `'` can be escaped with `&apos;`, `&lsquo;`, `&#39;`, `&rsquo;`.  react/no-unescaped-entities
+
+./src/components/ReferralTracking.tsx
+558:73  Error: `'` can be escaped with `&apos;`, `&lsquo;`, `&#39;`, `&rsquo;`.  react/no-unescaped-entities
+
+./src/components/RoleManagement.tsx
+36:6  Warning: React Hook useEffect has a missing dependency: 'fetchUsers'. Either include it or remove the dependency array.  react-hooks/exhaustive-deps
+263:49  Error: `'` can be escaped with `&apos;`, `&lsquo;`, `&#39;`, `&rsquo;`.  react/no-unescaped-entities
+
+./src/components/TransactionSecurity.tsx
+53:6  Warning: React Hook useEffect has a missing dependency: 'loadUserData'. Either include it or remove the dependency array.  react-hooks/exhaustive-deps
+303:29  Error: `'` can be escaped with `&apos;`, `&lsquo;`, `&#39;`, `&rsquo;`.  react/no-unescaped-entities
+
+./src/components/UserDisputeTracking.tsx
+118:24  Error: `'` can be escaped with `&apos;`, `&lsquo;`, `&#39;`, `&rsquo;`.  react/no-unescaped-entities
+295:55  Error: No duplicate props allowed  react/jsx-no-duplicate-props
+349:61  Error: `'` can be escaped with `&apos;`, `&lsquo;`, `&#39;`, `&rsquo;`.  react/no-unescaped-entities
+
+./src/components/UserOnboarding.tsx
+184:6  Warning: React Hook useEffect has missing dependencies: 'tutorials' and 'updateLastShown'. Either include them or remove the dependency array.  react-hooks/exhaustive-deps
+
+./src/components/WalletManagement.tsx
+126:6  Warning: React Hook useEffect has a missing dependency: 'loadTransactions'. Either include it or remove the dependency array.  react-hooks/exhaustive-deps
+
+./src/components/admin/ComplianceDashboard.tsx
+72:6  Warning: React Hook useEffect has a missing dependency: 'loadReportsList'. Either include it or remove the dependency array.  react-hooks/exhaustive-deps
+
+./src/components/admin/TransactionMonitoring.tsx
+93:6  Warning: React Hook useEffect has a missing dependency: 'loadData'. Either include it or remove the dependency array.  react-hooks/exhaustive-deps
+
+./src/components/compliance/ComplianceReporting.tsx
+60:6  Warning: React Hook useEffect has a missing dependency: 'loadReportHistory'. Either include it or remove the dependency array.  react-hooks/exhaustive-deps
+
+./src/components/disputes/EnhancedDisputeManagement.tsx
+284:13  Warning: Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+
+./src/components/onboarding/UserOnboarding.tsx
+351:156  Error: `'` can be escaped with `&apos;`, `&lsquo;`, `&#39;`, `&rsquo;`.  react/no-unescaped-entities
+363:174  Error: `'` can be escaped with `&apos;`, `&lsquo;`, `&#39;`, `&rsquo;`.  react/no-unescaped-entities
+
+./src/components/referral/ReferralCodeGenerator.tsx
+95:22  Error: `'` can be escaped with `&apos;`, `&lsquo;`, `&#39;`, `&rsquo;`.  react/no-unescaped-entities
+240:24  Error: `'` can be escaped with `&apos;`, `&lsquo;`, `&#39;`, `&rsquo;`.  react/no-unescaped-entities
+
+./src/components/referral/ReferralList.tsx
+42:37  Error: `'` can be escaped with `&apos;`, `&lsquo;`, `&#39;`, `&rsquo;`.  react/no-unescaped-entities
+
+./src/components/system/SystemMonitoringDashboard.tsx
+86:6  Warning: React Hook useEffect has a missing dependency: 'loadSystemStatus'. Either include it or remove the dependency array.  react-hooks/exhaustive-deps
+226:23  Error: `'` can be escaped with `&apos;`, `&lsquo;`, `&#39;`, `&rsquo;`.  react/no-unescaped-entities
+
+./src/hooks/use-notifications.ts
+68:6  Warning: React Hook useEffect has a missing dependency: 'options'. Either include it or remove the dependency array.  react-hooks/exhaustive-deps
+
+info  - Need to disable some ESLint rules? Learn more here: https://nextjs.org/docs/basic-features/eslint#disabling-rules
+
+
+5. Unit Tests:
+   ⚠ Unit tests failed: Command failed: npm run test
+[33mThe CJS build of Vite's Node API is deprecated. See https://vite.dev/guide/troubleshooting.html#vite-cjs-node-api-deprecated for more details.[39m
+failed to load config from /workspaces/coinbox-ai/vitest.config.ts
+
+⎯⎯⎯⎯⎯⎯ Unhandled Error ⎯⎯⎯⎯⎯⎯⎯
+Error: Cannot find module '@vitejs/plugin-react'
+Require stack:
+- /workspaces/coinbox-ai/vitest.config.ts
+- /workspaces/coinbox-ai/node_modules/vite/dist/node/chunks/dep-C6uTJdX2.js
+    at Module._resolveFilename (node:internal/modules/cjs/loader:1212:15)
+    at Module._load (node:internal/modules/cjs/loader:1043:27)
+    at Module.require (node:internal/modules/cjs/loader:1298:19)
+    at require (node:internal/modules/helpers:182:18)
+    at Object.<anonymous> (/workspaces/coinbox-ai/vitest.config.ts:37:35)
+    at Module._compile (node:internal/modules/cjs/loader:1529:14)
+    at _require.extensions.<computed> [as .js] (file:///workspaces/coinbox-ai/node_modules/vite/dist/node/chunks/dep-C6uTJdX2.js:66970:16)
+    at Module.load (node:internal/modules/cjs/loader:1275:32)
+    at Module._load (node:internal/modules/cjs/loader:1096:12)
+    at Module.require (node:internal/modules/cjs/loader:1298:19) {
+  code: 'MODULE_NOT_FOUND',
+  requireStack: [
+    '/workspaces/coinbox-ai/vitest.config.ts',
+    '/workspaces/coinbox-ai/node_modules/vite/dist/node/chunks/dep-C6uTJdX2.js'
+  ]
+}
+
+
+
+
+
+6. Build Test:
+   ⚠ Build failed: Command failed: npm run build
+uncaughtException Error: listen EADDRINUSE: address already in use :::9006
+    at Server.setupListenHandle [as _listen2] (node:net:1908:16)
+    at listenInCluster (node:net:1965:12)
+    at Server.listen (node:net:2067:7)
+    at startServer (/workspaces/coinbox-ai/next.config.js:41:18)
+    at Object.webpack (/workspaces/coinbox-ai/next.config.js:47:9)
+    at getBaseWebpackConfig (/workspaces/coinbox-ai/node_modules/next/dist/build/webpack-config.js:1937:32)
+    at async Promise.all (index 2)
+    at async Span.traceAsyncFn (/workspaces/coinbox-ai/node_modules/next/dist/trace/trace.js:105:20)
+    at async webpackBuildImpl (/workspaces/coinbox-ai/node_modules/next/dist/build/webpack-build/impl.js:132:21)
+    at async webpackBuild (/workspaces/coinbox-ai/node_modules/next/dist/build/webpack-build/index.js:156:16) {
+  code: 'EADDRINUSE',
+  errno: -98,
+  syscall: 'listen',
+  address: '::',
+  port: 9006
+}
+
+
+7. Security Audit:
+   ⚠ Security vulnerabilities found: Command failed: npm audit --audit-level=high
+
+=== Test Suite Complete ===
+Completed at: 2025-06-30T15:38:09.285Z
+Results saved to: /workspaces/coinbox-ai/test-results.log

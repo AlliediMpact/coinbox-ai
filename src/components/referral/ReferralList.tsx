@@ -31,15 +31,15 @@ interface ReferralListProps {
 
 export function ReferralList({ referrals, membership }: ReferralListProps) {
   const [searchQuery, setSearchQuery] = useState('');
-  const [sortField, setSortField] = useState<string>('joinDate');
-  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
+  const [sortField, setSortField] = useState<string>(&apos;joinDate&apos;);
+  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>(&apos;desc&apos;);
   
   if (!referrals || referrals.length === 0) {
     return (
       <Card>
         <CardHeader>
           <CardTitle>Your Referrals</CardTitle>
-          <CardDescription>You haven't referred anyone yet</CardDescription>
+          <CardDescription>You haven&apos;t referred anyone yet</CardDescription>
         </CardHeader>
         <CardContent>
           <p className="text-center py-8 text-sm text-muted-foreground">
@@ -52,7 +52,7 @@ export function ReferralList({ referrals, membership }: ReferralListProps) {
   
   // Get commission rate based on membership tier
   const getCommissionRate = (referredUserTier: string) => {
-    const currentTier = membership?.currentTier || 'basic';
+    const currentTier = membership?.currentTier || &apos;basic&apos;;
     
     // Commission rates based on referrer and referee tiers
     const commissionRates: Record<string, Record<string, number>> = {
@@ -123,7 +123,7 @@ export function ReferralList({ referrals, membership }: ReferralListProps) {
       case 'active': return 'bg-green-500/10 text-green-500';
       case 'pending': return 'bg-yellow-500/10 text-yellow-500';
       case 'inactive': return 'bg-gray-500/10 text-gray-500';
-      default: return 'bg-blue-500/10 text-blue-500';
+      default: return &apos;bg-blue-500/10 text-blue-500&apos;;
     }
   };
 
@@ -145,8 +145,8 @@ export function ReferralList({ referrals, membership }: ReferralListProps) {
             />
           </div>
           
-          <Button variant="outline" size="sm" onClick={() => handleSort('joinDate')}>
-            {sortDirection === 'asc' ? <SortAsc className="mr-1 h-4 w-4" /> : <SortDesc className="mr-1 h-4 w-4" />}
+          <Button variant="outline" size="sm" onClick={() => handleSort('joinDate&apos;)}>
+            {sortDirection === 'asc&apos; ? <SortAsc className="mr-1 h-4 w-4" /> : <SortDesc className="mr-1 h-4 w-4" />}
             Sort
           </Button>
         </div>
@@ -157,13 +157,13 @@ export function ReferralList({ referrals, membership }: ReferralListProps) {
               <TableRow>
                 <TableHead>User</TableHead>
                 <TableHead onClick={() => handleSort('tier')} className="cursor-pointer">
-                  Tier {sortField === 'tier' && (sortDirection === 'asc' ? '↑' : '↓')}
+                  Tier {sortField === 'tier' && (sortDirection === 'asc' ? '↑' : &apos;↓&apos;)}
                 </TableHead>
                 <TableHead onClick={() => handleSort('joinDate')} className="cursor-pointer">
-                  Joined {sortField === 'joinDate' && (sortDirection === 'asc' ? '↑' : '↓')}
+                  Joined {sortField === 'joinDate' && (sortDirection === 'asc' ? '↑' : &apos;↓&apos;)}
                 </TableHead>
                 <TableHead onClick={() => handleSort('commissionsEarned')} className="cursor-pointer text-right">
-                  Commission {sortField === 'commissionsEarned' && (sortDirection === 'asc' ? '↑' : '↓')}
+                  Commission {sortField === 'commissionsEarned' && (sortDirection === 'asc' ? '↑' : &apos;↓&apos;)}
                 </TableHead>
                 <TableHead className="text-right">Status</TableHead>
                 <TableHead></TableHead>
@@ -179,14 +179,14 @@ export function ReferralList({ referrals, membership }: ReferralListProps) {
                         <AvatarFallback>{getInitials(referral.displayName)}</AvatarFallback>
                       </Avatar>
                       <div className="flex flex-col">
-                        <span className="font-medium">{referral.displayName || 'User'}</span>
+                        <span className="font-medium">{referral.displayName || 'User&apos;}</span>
                         <span className="text-xs text-muted-foreground">{referral.email}</span>
                       </div>
                     </div>
                   </TableCell>
                   <TableCell>
                     <Badge variant="outline" className="capitalize">
-                      {referral.tier || 'Basic'}
+                      {referral.tier || &apos;Basic&apos;}
                     </Badge>
                   </TableCell>
                   <TableCell>
@@ -195,12 +195,12 @@ export function ReferralList({ referrals, membership }: ReferralListProps) {
                   <TableCell className="text-right">
                     {referral.commissionsEarned 
                       ? `R${referral.commissionsEarned.toFixed(2)}` 
-                      : `${getCommissionRate(referral.tier || 'basic')}%`
+                      : `${getCommissionRate(referral.tier || &apos;basic&apos;)}%`
                     }
                   </TableCell>
                   <TableCell className="text-right">
                     <Badge variant="outline" className={getStatusColor(referral.status)}>
-                      {referral.status || 'Active'}
+                      {referral.status || &apos;Active&apos;}
                     </Badge>
                   </TableCell>
                   <TableCell>

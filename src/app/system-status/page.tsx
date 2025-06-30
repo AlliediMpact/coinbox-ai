@@ -44,9 +44,9 @@ export default function SystemStatusPage() {
 
   // Helper function to render status indicator
   const renderStatusIndicator = (status: 'operational' | 'degraded' | 'outage') => {
-    if (status === 'operational') {
+    if (status === &apos;operational&apos;) {
       return <CheckCircle className="h-5 w-5 text-green-500" />;
-    } else if (status === 'degraded') {
+    } else if (status === &apos;degraded&apos;) {
       return <AlertTriangle className="h-5 w-5 text-yellow-500" />;
     } else {
       return <XCircle className="h-5 w-5 text-red-500" />;
@@ -59,7 +59,7 @@ export default function SystemStatusPage() {
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-3xl font-bold">CoinBox System Status</h1>
           <p className="text-sm text-muted-foreground">
-            Updated {lastUpdated ? format(lastUpdated, 'MMM d, yyyy h:mm a') : 'Just now'}
+            Updated {lastUpdated ? format(lastUpdated, 'MMM d, yyyy h:mm a') : &apos;Just now&apos;}
           </p>
         </div>
         
@@ -67,7 +67,7 @@ export default function SystemStatusPage() {
         <Card className="mb-6">
           <CardContent className="pt-6">
             <div className="flex items-center space-x-4">
-              {status?.status === 'operational' ? (
+              {status?.status === &apos;operational&apos; ? (
                 <>
                   <CheckCircle className="h-8 w-8 text-green-500" />
                   <div>
@@ -75,7 +75,7 @@ export default function SystemStatusPage() {
                     <p className="text-muted-foreground">All CoinBox services are running normally</p>
                   </div>
                 </>
-              ) : status?.status === 'degraded' ? (
+              ) : status?.status === &apos;degraded&apos; ? (
                 <>
                   <AlertTriangle className="h-8 w-8 text-yellow-500" />
                   <div>
@@ -137,7 +137,7 @@ export default function SystemStatusPage() {
           </CardContent>
           <CardFooter>
             <p className="text-sm text-muted-foreground">
-              If you're experiencing issues, please contact support at support@coinbox.com
+              If you&apos;re experiencing issues, please contact support at support@coinbox.com
             </p>
           </CardFooter>
         </Card>

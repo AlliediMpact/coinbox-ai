@@ -207,23 +207,23 @@ export default function SystemMonitoringDashboard() {
 
   // Helper function to render status indicator
   const renderStatusIndicator = (status: 'operational' | 'degraded' | 'outage') => {
-    if (status === 'operational') {
+    if (status === &apos;operational&apos;) {
       return <CheckCircle className="h-5 w-5 text-green-500" />;
-    } else if (status === 'degraded') {
+    } else if (status === &apos;degraded&apos;) {
       return <AlertCircle className="h-5 w-5 text-yellow-500" />;
     } else {
       return <XCircle className="h-5 w-5 text-red-500" />;
     }
   };
 
-  // If not admin, don't show the dashboard
+  // If not admin, don&apos;t show the dashboard
   if (!user || !isAdmin) {
     return (
       <Card>
         <CardContent className="pt-6">
           <div className="flex items-center justify-center space-x-2">
             <AlertTriangle className="h-5 w-5 text-yellow-500" />
-            <p>You don't have permission to access system monitoring.</p>
+            <p>You don&apos;t have permission to access system monitoring.</p>
           </div>
         </CardContent>
       </Card>
@@ -260,7 +260,7 @@ export default function SystemMonitoringDashboard() {
                 {component.metrics?.responseTime || 0}ms
               </div>
               <p className="text-xs text-muted-foreground mt-2">
-                Last checked: {format(new Date(component.lastChecked), 'HH:mm:ss')}
+                Last checked: {format(new Date(component.lastChecked), &apos;HH:mm:ss&apos;)}
               </p>
               {component.metrics?.uptime && (
                 <div className="mt-2">
@@ -439,7 +439,7 @@ export default function SystemMonitoringDashboard() {
                           </p>
                         </TableCell>
                         <TableCell>{alert.component}</TableCell>
-                        <TableCell>{format(new Date(alert.timestamp), 'HH:mm:ss')}</TableCell>
+                        <TableCell>{format(new Date(alert.timestamp), 'HH:mm:ss&apos;)}</TableCell>
                         <TableCell>
                           <span className={`px-2 py-1 text-xs rounded-full ${
                             alert.status === 'active' ? 'bg-red-100 text-red-800' : 
@@ -450,7 +450,7 @@ export default function SystemMonitoringDashboard() {
                         </TableCell>
                         <TableCell>
                           <div className="flex space-x-2">
-                            {alert.status === 'active' && (
+                            {alert.status === &apos;active&apos; && (
                               <Button 
                                 size="sm" 
                                 variant="outline" 
@@ -523,7 +523,7 @@ export default function SystemMonitoringDashboard() {
                       'Database connection pool at 80% capacity',
                       'API request failed with status 500',
                       'Payment processing completed',
-                      'System health check completed'
+                      &apos;System health check completed&apos;
                     ];
                     
                     const type = logTypes[Math.floor(Math.random() * logTypes.length)];
@@ -533,7 +533,7 @@ export default function SystemMonitoringDashboard() {
                     
                     return (
                       <TableRow key={i}>
-                        <TableCell className="text-xs">{format(time, 'HH:mm:ss')}</TableCell>
+                        <TableCell className="text-xs">{format(time, 'HH:mm:ss&apos;)}</TableCell>
                         <TableCell>
                           <span className={`px-2 py-1 text-xs rounded-full ${
                             type === 'error' ? 'bg-red-100 text-red-800' : 
@@ -619,7 +619,7 @@ export default function SystemMonitoringDashboard() {
                 </TableHeader>
                 <TableBody>
                   <TableRow>
-                    <TableCell>{lastBackupTime || 'Never'}</TableCell>
+                    <TableCell>{lastBackupTime || 'Never&apos;}</TableCell>
                     <TableCell>Full</TableCell>
                     <TableCell>2.7 GB</TableCell>
                     <TableCell>
@@ -637,7 +637,7 @@ export default function SystemMonitoringDashboard() {
                     </TableCell>
                   </TableRow>
                   <TableRow>
-                    <TableCell>{format(new Date(Date.now() - 2 * 24 * 60 * 60 * 1000), 'PPP p')}</TableCell>
+                    <TableCell>{format(new Date(Date.now() - 2 * 24 * 60 * 60 * 1000), 'PPP p&apos;)}</TableCell>
                     <TableCell>Full</TableCell>
                     <TableCell>2.5 GB</TableCell>
                     <TableCell>
@@ -655,7 +655,7 @@ export default function SystemMonitoringDashboard() {
                     </TableCell>
                   </TableRow>
                   <TableRow>
-                    <TableCell>{format(new Date(Date.now() - 3 * 24 * 60 * 60 * 1000), 'PPP p')}</TableCell>
+                    <TableCell>{format(new Date(Date.now() - 3 * 24 * 60 * 60 * 1000), 'PPP p&apos;)}</TableCell>
                     <TableCell>Full</TableCell>
                     <TableCell>2.4 GB</TableCell>
                     <TableCell>

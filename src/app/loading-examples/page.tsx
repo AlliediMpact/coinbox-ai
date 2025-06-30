@@ -41,7 +41,7 @@ export default function LoadingExamples() {
   
   // Simulate progress updates
   useEffect(() => {
-    if (selectedExample === 'progressIndicator') {
+    if (selectedExample === &apos;progressIndicator&apos;) {
       const interval = setInterval(() => {
         setProgress(prev => {
           const next = prev + 5;
@@ -71,7 +71,7 @@ export default function LoadingExamples() {
       className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200
         ${selectedExample === id 
           ? 'bg-gradient-to-r from-blue-500 to-purple-600 text-white shadow-md'
-          : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+          : &apos;bg-gray-100 text-gray-700 hover:bg-gray-200&apos;
         }`}
     >
       {label}
@@ -83,7 +83,7 @@ export default function LoadingExamples() {
     setIsContentLoading(true);
     setTimeout(() => setIsContentLoading(false), 2000);
     
-    if (selectedExample === 'progressIndicator') {
+    if (selectedExample === &apos;progressIndicator&apos;) {
       setProgress(0);
     }
   };
@@ -106,14 +106,14 @@ export default function LoadingExamples() {
     }
     
     switch (selectedExample) {
-      case 'pageLoading':
+      case &apos;pageLoading&apos;:
         return (
           <div className="space-y-8">
             <section className="p-6 border border-gray-200 rounded-lg">
               <h3 className="text-lg font-medium text-gray-900 mb-4">PageLoading Component</h3>
               <p className="text-gray-600 mb-6">
                 The PageLoading component is used to display a full-page loading state. 
-                It's typically used when navigating between pages or when a page requires significant initial data loading.
+                It&apos;s typically used when navigating between pages or when a page requires significant initial data loading.
               </p>
               <div className="flex flex-col items-center p-10 border border-gray-100 rounded-lg bg-gray-50">
                 <PageLoading showAfterDelay={false} />
@@ -141,7 +141,7 @@ export default function LoadingExamples() {
           </div>
         );
         
-      case 'skeletonLoaders':
+      case &apos;skeletonLoaders&apos;:
         return (
           <div className="space-y-8">
             <section className="p-6 border border-gray-200 rounded-lg">
@@ -185,14 +185,14 @@ export default function LoadingExamples() {
           </div>
         );
         
-      case 'contentPlaceholders':
+      case &apos;contentPlaceholders&apos;:
         return (
           <div className="space-y-8">
             <section className="p-6 border border-gray-200 rounded-lg">
               <h3 className="text-lg font-medium text-gray-900 mb-4">Content Placeholder Components</h3>
               <p className="text-gray-600 mb-6">
                 Content placeholders provide more sophisticated loading states for different types of content
-                with staggered animations designed to match the app's visual style.
+                with staggered animations designed to match the app&apos;s visual style.
               </p>
               <div className="space-y-6">
                 <div>
@@ -214,7 +214,7 @@ export default function LoadingExamples() {
           </div>
         );
         
-      case 'progressIndicator':
+      case &apos;progressIndicator&apos;:
         return (
           <div className="space-y-8">
             <section className="p-6 border border-gray-200 rounded-lg">

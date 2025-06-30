@@ -118,7 +118,7 @@ export default function UserOnboarding() {
     {
       id: "escrow",
       title: "Understanding Escrow",
-      content: "Our escrow system protects both buyers and sellers by holding funds until all conditions of the trade are met. This guide explains how escrow works and why it's important.",
+      content: "Our escrow system protects both buyers and sellers by holding funds until all conditions of the trade are met. This guide explains how escrow works and why it&apos;s important.",
       video: "https://example.com/videos/escrow-explained",
       reading: "12 min",
       difficulty: "Intermediate"
@@ -126,7 +126,7 @@ export default function UserOnboarding() {
     {
       id: "advanced",
       title: "Advanced Trading Strategies",
-      content: "Once you're familiar with basic P2P trading, explore more advanced strategies to optimize your trading experience and potentially increase your returns.",
+      content: "Once you&apos;re familiar with basic P2P trading, explore more advanced strategies to optimize your trading experience and potentially increase your returns.",
       video: "https://example.com/videos/advanced-trading",
       reading: "20 min",
       difficulty: "Advanced"
@@ -221,7 +221,7 @@ export default function UserOnboarding() {
     });
   };
 
-  // If no user or onboarding shouldn't be shown, don't render
+  // If no user or onboarding shouldn&apos;t be shown, don&apos;t render
   if (!user || !showOnboarding) {
     return null;
   }
@@ -348,7 +348,7 @@ export default function UserOnboarding() {
                   </div>
                 </CardHeader>
                 <CardContent>
-                  <p className="text-sm">Trading with users who have high reputation scores reduces your risk. Initially, consider smaller trades until you've built your own reputation score.</p>
+                  <p className="text-sm">Trading with users who have high reputation scores reduces your risk. Initially, consider smaller trades until you&apos;ve built your own reputation score.</p>
                 </CardContent>
               </Card>
               
@@ -360,7 +360,7 @@ export default function UserOnboarding() {
                   </div>
                 </CardHeader>
                 <CardContent>
-                  <p className="text-sm">Never share your password or 2FA codes with anyone, including support staff. All legitimate transactions happen through the platform's escrow system.</p>
+                  <p className="text-sm">Never share your password or 2FA codes with anyone, including support staff. All legitimate transactions happen through the platform&apos;s escrow system.</p>
                 </CardContent>
               </Card>
             </div>

@@ -115,7 +115,7 @@ export default function UserDisputeTracking() {
             <CheckCircle className="mx-auto h-12 w-12 text-green-400" />
             <h3 className="mt-2 text-lg font-medium text-gray-900">No disputes</h3>
             <p className="mt-1 text-sm text-gray-500">
-              You haven't filed any disputes yet
+              You haven&apos;t filed any disputes yet
             </p>
           </div>
         ) : (
@@ -292,7 +292,7 @@ export default function UserDisputeTracking() {
                 <TabsContent value="resolution" className="space-y-4">
                   {selectedDispute.status === "Resolved" || selectedDispute.status === "Rejected" ? (
                     <>
-                      <div className="p-4 rounded-md" className={selectedDispute.status === "Resolved" ? "bg-green-50" : "bg-red-50"}>
+                      <div className={`p-4 rounded-md ${selectedDispute.status === "Resolved" ? "bg-green-50" : "bg-red-50"}`}>
                         <h3 className="font-medium mb-2">Resolution Status</h3>
                         <div className="flex items-center space-x-2">
                           {selectedDispute.status === "Resolved" ? (
@@ -346,7 +346,7 @@ export default function UserDisputeTracking() {
                         <ul className="text-sm text-gray-600 space-y-1 text-left max-w-md mx-auto">
                           <li>• Our support team will review your dispute details</li>
                           <li>• We may contact you for additional information if needed</li>
-                          <li>• Once a decision is made, you'll be notified via email</li>
+                          <li>• Once a decision is made, you&apos;ll be notified via email</li>
                           <li>• The resolution will be displayed in this section</li>
                         </ul>
                       </div>

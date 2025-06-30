@@ -17,7 +17,7 @@ export default function SystemMonitoringPage() {
           <AlertTriangle className="h-4 w-4" />
           <AlertTitle>Access Denied</AlertTitle>
           <AlertDescription>
-            You don't have permission to access the system monitoring dashboard.
+            You don&apos;t have permission to access the system monitoring dashboard.
           </AlertDescription>
         </Alert>
       </div>

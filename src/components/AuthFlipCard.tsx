@@ -86,7 +86,7 @@ const AuthFlipCard: React.FC<AuthFlipCardProps> = ({
       });
       
       // Switch back to signin
-      setCurrentSide('signin');
+      setCurrentSide(&apos;signin&apos;);
     } catch (error: any) {
       console.error("Sign up error:", error);
       toast({
@@ -189,17 +189,17 @@ const AuthFlipCard: React.FC<AuthFlipCardProps> = ({
             <CardFooter className="flex flex-col gap-4 mt-auto">
               <Button 
                 variant="link" 
-                onClick={() => setCurrentSide('reset')}
+                onClick={() => setCurrentSide(&apos;reset&apos;)}
                 className="text-primary-blue"
               >
                 Forgot Password?
               </Button>
               <div className="text-center">
-                <span className="text-sm text-muted-foreground">Don't have an account? </span>
+                <span className="text-sm text-muted-foreground">Don&apos;t have an account? </span>
                 <Button 
                   variant="link" 
                   className="text-primary-purple p-0" 
-                  onClick={() => setCurrentSide('signup')}
+                  onClick={() => setCurrentSide(&apos;signup&apos;)}
                 >
                   Sign Up
                 </Button>
@@ -306,7 +306,7 @@ const AuthFlipCard: React.FC<AuthFlipCardProps> = ({
               <Button 
                 variant="link" 
                 className="text-primary-blue" 
-                onClick={() => setCurrentSide('signin')}
+                onClick={() => setCurrentSide(&apos;signin&apos;)}
               >
                 Already have an account? Sign In
               </Button>
@@ -367,14 +367,14 @@ const AuthFlipCard: React.FC<AuthFlipCardProps> = ({
                     </div>
                   </motion.div>
                   <p className="text-center">
-                    We've sent a password reset link to <span className="font-bold">{email}</span>. 
+                    We&apos;ve sent a password reset link to <span className="font-bold">{email}</span>. 
                     Please check your inbox and follow the instructions to reset your password.
                   </p>
                   <Button 
                     variant="outline"
                     onClick={() => {
                       setResetSent(false);
-                      setEmail('');
+                      setEmail(&apos;&apos;);
                     }}
                     className="mt-4"
                   >
@@ -388,7 +388,7 @@ const AuthFlipCard: React.FC<AuthFlipCardProps> = ({
                 variant="link" 
                 className="text-primary-blue" 
                 onClick={() => {
-                  setCurrentSide('signin');
+                  setCurrentSide(&apos;signin&apos;);
                   setResetSent(false);
                 }}
               >

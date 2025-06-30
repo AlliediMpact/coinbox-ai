@@ -454,19 +454,19 @@ export default function ReferralTracking() {
                 className={`bg-white p-4 rounded-lg border shadow-sm relative overflow-hidden ${
                   referralStats?.pendingCommissions > 0 
                   ? 'border-primary/30' 
-                  : 'border-neutral-200'
+                  : &apos;border-neutral-200&apos;
                 }`}
               >
                 <div className={`absolute top-0 right-0 w-16 h-16 rounded-full -translate-y-1/2 translate-x-1/2 ${
                   referralStats?.pendingCommissions > 0 
                   ? 'bg-primary/20' 
-                  : 'bg-neutral-100'
+                  : &apos;bg-neutral-100&apos;
                 }`} />
                 
                 <DollarSign className={`h-5 w-5 mb-1 ${
                   referralStats?.pendingCommissions > 0 
                   ? 'text-primary/70' 
-                  : 'text-neutral-400'
+                  : &apos;text-neutral-400&apos;
                 }`} />
                 <p className="text-sm text-muted-foreground">Available to Withdraw</p>
                 <div className="flex items-end space-x-1 mt-1">
@@ -485,7 +485,7 @@ export default function ReferralTracking() {
                   >
                     {referralStats?.pendingCommissions > 0 
                       ? `R${referralStats.pendingCommissions.toFixed(2)}`
-                      : 'R0.00'}
+                      : &apos;R0.00&apos;}
                   </motion.p>
                 </div>
               </motion.div>
@@ -499,7 +499,7 @@ export default function ReferralTracking() {
                   Your Referrals
                 </h3>
                 <Badge variant="outline" className="bg-white">
-                  {userReferrals.length} {userReferrals.length === 1 ? 'person' : 'people'}
+                  {userReferrals.length} {userReferrals.length === 1 ? 'person' : &apos;people&apos;}
                 </Badge>
               </div>
               
@@ -521,15 +521,15 @@ export default function ReferralTracking() {
                         >
                           <div className="flex items-center space-x-3">
                             <div className="flex items-center justify-center h-8 w-8 rounded-full bg-primary/10 text-primary font-medium text-sm">
-                              {(referral.displayName || referral.email || 'User').charAt(0).toUpperCase()}
+                              {(referral.displayName || referral.email || &apos;User&apos;).charAt(0).toUpperCase()}
                             </div>
                             <div>
                               <p className="font-medium text-sm">
-                                {referral.displayName || referral.email || 'User'}
+                                {referral.displayName || referral.email || &apos;User&apos;}
                               </p>
                               <div className="flex items-center mt-0.5">
                                 <Badge variant="secondary" className="text-xs px-1.5 py-0">
-                                  {referral.tier || 'Basic'}
+                                  {referral.tier || &apos;Basic&apos;}
                                 </Badge>
                               </div>
                             </div>
@@ -539,7 +539,7 @@ export default function ReferralTracking() {
                             <p className="font-semibold">
                               {referral.commissionsEarned 
                                 ? `R${referral.commissionsEarned.toFixed(2)}` 
-                                : commissionTiers[referrerTier as keyof typeof commissionTiers]?.[referral.tier as keyof typeof commissionTiers["Basic"]] || 'N/A'}
+                                : commissionTiers[referrerTier as keyof typeof commissionTiers]?.[referral.tier as keyof typeof commissionTiers["Basic"]] || &apos;N/A&apos;}
                             </p>
                             <p className="text-xs text-muted-foreground">
                               commission
@@ -555,7 +555,7 @@ export default function ReferralTracking() {
                   <div className="h-12 w-12 rounded-full bg-neutral-100 flex items-center justify-center mb-3">
                     <Users className="h-6 w-6 text-neutral-400" />
                   </div>
-                  <p className="text-sm text-muted-foreground">You haven't referred anyone yet</p>
+                  <p className="text-sm text-muted-foreground">You haven&apos;t referred anyone yet</p>
                   <p className="text-xs text-muted-foreground mt-1 max-w-[200px]">
                     Share your referral code with friends to start earning commission
                   </p>
@@ -621,7 +621,7 @@ export default function ReferralTracking() {
                   <div className="text-center">
                     <p className="text-xs text-muted-foreground">Max. Commission Rate</p>
                     <p className="text-xl font-bold text-primary">
-                      {commissionTiers[referrerTier as keyof typeof commissionTiers]?.["VIP"] || '5%'}
+                      {commissionTiers[referrerTier as keyof typeof commissionTiers]?.["VIP"] || &apos;5%&apos;}
                     </p>
                   </div>
                 </div>

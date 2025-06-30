@@ -828,7 +828,7 @@ export default function CoinTrading() {
                                     </div>
                                 )}
                             </div>
-                            </>
+                        </>
                         )}
                     </CardContent>
 

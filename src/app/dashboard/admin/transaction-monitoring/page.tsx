@@ -38,7 +38,7 @@ export default function AdminTransactionMonitoringPage() {
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh]">
         <h1 className="text-2xl font-bold mb-4">Access Denied</h1>
-        <p className="text-gray-600 mb-6">You don't have permission to access this page.</p>
+        <p className="text-gray-600 mb-6">You don&apos;t have permission to access this page.</p>
         <Button asChild>
           <a href="/dashboard">Return to Dashboard</a>
         </Button>

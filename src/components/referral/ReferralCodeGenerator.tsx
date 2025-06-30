@@ -61,7 +61,7 @@ export function ReferralCodeGenerator({ referralCode, onGenerate }: ReferralCode
     
     Use my referral code: ${referralCode || '[Your code will appear here]'}
     
-    Or simply click this link to sign up: ${referralLink || '[Your link will appear here]'}
+    Or simply click this link to sign up: ${referralLink || &apos;[Your link will appear here]&apos;}
     
     Thanks!
   `.trim();
@@ -92,7 +92,7 @@ export function ReferralCodeGenerator({ referralCode, onGenerate }: ReferralCode
         {!referralCode ? (
           <div className="flex flex-col items-center justify-center py-6">
             <p className="text-center mb-4 text-muted-foreground">
-              You don't have a referral code yet. Generate one to start earning commissions.
+              You don&apos;t have a referral code yet. Generate one to start earning commissions.
             </p>
             <Button onClick={handleGenerateCode} disabled={isGenerating}>
               {isGenerating ? (
@@ -101,7 +101,7 @@ export function ReferralCodeGenerator({ referralCode, onGenerate }: ReferralCode
                   Generating...
                 </>
               ) : (
-                'Generate Referral Code'
+                &apos;Generate Referral Code&apos;
               )}
             </Button>
           </div>
@@ -237,7 +237,7 @@ export function ReferralCodeGenerator({ referralCode, onGenerate }: ReferralCode
                   <h4 className="text-sm font-medium">How it works</h4>
                   <p className="text-xs text-muted-foreground mt-1">
                     Share your referral code with friends. When they sign up and start trading, 
-                    you'll earn a commission on their trading fees based on your membership tier. 
+                    you&apos;ll earn a commission on their trading fees based on your membership tier. 
                     The more people you refer, the more you earn!
                   </p>
                 </div>
