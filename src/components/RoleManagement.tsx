@@ -21,7 +21,7 @@ export default function RoleManagement() {
   const { userClaims } = useAuth();
   const [users, setUsers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [searchQuery, setSearchQuery] = useState(&apos;&apos;);
+  const [searchQuery, setSearchQuery] = useState('');
   const [filteredUsers, setFilteredUsers] = useState<any[]>([]);
   const [changeRoleDialogOpen, setChangeRoleDialogOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState<any>(null);

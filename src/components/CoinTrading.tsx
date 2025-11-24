@@ -550,10 +550,9 @@ export default function CoinTrading() {
                                             y: -5,
                                             boxShadow: "0 12px 20px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -5px rgba(0, 0, 0, 0.04)"
                                         }}
-                                        transition={{ type: "spring", stiffness: 300, damping: 15 }}
                                         initial={{ opacity: 0, y: 20 }}
                                         animate={{ opacity: 1, y: 0 }}
-                                        transition={{ duration: 0.4 }}
+                                        transition={{ type: "spring", stiffness: 300, damping: 15 }}
                                     >
                                         <div className="flex items-center justify-between mb-2">
                                             <p className="text-sm font-medium text-gray-500">Wallet Balance</p>
@@ -578,10 +577,9 @@ export default function CoinTrading() {
                                             y: -5,
                                             boxShadow: "0 12px 20px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -5px rgba(0, 0, 0, 0.04)"
                                         }}
-                                        transition={{ type: "spring", stiffness: 300, damping: 15 }}
                                         initial={{ opacity: 0, y: 20 }}
                                         animate={{ opacity: 1, y: 0 }}
-                                        transition={{ duration: 0.4, delay: 0.1 }}
+                                        transition={{ type: "spring", stiffness: 300, damping: 15, delay: 0.1 }}
                                     >
                                         <div className="flex items-center justify-between mb-2">
                                             <p className="text-sm font-medium text-gray-500">Escrow Balance</p>
@@ -606,10 +604,9 @@ export default function CoinTrading() {
                                             y: -5,
                                             boxShadow: "0 12px 20px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -5px rgba(0, 0, 0, 0.04)"
                                         }}
-                                        transition={{ type: "spring", stiffness: 300, damping: 15 }}
                                         initial={{ opacity: 0, y: 20 }}
                                         animate={{ opacity: 1, y: 0 }}
-                                        transition={{ duration: 0.4, delay: 0.2 }}
+                                        transition={{ type: "spring", stiffness: 300, damping: 15, delay: 0.2 }}
                                     >
                                         <div className="absolute top-0 right-0 w-16 h-16 -mt-6 -mr-6 bg-gradient-to-br from-blue-400 to-purple-500 rounded-full opacity-20"></div>
                                         <div className="absolute bottom-0 left-0 w-24 h-24 -mb-12 -ml-12 bg-gradient-to-tr from-purple-400 to-blue-500 rounded-full opacity-10"></div>
@@ -695,6 +692,8 @@ export default function CoinTrading() {
                                     </DialogContent>
                                 </Dialog>
                             </div>
+                                    </motion.div>
+                                </div>
 
                             <div className="space-y-4">
                                 <div className="flex justify-between items-center mb-2">
@@ -828,8 +827,6 @@ export default function CoinTrading() {
                                     </div>
                                 )}
                             </div>
-                        </>
-                        )}
                     </CardContent>
 
                     {/* Dispute Dialog */}

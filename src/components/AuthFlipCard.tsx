@@ -86,7 +86,7 @@ const AuthFlipCard: React.FC<AuthFlipCardProps> = ({
       });
       
       // Switch back to signin
-      setCurrentSide(&apos;signin&apos;);
+      setCurrentSide('signin');
     } catch (error: any) {
       console.error("Sign up error:", error);
       toast({
@@ -189,7 +189,7 @@ const AuthFlipCard: React.FC<AuthFlipCardProps> = ({
             <CardFooter className="flex flex-col gap-4 mt-auto">
               <Button 
                 variant="link" 
-                onClick={() => setCurrentSide(&apos;reset&apos;)}
+                onClick={() => setCurrentSide('reset')}
                 className="text-primary-blue"
               >
                 Forgot Password?
@@ -199,7 +199,7 @@ const AuthFlipCard: React.FC<AuthFlipCardProps> = ({
                 <Button 
                   variant="link" 
                   className="text-primary-purple p-0" 
-                  onClick={() => setCurrentSide(&apos;signup&apos;)}
+                  onClick={() => setCurrentSide('signup')}
                 >
                   Sign Up
                 </Button>
@@ -306,7 +306,7 @@ const AuthFlipCard: React.FC<AuthFlipCardProps> = ({
               <Button 
                 variant="link" 
                 className="text-primary-blue" 
-                onClick={() => setCurrentSide(&apos;signin&apos;)}
+                onClick={() => setCurrentSide('signin')}
               >
                 Already have an account? Sign In
               </Button>
@@ -374,7 +374,7 @@ const AuthFlipCard: React.FC<AuthFlipCardProps> = ({
                     variant="outline"
                     onClick={() => {
                       setResetSent(false);
-                      setEmail(&apos;&apos;);
+                      setEmail('');
                     }}
                     className="mt-4"
                   >
@@ -388,7 +388,7 @@ const AuthFlipCard: React.FC<AuthFlipCardProps> = ({
                 variant="link" 
                 className="text-primary-blue" 
                 onClick={() => {
-                  setCurrentSide(&apos;signin&apos;);
+                  setCurrentSide('signin');
                   setResetSent(false);
                 }}
               >

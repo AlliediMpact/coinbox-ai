@@ -122,7 +122,7 @@ export default function KycVerification() {
             personalInfo: !!personalInfo.fullName && !!personalInfo.idNumber,
             idDocument: documents.some(d => d.type === 'id'),
             proofOfAddress: documents.some(d => d.type === 'address'),
-            bankStatement: documents.some(d => d.type === &apos;bank&apos;)
+            bankStatement: documents.some(d => d.type === 'bank')
         };
         
         const completedSteps = Object.values(steps).filter(Boolean).length;

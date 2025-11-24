@@ -100,7 +100,7 @@ export default function TransactionSecurity() {
       const dateObj = new Date(date instanceof Date ? date : date.toDate());
       return formatDistance(dateObj, new Date(), { addSuffix: true });
     } catch (error) {
-      return &apos;Invalid date&apos;;
+      return 'Invalid date';
     }
   };
 

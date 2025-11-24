@@ -41,7 +41,7 @@ export default function LoadingExamples() {
   
   // Simulate progress updates
   useEffect(() => {
-    if (selectedExample === &apos;progressIndicator&apos;) {
+    if (selectedExample === 'progressIndicator') {
       const interval = setInterval(() => {
         setProgress(prev => {
           const next = prev + 5;
@@ -71,7 +71,7 @@ export default function LoadingExamples() {
       className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200
         ${selectedExample === id 
           ? 'bg-gradient-to-r from-blue-500 to-purple-600 text-white shadow-md'
-          : &apos;bg-gray-100 text-gray-700 hover:bg-gray-200&apos;
+          : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
         }`}
     >
       {label}
@@ -83,7 +83,7 @@ export default function LoadingExamples() {
     setIsContentLoading(true);
     setTimeout(() => setIsContentLoading(false), 2000);
     
-    if (selectedExample === &apos;progressIndicator&apos;) {
+    if (selectedExample === 'progressIndicator') {
       setProgress(0);
     }
   };
@@ -106,7 +106,7 @@ export default function LoadingExamples() {
     }
     
     switch (selectedExample) {
-      case &apos;pageLoading&apos;:
+      case 'pageLoading':
         return (
           <div className="space-y-8">
             <section className="p-6 border border-gray-200 rounded-lg">
@@ -141,7 +141,7 @@ export default function LoadingExamples() {
           </div>
         );
         
-      case &apos;skeletonLoaders&apos;:
+      case 'skeletonLoaders':
         return (
           <div className="space-y-8">
             <section className="p-6 border border-gray-200 rounded-lg">
@@ -185,7 +185,7 @@ export default function LoadingExamples() {
           </div>
         );
         
-      case &apos;contentPlaceholders&apos;:
+      case 'contentPlaceholders':
         return (
           <div className="space-y-8">
             <section className="p-6 border border-gray-200 rounded-lg">
@@ -214,7 +214,7 @@ export default function LoadingExamples() {
           </div>
         );
         
-      case &apos;progressIndicator&apos;:
+      case 'progressIndicator':
         return (
           <div className="space-y-8">
             <section className="p-6 border border-gray-200 rounded-lg">

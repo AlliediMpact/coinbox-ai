@@ -208,13 +208,13 @@ export default function NotificationCenter() {
     // Get notification icon based on type
     const getNotificationIcon = (type: string, priority?: string) => {
         switch (type) {
-            case &apos;transaction&apos;:
+            case 'transaction':
                 return <ArrowDownToLine className="h-5 w-5 text-primary" />;
-            case &apos;kyc&apos;:
+            case 'kyc':
                 return <ShieldCheck className="h-5 w-5 text-primary" />;
-            case &apos;referral&apos;:
+            case 'referral':
                 return <UserPlus className="h-5 w-5 text-primary" />;
-            case &apos;security&apos;:
+            case 'security':
                 return <AlertCircle className={`h-5 w-5 ${priority === 'high' ? 'text-status-error' : 'text-primary'}`} />;
             default:
                 return <Info className="h-5 w-5 text-primary" />;

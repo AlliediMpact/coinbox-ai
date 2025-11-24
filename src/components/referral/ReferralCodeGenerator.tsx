@@ -61,7 +61,7 @@ export function ReferralCodeGenerator({ referralCode, onGenerate }: ReferralCode
     
     Use my referral code: ${referralCode || '[Your code will appear here]'}
     
-    Or simply click this link to sign up: ${referralLink || &apos;[Your link will appear here]&apos;}
+    Or simply click this link to sign up: ${referralLink || '[Your link will appear here]'}
     
     Thanks!
   `.trim();

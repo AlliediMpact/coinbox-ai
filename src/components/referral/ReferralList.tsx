@@ -31,8 +31,8 @@ interface ReferralListProps {
 
 export function ReferralList({ referrals, membership }: ReferralListProps) {
   const [searchQuery, setSearchQuery] = useState('');
-  const [sortField, setSortField] = useState<string>(&apos;joinDate&apos;);
-  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>(&apos;desc&apos;);
+  const [sortField, setSortField] = useState<string>('joinDate');
+  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
   
   if (!referrals || referrals.length === 0) {
     return (

@@ -207,16 +207,16 @@ export default function SystemMonitoringDashboard() {
 
   // Helper function to render status indicator
   const renderStatusIndicator = (status: 'operational' | 'degraded' | 'outage') => {
-    if (status === &apos;operational&apos;) {
+    if (status === 'operational') {
       return <CheckCircle className="h-5 w-5 text-green-500" />;
-    } else if (status === &apos;degraded&apos;) {
+    } else if (status === 'degraded') {
       return <AlertCircle className="h-5 w-5 text-yellow-500" />;
     } else {
       return <XCircle className="h-5 w-5 text-red-500" />;
     }
   };
 
-  // If not admin, don&apos;t show the dashboard
+  // If not admin, don't show the dashboard
   if (!user || !isAdmin) {
     return (
       <Card>

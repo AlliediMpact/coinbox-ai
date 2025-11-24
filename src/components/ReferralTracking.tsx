@@ -454,19 +454,19 @@ export default function ReferralTracking() {
                 className={`bg-white p-4 rounded-lg border shadow-sm relative overflow-hidden ${
                   referralStats?.pendingCommissions > 0 
                   ? 'border-primary/30' 
-                  : &apos;border-neutral-200&apos;
+                  : 'border-neutral-200'
                 }`}
               >
                 <div className={`absolute top-0 right-0 w-16 h-16 rounded-full -translate-y-1/2 translate-x-1/2 ${
                   referralStats?.pendingCommissions > 0 
                   ? 'bg-primary/20' 
-                  : &apos;bg-neutral-100&apos;
+                  : 'bg-neutral-100'
                 }`} />
                 
                 <DollarSign className={`h-5 w-5 mb-1 ${
                   referralStats?.pendingCommissions > 0 
                   ? 'text-primary/70' 
-                  : &apos;text-neutral-400&apos;
+                  : 'text-neutral-400'
                 }`} />
                 <p className="text-sm text-muted-foreground">Available to Withdraw</p>
                 <div className="flex items-end space-x-1 mt-1">
