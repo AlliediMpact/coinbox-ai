@@ -104,7 +104,7 @@ export default function TransactionMonitoring() {
       const rules = await transactionMonitoringAPI.getMonitoringRules();
       setRules(rules);
     } catch (error) {
-      console.error("Error loading monitoring data:", error);
+      console.error('Error loading transaction monitoring data:', error);
       toast({
         title: "Error",
         description: "Failed to load monitoring data",
@@ -113,7 +113,7 @@ export default function TransactionMonitoring() {
     } finally {
       setLoading(false);
     }
-  }, [statusFilter, severityFilter]);
+  }, [statusFilter, severityFilter, toast]);
 
   useEffect(() => {
     if (!user) return;

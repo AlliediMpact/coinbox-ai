@@ -826,68 +826,9 @@ export default function CoinTrading() {
                                         ))}
                                     </div>
                                 )}
-                            </div>
+                        </div>
                     </CardContent>
-
-                    {/* Dispute Dialog */}
-                <Dialog open={disputeOpen} onOpenChange={setDisputeOpen}>
-                    <DialogContent>
-                        <DialogHeader>
-                            <DialogTitle>File a Dispute</DialogTitle>
-                            <DialogDescription>
-                                Please provide details about your dispute. Our team will review it shortly.
-                            </DialogDescription>
-                        </DialogHeader>
-                        <form onSubmit={disputeForm.handleSubmit(handleDisputeSubmit)} className="space-y-4">
-                            <div className="space-y-2">
-                                <Label>Reason for Dispute</Label>
-                                <Textarea
-                                    placeholder="Explain the reason for your dispute"
-                                    {...disputeForm.register("reason")}
-                                />
-                                {disputeForm.formState.errors.reason && (
-                                    <p className="text-sm text-red-500">{disputeForm.formState.errors.reason.message}</p>
-                                )}
-                            </div>
-                            <div className="space-y-2">
-                                <Label>Supporting Evidence (Optional)</Label>
-                                <Textarea
-                                    placeholder="Provide any additional evidence or details"
-                                    {...disputeForm.register("evidence")}
-                                />
-                            </div>
-                            <div className="flex justify-end space-x-2">
-                                <Button type="button" variant="outline" onClick={() => setDisputeOpen(false)}>
-                                    Cancel
-                                </Button>
-                                <Button type="submit" disabled={disputeLoading} className="relative">
-                                    {disputeLoading && (
-                                        <span className="absolute left-4">
-                                            <InlineLoading />
-                                        </span>
-                                    )}
-                                    {disputeLoading ? "Submitting..." : "Submit Dispute"}
-                                </Button>
-                            </div>
-                        </form>
-                    </DialogContent>
-                </Dialog>
-
-                {/* Ticket Details Dialog */}
-                <Dialog open={ticketDetailsOpen} onOpenChange={setTicketDetailsOpen}>
-                    <DialogContent className="max-w-2xl">
-                        {selectedTicketId && (
-                            <TicketDetails 
-                                ticketId={selectedTicketId} 
-                                onClose={handleCloseTicketDetails}
-                                onConfirm={handleConfirmTrade}
-                                onDispute={handleOpenDispute}
-                                onCancel={handleCancelTicket}
-                            />
-                        )}
-                    </DialogContent>
-                </Dialog>
-            </Card>
+                </Card>
             </motion.div>
         </ErrorBoundary>
     );

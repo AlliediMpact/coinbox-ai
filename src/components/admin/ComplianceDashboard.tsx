@@ -179,7 +179,7 @@ export default function ComplianceDashboard() {
       setLoading(false);
     }
   }, [toast]);
-  
+
   useEffect(() => {
     if (user && isAdmin) {
       loadReportsList();

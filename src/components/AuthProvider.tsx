@@ -170,7 +170,7 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
     return () => {
       unsubscribeAuth();
     };
-  }, [auth, db, toast, router]);
+  }, [auth, db, toast, router, signOutUser]);
 
   const signOutUser = useCallback(async () => {
     try {
@@ -514,27 +514,27 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
     }
   };
 
-  const contextSignOut = signOutUser;
+  const value = {
+    user,
+    loading,
+    signIn,
+    signOut: signOutUser,
+    sendPasswordReset,
+    resetPassword,
+    verifyEmail,
+    updateUserProfile,
+    resendVerificationEmail,
+    checkEmailVerification,
+    enrollMfa,
+    verifyMfaCode,
+    isMfaEnabled,
+    getMfaPhone,
+    disableMfa,
+    userClaims,
+  };
 
   return (
-    <AuthContext.Provider value={{
-      user,
-      loading,
-      signIn,
-      signOut: contextSignOut,
-      sendPasswordReset,
-      resetPassword,
-      verifyEmail,
-      updateUserProfile,
-      resendVerificationEmail,
-      checkEmailVerification,
-      enrollMfa,
-      verifyMfaCode,
-      isMfaEnabled,
-      getMfaPhone,
-      disableMfa,
-      userClaims,
-    }}>
+    <AuthContext.Provider value={value}>
       {!loading && children}
     </AuthContext.Provider>
   );

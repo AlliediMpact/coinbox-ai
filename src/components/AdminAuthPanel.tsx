@@ -54,17 +54,6 @@ export default function AdminAuthPanel() {
   // Only admin role can modify, support is view-only
   const canModify = isAdmin;
 
-  // Fetch users when component mounts or page/filters change
-  useEffect(() => {
-    if (activeTab === 'users') {
-      fetchUsers();
-    } else if (activeTab === 'security') {
-      fetchSecurityEvents();
-    } else if (activeTab === 'logs') {
-      fetchAuthLogs();
-    }
-  }, [activeTab, fetchUsers, fetchSecurityEvents, fetchAuthLogs]);
-
   const fetchUsers = useCallback(async () => {
     setLoading(true);
     try {
@@ -123,6 +112,17 @@ export default function AdminAuthPanel() {
       setLoading(false);
     }
   }, [toast]);
+
+  // Fetch users when component mounts or page/filters change
+  useEffect(() => {
+    if (activeTab === 'users') {
+      fetchUsers();
+    } else if (activeTab === 'security') {
+      fetchSecurityEvents();
+    } else if (activeTab === 'logs') {
+      fetchAuthLogs();
+    }
+  }, [activeTab, fetchUsers, fetchSecurityEvents, fetchAuthLogs]);
 
   const handleUserAction = async () => {
     if (!canModify) {

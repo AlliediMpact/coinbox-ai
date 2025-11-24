@@ -809,7 +809,7 @@ export default function KycVerification() {
                                                 )}
                                             </AnimatePresence>
                                             
-                                            {doc.status === &apos;rejected&apos; && (
+                                            {doc.status === 'rejected' && (
                                                 <motion.div
                                                     initial={{ opacity: 0, y: 5 }}
                                                     animate={{ opacity: 1, y: 0 }}

@@ -235,7 +235,7 @@ export default function TransactionSecurity() {
         </CardContent>
         <CardFooter className="flex justify-between border-t pt-4">
           <p className="text-xs text-gray-500">
-            Last updated: {refreshing ? &apos;Updating...&apos; : new Date().toLocaleString()}
+            Last updated: {refreshing ? 'Updating...' : new Date().toLocaleString()}
           </p>
           <Button variant="link" size="sm" asChild>
             <a href="/dashboard/security" className="flex items-center">

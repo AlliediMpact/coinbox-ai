@@ -272,7 +272,7 @@ export default function RoleManagement() {
                     <li>• Read-only access to analytics and reports</li>
                   </ul>
                 )}
-                {selectedRole === &apos;user&apos; && (
+                {selectedRole === 'user' && (
                   <ul className="text-sm space-y-1">
                     <li>• Standard user permissions only</li>
                     <li>• No access to admin or management features</li>

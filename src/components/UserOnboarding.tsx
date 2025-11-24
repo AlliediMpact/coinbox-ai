@@ -151,18 +151,34 @@ export default function UserOnboarding({ onComplete, disableAutoShow = false }: 
     loadOnboardingState();
   }, [user]);
 
+  const updateLastShown = useCallback(async () => {
+    if (!user) return;
+
+    try {
+      const db = getFirestore();
+      const onboardingRef = doc(db, "user_preferences", user.uid);
+      await setDoc(onboardingRef, {
+        lastOnboardingShown: Date.now()
+      }, { merge: true });
+    } catch (error) {
+      console.error("Error updating onboarding shown time:", error);
+    }
+  }, [user]);
+
   // Show onboarding automatically for new users
   useEffect(() => {
-    if (disableAutoShow) return;
-    
     const shouldShowOnboarding = () => {
-      // Show if:
-      // - Not dismissed AND
-      // - No tutorials completed OR last shown was more than 1 day ago but not all tutorials completed
-      const allTutorials = tutorials.map(t => t.id);
-      const allCompleted = allTutorials.every(id => onboardingState.completed.includes(id));
-      const daysSinceLastShown = onboardingState.lastShown 
-        ? (Date.now() - onboardingState.lastShown) / (1000 * 60 * 60 * 24)
+      if (disableAutoShow || !onboardingState) return false;
+
+      const allCompleted = tutorials.every(t => onboardingState.completed.includes(t.id));
+      if (allCompleted && onboardingState.dismissed) return false;
+
+      const lastShown = onboardingState.lastOnboardingShown || 0;
+      const daysSinceLastShown = (Date.now() - lastShown) / (1000 * 60 * 60 * 24);
+      
+      // Show if never shown, or if it's been more than a day and not all tutorials are complete
+      const timeSinceFirstInteraction = onboardingState.firstInteractionTimestamp
+        ? (Date.now() - onboardingState.firstInteractionTimestamp) / (1000 * 60 * 60 * 24)
         : 999; // Large number to ensure it shows if never shown
       
       return !onboardingState.dismissed && 
@@ -182,20 +198,6 @@ export default function UserOnboarding({ onComplete, disableAutoShow = false }: 
       updateLastShown();
     }
   }, [onboardingState, user, disableAutoShow, tutorials, updateLastShown]);
-
-  const updateLastShown = useCallback(async () => {
-    if (!user) return;
-
-    try {
-      const db = getFirestore();
-      const onboardingRef = doc(db, "user_preferences", user.uid);
-      await setDoc(onboardingRef, {
-        lastOnboardingShown: Date.now()
-      }, { merge: true });
-    } catch (error) {
-      console.error("Error updating onboarding shown time:", error);
-    }
-  }, [user]);
 
   const markTutorialComplete = async (tutorialId: string) => {
     if (!user) return;

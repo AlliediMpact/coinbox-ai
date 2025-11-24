@@ -529,7 +529,7 @@ export default function ReferralTracking() {
                               </p>
                               <div className="flex items-center mt-0.5">
                                 <Badge variant="secondary" className="text-xs px-1.5 py-0">
-                                  {referral.tier || &apos;Basic&apos;}
+                                  {referral.tier || 'Basic'}
                                 </Badge>
                               </div>
                             </div>

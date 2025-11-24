@@ -68,16 +68,6 @@ export default function AdvancedAnalyticsDashboard() {
     }
   }, [timeRange]);
 
-  useEffect(() => {
-    loadAnalyticsData();
-    loadPredictiveData();
-    loadRealtimeData();
-
-    // Set up real-time data updates
-    const interval = setInterval(loadRealtimeData, 30000); // Update every 30 seconds
-    return () => clearInterval(interval);
-  }, [loadAnalyticsData, loadRealtimeData]);
-
   const loadPredictiveData = async () => {
     try {
       const data = await advancedAnalyticsService.getPredictiveAnalytics(30);
@@ -87,14 +77,24 @@ export default function AdvancedAnalyticsDashboard() {
     }
   };
 
-  const loadRealtimeData = async () => {
+  const loadRealtimeData = useCallback(async () => {
     try {
       const data = await advancedAnalyticsService.getRealtimeMetrics();
       setRealtimeData(data);
     } catch (error) {
       console.error('Failed to load realtime data:', error);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    loadAnalyticsData();
+    loadPredictiveData();
+    loadRealtimeData();
+
+    // Set up real-time data updates
+    const interval = setInterval(loadRealtimeData, 30000); // Update every 30 seconds
+    return () => clearInterval(interval);
+  }, [loadAnalyticsData, loadRealtimeData]);
 
   const getTimeRangeMs = (range: string): number => {
     const ranges = {

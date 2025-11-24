@@ -64,50 +64,44 @@ export function useNotifications(options: NotificationFilterOptions = {}) {
   
   // Mark a notification as read
   const markAsRead = useCallback(async (notificationId: string) => {
+    if (!user) return;
     try {
-      await notificationService.markAsRead(notificationId);
-      // Don't need to update state manually since we're using real-time subscriptions
+      await notificationService.markAsRead(user.uid, notificationId);
     } catch (err) {
-      console.error('Error marking notification as read:', err);
-      throw err;
+      console.error("Error marking notification as read:", err);
     }
-  }, []);
-  
+  }, [user]);
+
   // Mark all notifications as read
   const markAllAsRead = useCallback(async () => {
     if (!user) return;
-    
     try {
       await notificationService.markAllAsRead(user.uid);
-      // Don't need to update state manually since we're using real-time subscriptions
     } catch (err) {
-      console.error('Error marking all notifications as read:', err);
-      throw err;
+      console.error("Error marking all notifications as read:", err);
     }
   }, [user]);
-  
+
   // Archive a notification
   const archiveNotification = useCallback(async (notificationId: string) => {
     try {
       await notificationService.archiveNotification(notificationId);
-      // Don't need to update state manually since we're using real-time subscriptions
     } catch (err) {
       console.error('Error archiving notification:', err);
       throw err;
     }
   }, []);
-  
+
   // Delete a notification
   const deleteNotification = useCallback(async (notificationId: string) => {
     try {
       await notificationService.deleteNotification(notificationId);
-      // Don't need to update state manually since we're using real-time subscriptions
     } catch (err) {
       console.error('Error deleting notification:', err);
       throw err;
     }
   }, []);
-  
+
   // Cleanup expired notifications
   const cleanupExpiredNotifications = useCallback(async (olderThanDays = 30) => {
     if (!user) return;
