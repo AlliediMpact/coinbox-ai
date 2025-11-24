@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -63,9 +63,9 @@ export default function AdminAuthPanel() {
     } else if (activeTab === 'logs') {
       fetchAuthLogs();
     }
-  }, [activeTab, currentPage, filterOptions]);
+  }, [activeTab, fetchUsers, fetchSecurityEvents, fetchAuthLogs]);
 
-  const fetchUsers = async () => {
+  const fetchUsers = useCallback(async () => {
     setLoading(true);
     try {
       const result = await adminService.getUsers({
@@ -88,9 +88,9 @@ export default function AdminAuthPanel() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [currentPage, filterOptions, toast]);
 
-  const fetchSecurityEvents = async () => {
+  const fetchSecurityEvents = useCallback(async () => {
     setLoading(true);
     try {
       const events = await adminService.getSecurityEventsForReview();
@@ -105,9 +105,9 @@ export default function AdminAuthPanel() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [toast]);
 
-  const fetchAuthLogs = async () => {
+  const fetchAuthLogs = useCallback(async () => {
     setLoading(true);
     try {
       const logs = await adminService.getRecentAuthEvents(100);
@@ -122,7 +122,7 @@ export default function AdminAuthPanel() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [toast]);
 
   const handleUserAction = async () => {
     if (!canModify) {

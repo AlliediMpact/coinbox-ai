@@ -49,7 +49,7 @@ export default function CommissionTrackingDashboard() {
       loadCommissionData();
       loadLeaderboard();
     }
-  }, [user]);
+  }, [user, loadCommissionData, loadLeaderboard]);
 
   const loadCommissionData = async () => {
     if (!user) return;

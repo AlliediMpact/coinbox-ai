@@ -193,7 +193,7 @@ export default function NotificationCenter() {
         }, 5000);
         
         return () => clearTimeout(timer);
-    }, []);
+    }, [unreadCount]);
 
     const markAsRead = (id: string) => {
         setNotifications(notifications.map(notification => 

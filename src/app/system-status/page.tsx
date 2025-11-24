@@ -75,7 +75,7 @@ export default function SystemStatusPage() {
                     <p className="text-muted-foreground">All CoinBox services are running normally</p>
                   </div>
                 </>
-              ) : status?.status === &apos;degraded&apos; ? (
+              ) : status?.status === 'degraded' ? (
                 <>
                   <AlertTriangle className="h-8 w-8 text-yellow-500" />
                   <div>

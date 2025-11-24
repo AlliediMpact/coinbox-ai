@@ -170,7 +170,7 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
     return () => {
       unsubscribeAuth();
     };
-  }, [auth, db, toast, router]);
+  }, [auth, db, toast, router, signOutUser]);
 
   const signOutUser = async () => {
     try {

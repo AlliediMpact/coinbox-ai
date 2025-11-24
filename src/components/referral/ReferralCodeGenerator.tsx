@@ -101,7 +101,7 @@ export function ReferralCodeGenerator({ referralCode, onGenerate }: ReferralCode
                   Generating...
                 </>
               ) : (
-                &apos;Generate Referral Code&apos;
+                'Generate Referral Code'
               )}
             </Button>
           </div>

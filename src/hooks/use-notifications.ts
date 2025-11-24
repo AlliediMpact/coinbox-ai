@@ -57,15 +57,10 @@ export function useNotifications(options: NotificationFilterOptions = {}) {
     subscribeToNotifications();
     
     // Cleanup subscriptions when component unmounts or user changes
-    return () => {
-      if (unsubscribeNotifications) {
-        unsubscribeNotifications();
-      }
-      if (unsubscribeCount) {
         unsubscribeCount();
       }
     };
-  }, [user, options.status, options.category, options.limit]);
+  }, [user, options]);
   
   // Mark a notification as read
   const markAsRead = useCallback(async (notificationId: string) => {

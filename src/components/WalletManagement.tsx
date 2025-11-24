@@ -123,7 +123,7 @@ export default function WalletManagement() {
   useEffect(() => {
     if (!user) return;
     loadTransactions();
-  }, [user]);
+  }, [user, loadTransactions]);
 
   const loadTransactions = async (loadMore = false) => {
     try {

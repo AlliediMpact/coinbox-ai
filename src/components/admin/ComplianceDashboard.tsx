@@ -69,7 +69,7 @@ export default function ComplianceDashboard() {
       loadReportsList();
       loadSummaryMetrics();
     }
-  }, [user, isAdmin]);
+  }, [user, isAdmin, loadReportsList, loadSummaryMetrics]);
   
   const loadReportsList = async () => {
     try {

@@ -57,7 +57,7 @@ export default function ComplianceReporting() {
     if (user && isAdmin) {
       loadReportHistory();
     }
-  }, [user, isAdmin]);
+  }, [user, isAdmin, loadReportHistory]);
 
   const loadReportHistory = async () => {
     try {

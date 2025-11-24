@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -51,17 +51,7 @@ export default function AdvancedAnalyticsDashboard() {
   const [selectedView, setSelectedView] = useState('overview');
   const [realtimeData, setRealtimeData] = useState<any>(null);
 
-  useEffect(() => {
-    loadAnalyticsData();
-    loadPredictiveData();
-    loadRealtimeData();
-
-    // Set up real-time data updates
-    const interval = setInterval(loadRealtimeData, 30000); // Update every 30 seconds
-    return () => clearInterval(interval);
-  }, [timeRange]);
-
-  const loadAnalyticsData = async () => {
+  const loadAnalyticsData = useCallback(async () => {
     try {
       setLoading(true);
       const data = await advancedAnalyticsService.getAnalyticsMetrics({
@@ -76,7 +66,17 @@ export default function AdvancedAnalyticsDashboard() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [timeRange]);
+
+  useEffect(() => {
+    loadAnalyticsData();
+    loadPredictiveData();
+    loadRealtimeData();
+
+    // Set up real-time data updates
+    const interval = setInterval(loadRealtimeData, 30000); // Update every 30 seconds
+    return () => clearInterval(interval);
+  }, [loadAnalyticsData, loadRealtimeData]);
 
   const loadPredictiveData = async () => {
     try {

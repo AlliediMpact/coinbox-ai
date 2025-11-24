@@ -1,7 +1,8 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
+import { useToast } from '@/hooks/use-toast';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -35,18 +36,13 @@ interface PaymentHistory {
 
 export default function PaymentsPage() {
   const { user } = useAuth();
+  const { toast } = useToast();
   const [loading, setLoading] = useState(true);
-  const [paymentHistory, setPaymentHistory] = useState<PaymentHistory[]>([]);
+  const [paymentHistory, setPaymentHistory] = useState<any[]>([]);
   const [membership, setMembership] = useState<any>(null);
   const [processingPayment, setProcessingPayment] = useState<string | null>(null);
 
-  useEffect(() => {
-    if (user) {
-      loadPaymentData();
-    }
-  }, [user]);
-
-  const loadPaymentData = async () => {
+  const loadPaymentData = useCallback(async () => {
     try {
       setLoading(true);
       
@@ -58,11 +54,22 @@ export default function PaymentsPage() {
       const history = await enhancedPaystackService.getPaymentHistory(user!.uid);
       setPaymentHistory(history);
     } catch (error) {
-      console.error('Failed to load payment data:', error);
+      console.error("Failed to load payment data:", error);
+      toast({
+        title: "Error",
+        description: "Could not load payment data.",
+        variant: "destructive",
+      });
     } finally {
       setLoading(false);
     }
-  };
+  }, [user, toast]);
+
+  useEffect(() => {
+    if (user) {
+      loadPaymentData();
+    }
+  }, [user, loadPaymentData]);
 
   const handleMembershipUpgrade = async (targetTier: MembershipTier) => {
     try {

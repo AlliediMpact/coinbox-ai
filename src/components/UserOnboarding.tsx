@@ -181,7 +181,7 @@ export default function UserOnboarding({ onComplete, disableAutoShow = false }: 
       setIsVisible(true);
       updateLastShown();
     }
-  }, [onboardingState, user, disableAutoShow]);
+  }, [onboardingState, user, disableAutoShow, tutorials, updateLastShown]);
 
   const updateLastShown = async () => {
     if (!user) return;

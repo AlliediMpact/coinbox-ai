@@ -260,7 +260,7 @@ export default function SystemMonitoringDashboard() {
                 {component.metrics?.responseTime || 0}ms
               </div>
               <p className="text-xs text-muted-foreground mt-2">
-                Last checked: {format(new Date(component.lastChecked), &apos;HH:mm:ss&apos;)}
+                Last checked: {format(new Date(component.lastChecked), 'HH:mm:ss')}
               </p>
               {component.metrics?.uptime && (
                 <div className="mt-2">
@@ -439,7 +439,7 @@ export default function SystemMonitoringDashboard() {
                           </p>
                         </TableCell>
                         <TableCell>{alert.component}</TableCell>
-                        <TableCell>{format(new Date(alert.timestamp), 'HH:mm:ss&apos;)}</TableCell>
+                        <TableCell>{format(new Date(alert.timestamp), 'HH:mm:ss')}</TableCell>
                         <TableCell>
                           <span className={`px-2 py-1 text-xs rounded-full ${
                             alert.status === 'active' ? 'bg-red-100 text-red-800' : 

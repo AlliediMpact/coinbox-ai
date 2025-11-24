@@ -143,7 +143,7 @@ export default function RoleManagement() {
       toast({
         title: 'Update Failed',
         description: 'Failed to connect to the server',
-        variant: &apos;destructive&apos;,
+        variant: 'destructive',
       });
     } finally {
       setChangeRoleDialogOpen(false);
@@ -199,11 +199,11 @@ export default function RoleManagement() {
                 filteredUsers.map((user) => (
                   <TableRow key={user.id}>
                     <TableCell>
-                      <div className="font-medium">{user.fullName || 'Unnamed User&apos;}</div>
+                      <div className="font-medium">{user.fullName || 'Unnamed User'}</div>
                     </TableCell>
                     <TableCell>{user.email}</TableCell>
                     <TableCell>
-                      <Badge variant={getRoleBadgeVariant(user.role)}>{user.role || 'user&apos;}</Badge>
+                      <Badge variant={getRoleBadgeVariant(user.role)}>{user.role || 'user'}</Badge>
                     </TableCell>
                     <TableCell>
                       <Button
@@ -256,15 +256,15 @@ export default function RoleManagement() {
               
               <div className="mt-4 p-3 bg-muted rounded-md">
                 <h4 className="font-semibold mb-2">Role Permissions:</h4>
-                {selectedRole === &apos;admin&apos; && (
+                {selectedRole === 'admin' && (
                   <ul className="text-sm space-y-1">
                     <li>• Full access to admin panel and all features</li>
                     <li>• Can modify user accounts and settings</li>
-                    <li>• Can manage other users&apos; roles</li>
+                    <li>• Can manage other users' roles</li>
                     <li>• Full access to analytics and reports</li>
                   </ul>
                 )}
-                {selectedRole === &apos;support&apos; && (
+                {selectedRole === 'support' && (
                   <ul className="text-sm space-y-1">
                     <li>• View-only access to admin panel</li>
                     <li>• Can view user accounts but cannot modify them</li>

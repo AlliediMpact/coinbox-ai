@@ -90,7 +90,7 @@ export default function TransactionMonitoring() {
     if (!user) return;
 
     loadData();
-  }, [user, statusFilter, severityFilter]);
+  }, [user, statusFilter, severityFilter, loadData]);
 
   // Function to load alerts and rules
   const loadData = async () => {

@@ -485,7 +485,7 @@ export default function ReferralTracking() {
                   >
                     {referralStats?.pendingCommissions > 0 
                       ? `R${referralStats.pendingCommissions.toFixed(2)}`
-                      : &apos;R0.00&apos;}
+                      : 'R0.00'}
                   </motion.p>
                 </div>
               </motion.div>
@@ -499,7 +499,7 @@ export default function ReferralTracking() {
                   Your Referrals
                 </h3>
                 <Badge variant="outline" className="bg-white">
-                  {userReferrals.length} {userReferrals.length === 1 ? 'person' : &apos;people&apos;}
+                  {userReferrals.length} {userReferrals.length === 1 ? 'person' : 'people'}
                 </Badge>
               </div>
               
@@ -521,11 +521,11 @@ export default function ReferralTracking() {
                         >
                           <div className="flex items-center space-x-3">
                             <div className="flex items-center justify-center h-8 w-8 rounded-full bg-primary/10 text-primary font-medium text-sm">
-                              {(referral.displayName || referral.email || &apos;User&apos;).charAt(0).toUpperCase()}
+                              {(referral.displayName || referral.email || 'User').charAt(0).toUpperCase()}
                             </div>
                             <div>
                               <p className="font-medium text-sm">
-                                {referral.displayName || referral.email || &apos;User&apos;}
+                                {referral.displayName || referral.email || 'User'}
                               </p>
                               <div className="flex items-center mt-0.5">
                                 <Badge variant="secondary" className="text-xs px-1.5 py-0">

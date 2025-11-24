@@ -52,7 +52,7 @@ export function ReferralList({ referrals, membership }: ReferralListProps) {
   
   // Get commission rate based on membership tier
   const getCommissionRate = (referredUserTier: string) => {
-    const currentTier = membership?.currentTier || &apos;basic&apos;;
+    const currentTier = membership?.currentTier || 'basic';
     
     // Commission rates based on referrer and referee tiers
     const commissionRates: Record<string, Record<string, number>> = {
@@ -123,7 +123,7 @@ export function ReferralList({ referrals, membership }: ReferralListProps) {
       case 'active': return 'bg-green-500/10 text-green-500';
       case 'pending': return 'bg-yellow-500/10 text-yellow-500';
       case 'inactive': return 'bg-gray-500/10 text-gray-500';
-      default: return &apos;bg-blue-500/10 text-blue-500&apos;;
+      default: return 'bg-blue-500/10 text-blue-500';
     }
   };
 
@@ -145,8 +145,8 @@ export function ReferralList({ referrals, membership }: ReferralListProps) {
             />
           </div>
           
-          <Button variant="outline" size="sm" onClick={() => handleSort('joinDate&apos;)}>
-            {sortDirection === 'asc&apos; ? <SortAsc className="mr-1 h-4 w-4" /> : <SortDesc className="mr-1 h-4 w-4" />}
+          <Button variant="outline" size="sm" onClick={() => handleSort('joinDate')}>
+            {sortDirection === 'asc' ? <SortAsc className="mr-1 h-4 w-4" /> : <SortDesc className="mr-1 h-4 w-4" />}
             Sort
           </Button>
         </div>
@@ -157,7 +157,7 @@ export function ReferralList({ referrals, membership }: ReferralListProps) {
               <TableRow>
                 <TableHead>User</TableHead>
                 <TableHead onClick={() => handleSort('tier')} className="cursor-pointer">
-                  Tier {sortField === 'tier' && (sortDirection === 'asc' ? '↑' : &apos;↓&apos;)}
+                  Tier {sortField === 'tier' && (sortDirection === 'asc' ? '↑' : '↓')}
                 </TableHead>
                 <TableHead onClick={() => handleSort('joinDate')} className="cursor-pointer">
                   Joined {sortField === 'joinDate' && (sortDirection === 'asc' ? '↑' : &apos;↓&apos;)}

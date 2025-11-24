@@ -136,7 +136,7 @@ export default function TransactionSecurity() {
         <CardContent>
           <div className="flex items-center justify-between mb-6 p-4 rounded-lg border">
             <div className="flex items-center">
-              {tradingStatus?.status === &apos;normal&apos; ? (
+              {tradingStatus?.status === 'normal' ? (
                 <CheckCircle className="h-8 w-8 text-green-500 mr-3" />
               ) : (
                 <AlertTriangle className="h-8 w-8 text-amber-500 mr-3" />
@@ -149,13 +149,13 @@ export default function TransactionSecurity() {
                       ? 'text-green-600 ml-2'
                       : 'text-amber-600 ml-2'
                   }>
-                    {tradingStatus?.status === 'normal' ? 'Normal' : &apos;Restricted&apos;}
+                    {tradingStatus?.status === 'normal' ? 'Normal' : 'Restricted'}
                   </span>
                 </h3>
                 <p className="text-sm text-gray-500">
                   {tradingStatus?.status === 'normal'
                     ? 'Your account has normal trading privileges'
-                    : `Restricted: ${tradingStatus?.reason || &apos;Security review in progress&apos;}`
+                    : `Restricted: ${tradingStatus?.reason || 'Security review in progress'}`
                   }
                 </p>
               </div>
@@ -166,11 +166,11 @@ export default function TransactionSecurity() {
                 ? 'bg-green-100 text-green-800 hover:bg-green-200'
                 : 'bg-amber-100 text-amber-800 hover:bg-amber-200'
             }>
-              {tradingStatus?.alerts} Alert{tradingStatus?.alerts !== 1 ? 's' : &apos;&apos;}
+              {tradingStatus?.alerts} Alert{tradingStatus?.alerts !== 1 ? 's' : ''}
             </Badge>
           </div>
 
-          {tradingStatus?.status === &apos;restricted&apos; && (
+          {tradingStatus?.status === 'restricted' && (
             <Alert className="mb-6" variant="destructive">
               <AlertCircle className="h-4 w-4" />
               <AlertTitle>Trading Restrictions in Place</AlertTitle>
