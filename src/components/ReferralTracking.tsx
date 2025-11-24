@@ -527,7 +527,45 @@ export default function ReferralTracking() {
                               <p className="font-medium text-sm">
                                 {referral.displayName || referral.email || 'User'}
                               </p>
-                              <div className="flex items-center mt-0.5">
+                                                            <div className="flex items-center mt-0.5">
+                                <span className={`flex items-center text-xs px-1.5 py-0.5 rounded-full ${
+                                  referral.status === 'Active' 
+                                    ? 'bg-green-100 text-green-700' 
+                                    : 'bg-yellow-100 text-yellow-700'
+                                }`}>
+                                  <span className={`h-1.5 w-1.5 rounded-full mr-1 ${
+                                    referral.status === 'Active' ? 'bg-green-500' : 'bg-yellow-500'
+                                  }`}></span>
+                                  {referral.status}
+                                </span>
+                              </div>
+                            </div>
+                          </div>
+                          <div className="text-right">
+                            <p className="font-medium text-sm">
+                              +R{referral.commissionEarned.toFixed(2)}
+                            </p>
+                            <p className="text-xs text-neutral-500">
+                              {new Date(referral.joinDate).toLocaleDateString()}
+                            </p>
+                          </div>
+                        </motion.li>
+                      ))}
+                    </motion.ul>
+                  </AnimatePresence>
+                </div>
+              ) : (
+                <div className="text-center p-8">
+                  <p className="text-sm text-neutral-500">You haven't referred anyone yet.</p>
+                </div>
+              )}
+            </motion.div>
+          </motion.div>
+        </AnimatePresence>
+      </CardContent>
+    </Card>
+  );
+};
                                 <Badge variant="secondary" className="text-xs px-1.5 py-0">
                                   {referral.tier || 'Basic'}
                                 </Badge>

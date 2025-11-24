@@ -826,7 +826,7 @@ export default function CoinTrading() {
                                         ))}
                                     </div>
                                 )}
-                        </div>
+                            </div>
                     </CardContent>
                 </Card>
             </motion.div>

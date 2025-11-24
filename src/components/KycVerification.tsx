@@ -790,7 +790,7 @@ export default function KycVerification() {
                                                         {doc.status === 'pending' && <Clock className="h-3 w-3 mr-1" />}
                                                         {doc.status}
                                                     </Badge>
-                                                </motion.div>
+                                                </div>
                                             </div>
                                             
                                             <AnimatePresence>
