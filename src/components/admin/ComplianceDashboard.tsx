@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@/components/AuthProvider';
 import { 
   Card, 
@@ -64,14 +64,7 @@ export default function ComplianceDashboard() {
   // Check if user has admin access
   const isAdmin = userClaims?.role === 'admin';
   
-  useEffect(() => {
-    if (user && isAdmin) {
-      loadReportsList();
-      loadSummaryMetrics();
-    }
-  }, [user, isAdmin, loadReportsList, loadSummaryMetrics]);
-  
-  const loadReportsList = async () => {
+  const loadReportsList = useCallback(async () => {
     try {
       setLoading(true);
       
@@ -126,9 +119,9 @@ export default function ComplianceDashboard() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [toast]);
   
-  const loadSummaryMetrics = async () => {
+  const loadSummaryMetrics = useCallback(async () => {
     try {
       setLoading(true);
       
@@ -185,7 +178,14 @@ export default function ComplianceDashboard() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [toast]);
+  
+  useEffect(() => {
+    if (user && isAdmin) {
+      loadReportsList();
+      loadSummaryMetrics();
+    }
+  }, [user, isAdmin, loadReportsList, loadSummaryMetrics]);
   
   const generateReport = async () => {
     if (!user || !isAdmin) return;

@@ -2,7 +2,7 @@
 
 import {Card, CardContent, CardDescription, CardHeader, CardTitle} from "@/components/ui/card";
 import {Button} from "@/components/ui/button";
-import {useState, useEffect} from "react";
+import {useState, useEffect, useCallback} from "react";
 import {Dialog, DialogClose, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger} from "@/components/ui/dialog";
 import {Input} from "@/components/ui/input";
 import {
@@ -119,13 +119,7 @@ export default function WalletManagement() {
     return () => unsubscribe();
   }, [user, db]);
 
-  // Load initial transactions with pagination
-  useEffect(() => {
-    if (!user) return;
-    loadTransactions();
-  }, [user, loadTransactions]);
-
-  const loadTransactions = async (loadMore = false) => {
+  const loadTransactions = useCallback(async (loadMore = false) => {
     try {
       const transactionsRef = collection(db, "wallets", user.uid, "transactions");
       let transactionQuery = query(
@@ -143,14 +137,11 @@ export default function WalletManagement() {
         );
       }
 
-      const snapshot = await getDocs(transactionQuery);
-      const newTransactions = snapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data()
-      } as Transaction));
-
-      setLastDoc(snapshot.docs[snapshot.docs.length - 1]);
-      setHasMore(snapshot.docs.length === ITEMS_PER_PAGE);
+      const documentSnapshots = await getDocs(transactionQuery);
+      const newTransactions = documentSnapshots.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      
+      setLastDoc(documentSnapshots.docs[documentSnapshots.docs.length - 1]);
+      setHasMore(newTransactions.length === ITEMS_PER_PAGE);
 
       if (loadMore) {
         setTransactions(prev => [...prev, ...newTransactions]);
@@ -158,16 +149,17 @@ export default function WalletManagement() {
         setTransactions(newTransactions);
       }
     } catch (error) {
-      console.error('Error loading transactions:', error);
-      toast({
-        title: "Error",
-        description: "Failed to load transactions",
-        variant: "destructive",
-      });
+      console.error("Error loading transactions:", error);
     } finally {
       setLoading(false);
     }
-  };
+  }, [db, user, lastDoc]);
+
+  // Load initial transactions with pagination
+  useEffect(() => {
+    if (!user) return;
+    loadTransactions();
+  }, [user, loadTransactions]);
 
   const handleTransaction = async (data: { amount: number; method: string }) => {
     const { amount, method } = data;

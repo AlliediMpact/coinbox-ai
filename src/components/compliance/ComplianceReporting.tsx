@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@/components/AuthProvider';
 import { 
   Card, 
@@ -53,13 +53,7 @@ export default function ComplianceReporting() {
   // Check if user has admin access
   const isAdmin = userClaims?.role === 'admin';
 
-  useEffect(() => {
-    if (user && isAdmin) {
-      loadReportHistory();
-    }
-  }, [user, isAdmin, loadReportHistory]);
-
-  const loadReportHistory = async () => {
+  const loadReportHistory = useCallback(async () => {
     try {
       setLoading(true);
       
@@ -68,34 +62,31 @@ export default function ComplianceReporting() {
         {
           id: 'report_monthly_20250321_20250421',
           type: 'Monthly',
-          format: 'PDF',
-          generatedAt: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000),
-          period: '03/21/2025 - 04/21/2025',
-          status: 'Completed'
+          dateRange: 'Mar 21, 2025 - Apr 21, 2025',
+          status: 'Generated',
+          url: '/reports/monthly_03212025.pdf'
         },
         {
-          id: 'report_quarterly_20250121_20250421',
+          id: 'report_quarterly_20250101_20250331',
           type: 'Quarterly',
-          format: 'XLSX',
-          generatedAt: new Date(Date.now() - 12 * 24 * 60 * 60 * 1000),
-          period: '01/21/2025 - 04/21/2025',
-          status: 'Completed'
+          dateRange: 'Jan 01, 2025 - Mar 31, 2025',
+          status: 'Generated',
+          url: '/reports/quarterly_q12025.pdf'
         }
       ];
-      
       setReports(mockReports);
-      setExportHistory(mockReports);
     } catch (error) {
       console.error('Failed to load report history:', error);
-      toast({
-        title: "Error",
-        description: "Failed to load compliance report history",
-        variant: "destructive"
-      });
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    if (user && isAdmin) {
+      loadReportHistory();
+    }
+  }, [user, isAdmin, loadReportHistory]);
 
   const generateReport = async () => {
     try {
@@ -282,7 +273,7 @@ export default function ComplianceReporting() {
                     {reports.map((report) => (
                       <TableRow key={report.id}>
                         <TableCell>{report.type}</TableCell>
-                        <TableCell>{report.period}</TableCell>
+                        <TableCell>{report.dateRange}</TableCell>
                         <TableCell>{report.format}</TableCell>
                         <TableCell>{format(new Date(report.generatedAt), 'yyyy-MM-dd')}</TableCell>
                         <TableCell>

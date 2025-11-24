@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@/components/AuthProvider';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -41,17 +41,10 @@ export default function CommissionTrackingDashboard() {
   const [stats, setStats] = useState<CommissionStats | null>(null);
   const [recentCommissions, setRecentCommissions] = useState<Commission[]>([]);
   const [recentPayouts, setRecentPayouts] = useState<CommissionPayout[]>([]);
-  const [leaderboard, setLeaderboard] = useState<ReferralLeaderboard[]>([]);
+  const [leaderboard, setLeaderboard] = useState<any[]>([]);
   const [activeTab, setActiveTab] = useState('overview');
 
-  useEffect(() => {
-    if (user) {
-      loadCommissionData();
-      loadLeaderboard();
-    }
-  }, [user, loadCommissionData, loadLeaderboard]);
-
-  const loadCommissionData = async () => {
+  const loadCommissionData = useCallback(async () => {
     if (!user) return;
 
     try {
@@ -74,16 +67,23 @@ export default function CommissionTrackingDashboard() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [user]);
 
-  const loadLeaderboard = async () => {
+  const loadLeaderboard = useCallback(async () => {
     try {
       const leaderboardData = await commissionAutomationService.getReferralLeaderboard(10);
       setLeaderboard(leaderboardData);
     } catch (error) {
       console.error('Error loading leaderboard:', error);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    if (user) {
+      loadCommissionData();
+      loadLeaderboard();
+    }
+  }, [user, loadCommissionData, loadLeaderboard]);
 
   const getStatusColor = (status: Commission['status']) => {
     switch (status) {

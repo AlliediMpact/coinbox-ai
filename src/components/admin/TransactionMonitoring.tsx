@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useAuth } from "@/components/AuthProvider";
 import { transactionMonitoringAPI } from "@/lib/transaction-monitoring-api";
 import { TransactionAlert, MonitoringRule } from "@/lib/transaction-monitoring-service";
@@ -86,14 +86,7 @@ export default function TransactionMonitoring() {
   const [refreshing, setRefreshing] = useState(false);
 
   // Initial data loading
-  useEffect(() => {
-    if (!user) return;
-
-    loadData();
-  }, [user, statusFilter, severityFilter, loadData]);
-
-  // Function to load alerts and rules
-  const loadData = async () => {
+  const loadData = useCallback(async () => {
     setLoading(true);
     try {
       // Load alerts with filters
@@ -104,13 +97,12 @@ export default function TransactionMonitoring() {
       if (severityFilter !== "all") {
         alertOptions.severity = severityFilter;
       }
-      
-      const alertsData = await transactionMonitoringAPI.getAllAlerts(alertOptions);
-      setAlerts(alertsData);
-      
+      const alerts = await transactionMonitoringAPI.getAllAlerts(alertOptions);
+      setAlerts(alerts);
+
       // Load rules
-      const rulesData = await transactionMonitoringAPI.getMonitoringRules();
-      setRules(rulesData);
+      const rules = await transactionMonitoringAPI.getMonitoringRules();
+      setRules(rules);
     } catch (error) {
       console.error("Error loading monitoring data:", error);
       toast({
@@ -121,7 +113,13 @@ export default function TransactionMonitoring() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [statusFilter, severityFilter]);
+
+  useEffect(() => {
+    if (!user) return;
+
+    loadData();
+  }, [user, loadData]);
 
   // Function to refresh data
   const refreshData = async () => {

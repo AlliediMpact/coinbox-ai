@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "./ui/card";
 import { Button } from "./ui/button";
@@ -55,7 +55,7 @@ export default function UserOnboarding({ onComplete, disableAutoShow = false }: 
   const { user } = useAuth();
   const { toast } = useToast();
 
-  const tutorials: Tutorial[] = [
+  const tutorials = useMemo(() => [
     {
       id: 'dashboard',
       title: 'Welcome to Allied iMpact Coin Box',
@@ -111,7 +111,7 @@ export default function UserOnboarding({ onComplete, disableAutoShow = false }: 
         'Track your referrals and earnings in the Referrals section of your dashboard.'
       ]
     }
-  ];
+  ], []);
 
   // Load onboarding state from Firestore on component mount
   useEffect(() => {
@@ -183,7 +183,7 @@ export default function UserOnboarding({ onComplete, disableAutoShow = false }: 
     }
   }, [onboardingState, user, disableAutoShow, tutorials, updateLastShown]);
 
-  const updateLastShown = async () => {
+  const updateLastShown = useCallback(async () => {
     if (!user) return;
 
     try {
@@ -195,7 +195,7 @@ export default function UserOnboarding({ onComplete, disableAutoShow = false }: 
     } catch (error) {
       console.error("Error updating onboarding shown time:", error);
     }
-  };
+  }, [user]);
 
   const markTutorialComplete = async (tutorialId: string) => {
     if (!user) return;

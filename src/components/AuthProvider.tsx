@@ -1,6 +1,6 @@
 'use client';
 
-import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { createContext, useContext, useState, useEffect, ReactNode, useCallback } from 'react';
 import {
   getAuth,
   signInWithEmailAndPassword,
@@ -170,25 +170,24 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
     return () => {
       unsubscribeAuth();
     };
-  }, [auth, db, toast, router, signOutUser]);
+  }, [auth, db, toast, router]);
 
-  const signOutUser = async () => {
+  const signOutUser = useCallback(async () => {
     try {
       await firebaseSignOut(auth);
       toast({
          title: "Signed Out",
          description: "You have been successfully signed out.",
       });
-    } catch (error: any) {
-      console.error('Sign out error:', error);
+    } catch (error) {
+      console.error("Sign out error: ", error);
       toast({
-         title: "Sign Out Failed",
-         description: error.message || 'Could not sign out.',
-         variant: "destructive",
+        title: "Sign Out Failed",
+        description: "An error occurred while signing out.",
+        variant: "destructive",
       });
-      throw error;
     }
-  };
+  }, [auth, toast]);
 
   const signIn = async (email: string, password: string) => {
     setLoading(true);
