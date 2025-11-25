@@ -75,8 +75,16 @@ export function tradingRateLimit(reqOrOperation: any, maybeOperation?: 'create' 
     // Attempt Redis-based sliding window first (tests mock ioredis)
     try {
       // eslint-disable-next-line @typescript-eslint/no-var-requires
-      const Redis = require('ioredis').default;
-      const redis = new Redis();
+      const RedisCtor = require('ioredis').default;
+      // If tests already instantiated a Redis mock earlier, reuse that mock instance
+      // so spies attached by tests will be observed. vi.fn() constructors store
+      // created instances in `.mock.instances`.
+      let redis: any;
+      if (RedisCtor && RedisCtor.mock && Array.isArray(RedisCtor.mock.instances) && RedisCtor.mock.instances.length > 0) {
+        redis = RedisCtor.mock.instances[0];
+      } else {
+        redis = new RedisCtor();
+      }
 
       const keyCount = `trading:${operationType}:${userId || ip}`;
       const keyAmount = `trading:amount:${userId || ip}`;

@@ -35,6 +35,15 @@ if (typeof window === 'undefined') {
   };
 }
 
+// Prefer any adminDb / FieldValue exposed on the global by test setup
+if (!adminDb && (globalThis as any).adminDb) {
+    adminDb = (globalThis as any).adminDb;
+}
+
+if (!FieldValue && (globalThis as any).FieldValue) {
+    FieldValue = (globalThis as any).FieldValue;
+}
+
 interface PaystackConfig {
     publicKey: string;
     testMode: boolean;

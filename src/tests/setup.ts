@@ -107,6 +107,25 @@ vi.mock('@/lib/firebase-admin', () => ({
   adminAuth: mockAdminAuth
 }));
 
+// Also mock other common resolution paths so modules that import the
+// local firebase-admin using relative paths receive the same mocked instance.
+try {
+  vi.mock('src/lib/firebase-admin', () => ({ adminDb: mockAdminFirestore, adminAuth: mockAdminAuth }));
+} catch (e) {}
+
+try {
+  vi.mock('../lib/firebase-admin', () => ({ adminDb: mockAdminFirestore, adminAuth: mockAdminAuth }));
+} catch (e) {}
+
+try {
+  vi.mock('./firebase-admin', () => ({ adminDb: mockAdminFirestore, adminAuth: mockAdminAuth }));
+} catch (e) {}
+
+// Expose the mocked admin objects on the global so modules that read them
+// dynamically from `globalThis` in tests will get the same instance.
+(globalThis as any).adminDb = mockAdminFirestore;
+(globalThis as any).adminAuth = mockAdminAuth;
+
 // Mock firestore FieldValue used by server-side monitoring utilities
 vi.mock('firebase-admin/firestore', () => ({
   FieldValue: {
@@ -160,16 +179,20 @@ vi.mock('@jest/globals', () => ({
 
 // Initialize a minimal Firebase App for client-side tests that use `getFirestore()`
 try {
+  // Support multiple module shapes (CommonJS/ESM interop)
   // eslint-disable-next-line @typescript-eslint/no-var-requires
-  const firebaseApp = require('firebase/app');
-  const firebaseUtils = require('firebase/app');
-  if (firebaseApp && firebaseApp.getApps && firebaseApp.getApps().length === 0) {
-    firebaseApp.initializeApp({
-      apiKey: 'test-api-key',
-      authDomain: 'localhost',
-      projectId: 'test-project',
-      appId: '1:123:web:test'
-    });
+  const maybeFirebase = require('firebase/app');
+  const firebaseModule = maybeFirebase && maybeFirebase.initializeApp ? maybeFirebase : (maybeFirebase && maybeFirebase.default ? maybeFirebase.default : null);
+
+  if (firebaseModule && typeof firebaseModule.getApps === 'function') {
+    if (firebaseModule.getApps().length === 0) {
+      firebaseModule.initializeApp({
+        apiKey: 'test-api-key',
+        authDomain: 'localhost',
+        projectId: 'test-project',
+        appId: '1:123:web:test'
+      });
+    }
   }
 } catch (e) {
   // ignore if firebase client isn't installed in test environment
@@ -187,6 +210,23 @@ beforeEach(() => {
       try { svc.installPromptEvent = null; } catch (e) {}
       try { svc.serviceWorkerRegistration = null; } catch (e) {}
       try { if (typeof svc.statusCallbacks === 'object') svc.statusCallbacks.length = 0; } catch (e) {}
+        // Ensure commonly mocked methods are spyable in tests (allow tests to call
+        // `.mockReturnValue` / `.mockImplementation` on them). Wrap original
+        // implementations so behavior is preserved unless tests override the mock.
+        const makeSpyable = (obj: any, name: string) => {
+          try {
+            if (obj && typeof obj[name] === 'function' && !(obj[name] && obj[name]._isMockFunction)) {
+              const orig = obj[name].bind(obj);
+              obj[name] = vi.fn((...args: any[]) => orig(...args));
+            }
+          } catch (e) {}
+        };
+
+        makeSpyable(svc, 'getStatus');
+        makeSpyable(svc, 'installApp');
+        makeSpyable(svc, 'subscribeToPushNotifications');
+        makeSpyable(svc, 'syncData');
+        makeSpyable(svc, 'checkForUpdates');
     }
   } catch (e) {
     // ignore if module not present in test environment

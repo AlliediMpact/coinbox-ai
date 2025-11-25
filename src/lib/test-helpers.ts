@@ -4,7 +4,36 @@ export async function setupTestData(userId: string) {
   const firestore = await import('firebase/firestore');
   const { getFirestore, doc, setDoc, collection } = firestore;
 
-  const db = getFirestore();
+  let db: any;
+  try {
+    db = getFirestore();
+  } catch (e: any) {
+    // If no default app exists, initialize a minimal test app then retry
+    if (e && (e.code === 'app/no-app' || /No Firebase App/.test(String(e.message || '')))) {
+      try {
+        const firebaseAppModule = await import('firebase/app');
+        const maybeInit = (firebaseAppModule as any).initializeApp || (firebaseAppModule as any).default?.initializeApp;
+        const maybeGetApps = (firebaseAppModule as any).getApps || (firebaseAppModule as any).default?.getApps;
+        if (typeof maybeGetApps === 'function' && typeof maybeInit === 'function') {
+          if (maybeGetApps().length === 0) {
+            maybeInit({
+              apiKey: 'test-api-key',
+              authDomain: 'localhost',
+              projectId: 'test-project',
+              appId: '1:123:web:test'
+            });
+          }
+        }
+      } catch (ie) {
+        // ignore - best-effort initialization for tests
+      }
+
+      // Retry getting firestore
+      db = getFirestore();
+    } else {
+      throw e;
+    }
+  }
 
   // Setup test wallet
   await setDoc(doc(db, 'wallets', userId), {

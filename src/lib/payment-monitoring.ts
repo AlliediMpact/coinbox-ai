@@ -20,6 +20,15 @@ try {
     // ignore - may not exist in client env
 }
 
+// If tests or other setup expose adminDb on the global, prefer that instance
+if (!adminDb && (globalThis as any).adminDb) {
+    adminDb = (globalThis as any).adminDb;
+}
+
+if (!FieldValue && (globalThis as any).FieldValue) {
+    FieldValue = (globalThis as any).FieldValue;
+}
+
 // Browser-compatible fallback stubs (used only if admin mocks are not provided)
 if (!adminDb) {
     adminDb = {
