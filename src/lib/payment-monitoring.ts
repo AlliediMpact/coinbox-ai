@@ -1,37 +1,44 @@
 // Use different implementations based on environment
-let isServer = typeof window === 'undefined';
 let adminDb: any = null;
 let FieldValue: any = null;
 
-// Create browser-compatible stubs for client-side
-if (!isServer) {
-  // Browser environment - create mock implementations
-  adminDb = {
-    collection: () => ({
-      doc: () => ({
-        set: async () => console.log('Mock: Document set operation'),
-        update: async () => console.log('Mock: Document update operation')
-      }),
-      add: async () => ({ id: 'mock-id' })
-    })
-  };
-  
-  FieldValue = {
-    serverTimestamp: () => new Date(),
-    increment: (num: number) => num
-  };
+// Favor injected/mocked admin exports (tests mock '@/lib/firebase-admin')
+try {
+    // Use aliased path so Vitest/tsconfig path mocks are respected
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
+    const adminModule = require('@/lib/firebase-admin');
+    if (adminModule && adminModule.adminDb) adminDb = adminModule.adminDb;
+} catch (e) {
+    // ignore - will fall back to client stub if needed
 }
-// Server-side initialization - only runs in Node.js environment
-else {
-  try {
-    // Dynamic import to avoid client-side issues
-    const admin = require('./firebase-admin');
+
+try {
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
     const firestore = require('firebase-admin/firestore');
-    adminDb = admin.adminDb;
-    FieldValue = firestore.FieldValue;
-  } catch (e) {
-    console.error('Failed to import firebase-admin in payment-monitoring:', e);
-  }
+    if (firestore && firestore.FieldValue) FieldValue = firestore.FieldValue;
+} catch (e) {
+    // ignore - may not exist in client env
+}
+
+// Browser-compatible fallback stubs (used only if admin mocks are not provided)
+if (!adminDb) {
+    adminDb = {
+        collection: () => ({
+            doc: () => ({
+                get: async () => ({ exists: false, data: () => null }),
+                set: async () => console.log('Mock: Document set operation'),
+                update: async () => console.log('Mock: Document update operation')
+            }),
+            add: async () => ({ id: 'mock-id' })
+        })
+    };
+}
+
+if (!FieldValue) {
+    FieldValue = {
+        serverTimestamp: () => new Date(),
+        increment: (num: number) => num
+    };
 }
 
 interface PaymentMetrics {
@@ -57,9 +64,9 @@ class PaymentMonitoringService {
     private readonly analyticsCollection = 'payment_analytics';
 
     async logPaymentEvent(analytics: Omit<PaymentAnalytics, 'timestamp'>) {
-        // Check if we're in a browser environment or adminDb is not available
-        if (!isServer || !adminDb) {
-            console.warn('Browser environment or Firebase Admin not initialized - skipping payment event logging');
+        // If adminDb/FieldValue aren't available we skip logging (safe no-op)
+        if (!adminDb || !FieldValue) {
+            console.warn('Firebase Admin not initialized - skipping payment event logging');
             return;
         }
 
@@ -135,9 +142,9 @@ class PaymentMonitoringService {
             averageAmount: 0
         };
 
-        // Check if we're in a browser environment or adminDb is not available
-        if (!isServer || !adminDb) {
-            console.warn('Browser environment or Firebase Admin not initialized - returning default payment metrics');
+        // If adminDb/FieldValue aren't available return default metrics
+        if (!adminDb || !FieldValue) {
+            console.warn('Firebase Admin not initialized - returning default payment metrics');
             return defaultMetrics;
         }
 

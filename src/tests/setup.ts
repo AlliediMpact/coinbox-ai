@@ -107,3 +107,33 @@ vi.mock('@/lib/firebase-admin', () => ({
   adminAuth: mockAdminAuth
 }));
 
+// Mock firestore FieldValue used by server-side monitoring utilities
+vi.mock('firebase-admin/firestore', () => ({
+  FieldValue: {
+    serverTimestamp: () => new Date(),
+    increment: (n: number) => n
+  }
+}));
+
+// Minimal WebSocket mock so server-side websocket modules don't crash in tests
+vi.mock('ws', () => {
+  class MockWSS {
+    clients = new Set<any>();
+    on = vi.fn();
+    close = vi.fn();
+    // helper to simulate broadcast
+    broadcast = vi.fn((data: any) => {
+      for (const c of this.clients) {
+        if (typeof c.send === 'function') c.send(data);
+      }
+    });
+  }
+
+  return { WebSocketServer: MockWSS };
+});
+
+// Provide common environment variables used by services (Paystack, app URL, etc.)
+process.env.PAYSTACK_SECRET_KEY = process.env.PAYSTACK_SECRET_KEY || 'test-paystack-secret';
+process.env.NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY = process.env.NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY || 'test-paystack-pk';
+process.env.NEXT_PUBLIC_APP_URL = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost';
+
