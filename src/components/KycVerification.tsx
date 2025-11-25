@@ -68,13 +68,7 @@ export default function KycVerification() {
         phoneNumber: "",
     });
 
-    useEffect(() => {
-        if (user) {
-            loadKYCStatus();
-        }
-    }, [user]);
-
-    const loadKYCStatus = async () => {
+    const loadKYCStatus = useCallback(async () => {
         try {
             const userDoc = await getDoc(doc(db, "users", user.uid));
             if (userDoc.exists()) {
@@ -88,7 +82,13 @@ export default function KycVerification() {
         } catch (error) {
             console.error("Error loading KYC status:", error);
         }
-    };
+    }, [user, db]);
+
+    useEffect(() => {
+        if (user) {
+            loadKYCStatus();
+        }
+    }, [user, loadKYCStatus]);
 
     const handlePersonalInfoSubmit = async (e: React.FormEvent) => {
         e.preventDefault();

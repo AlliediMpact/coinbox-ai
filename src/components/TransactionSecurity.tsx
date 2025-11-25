@@ -45,15 +45,8 @@ export default function TransactionSecurity() {
   const [alertDetailsOpen, setAlertDetailsOpen] = useState(false);
   const [selectedAlert, setSelectedAlert] = useState<TransactionAlert | null>(null);
 
-  // Load user trading status on component mount
-  useEffect(() => {
-    if (!user) return;
-    
-    loadUserData();
-  }, [user]);
-
   // Function to load user security data
-  const loadUserData = async () => {
+  const loadUserData = useCallback(async () => {
     setLoading(true);
     try {
       // Check trading status
@@ -73,7 +66,14 @@ export default function TransactionSecurity() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [user, toast]);
+
+  // Load user trading status on component mount
+  useEffect(() => {
+    if (!user) return;
+    
+    loadUserData();
+  }, [user, loadUserData]);
 
   // Function to refresh data
   const handleRefresh = async () => {

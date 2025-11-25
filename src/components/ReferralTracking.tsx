@@ -556,12 +556,10 @@ export default function ReferralTracking() {
                 </div>
               ) : (
                 <div className="text-center p-8">
-                  <p className="text-sm text-neutral-500">You haven't referred anyone yet.</p>
+                  <p className="text-sm text-neutral-500">You haven&apos;t referred anyone yet.</p>
                 </div>
               )}
             </motion.div>
-          </motion.div>
-        </AnimatePresence>
       </CardContent>
     </Card>
       </motion.div>

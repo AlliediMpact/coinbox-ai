@@ -69,23 +69,7 @@ export default function SystemMonitoringDashboard() {
   // Check if user has admin access
   const isAdmin = userClaims?.role === 'admin';
 
-  useEffect(() => {
-    if (user && isAdmin) {
-      loadSystemStatus();
-      loadActiveAlerts();
-      generateMockPerformanceData();
-      
-      // Set mock last backup time
-      setLastBackupTime(format(new Date(Date.now() - 24 * 60 * 60 * 1000), 'PPP p'));
-      
-      // Set up refresh interval (every 2 minutes)
-      const interval = setInterval(loadSystemStatus, 120000);
-      
-      return () => clearInterval(interval);
-    }
-  }, [user, isAdmin]);
-
-  const loadSystemStatus = async () => {
+  const loadSystemStatus = useCallback(async () => {
     try {
       setLoading(true);
       const status = await systemMonitoring.checkSystemHealth();
@@ -100,7 +84,23 @@ export default function SystemMonitoringDashboard() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [toast]);
+
+  useEffect(() => {
+    if (user && isAdmin) {
+      loadSystemStatus();
+      loadActiveAlerts();
+      generateMockPerformanceData();
+      
+      // Set mock last backup time
+      setLastBackupTime(format(new Date(Date.now() - 24 * 60 * 60 * 1000), 'PPP p'));
+      
+      // Set up refresh interval (every 2 minutes)
+      const interval = setInterval(loadSystemStatus, 120000);
+      
+      return () => clearInterval(interval);
+    }
+  }, [user, isAdmin, loadSystemStatus]);
 
   const loadActiveAlerts = async () => {
     try {

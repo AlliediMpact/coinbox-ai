@@ -48,7 +48,7 @@ export default function RoleManagement() {
     }
   }, [searchQuery, users]);
 
-  const fetchUsers = async () => {
+  const fetchUsers = useCallback(async () => {
     setLoading(true);
     try {
       const response = await fetch('/api/admin/users');
@@ -74,7 +74,7 @@ export default function RoleManagement() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [toast]);
 
   const getRoleBadgeVariant = (role: string) => {
     switch (role) {

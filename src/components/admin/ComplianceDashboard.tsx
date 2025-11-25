@@ -178,7 +178,7 @@ export default function ComplianceDashboard() {
     } finally {
       setLoading(false);
     }
-  }, [toast]);
+  }, []);
 
   useEffect(() => {
     if (user && isAdmin) {

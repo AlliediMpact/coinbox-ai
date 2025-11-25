@@ -94,7 +94,7 @@ export default function CoinTrading() {
     const db = getFirestore();
 
     // Load user membership tier and wallet data
-    const loadUserData = async () => {
+    const loadUserData = useCallback(async () => {
         if (!user) return;
         
         try {
@@ -141,7 +141,7 @@ export default function CoinTrading() {
         } finally {
             setIsLoading(false);
         }
-    };
+    }, [user, db, toast]);
     
     const { form: ticketForm, handleSubmit: handleTicketSubmit, loading: ticketLoading } = useFormWithValidation(
         ticketFormSchema,
