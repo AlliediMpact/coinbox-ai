@@ -1,7 +1,11 @@
-import { getFirestore, collection, query, where, orderBy, getDocs, doc } from 'firebase/firestore';
-
-// Import from our mocked module for functions that are giving us import trouble
 import { 
+  getFirestore, 
+  collection, 
+  query, 
+  where, 
+  orderBy, 
+  getDocs, 
+  doc,
   setDoc, 
   updateDoc, 
   getDoc,
@@ -12,7 +16,7 @@ import {
   limit,
   serverTimestamp,
   Transaction as FirestoreTransaction
-} from './mocked-firebase';
+} from 'firebase/firestore';
 import { getTierConfig, MembershipTierType } from './membership-tiers';
 import { db } from './firebase';
 import { paystackService } from './paystack-service';

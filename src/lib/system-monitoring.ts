@@ -15,7 +15,7 @@ import {
   where,
   limit,
   Timestamp
-} from './mocked-firebase';
+} from 'firebase/firestore';
 
 // Types for monitoring
 export interface SystemLog {

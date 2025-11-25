@@ -1,6 +1,6 @@
 // src/app/api/auth/signup/route.ts
 import { NextResponse } from 'next/server';
-import { auth, db } from '@/lib/firebase-admin'; // Assuming firebase-admin is set up here
+import { adminAuth as auth, adminDb as db } from '@/lib/firebase-admin'; // Corrected import names
 // import { getMembershipTier } from '@/lib/membership-tiers'; // Not needed here anymore
 import { Timestamp } from 'firebase-admin/firestore'; // Import Timestamp for expiry check
 

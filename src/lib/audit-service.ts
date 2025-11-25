@@ -13,18 +13,16 @@ import {
   where, 
   orderBy, 
   getDocs,
-  DocumentData
-} from 'firebase/firestore';
-import { db } from './firebase';
-import { adminDb } from './firebase-admin';
-import {
+  DocumentData,
   addDoc,
   Timestamp,
   DocumentReference,
   startAfter,
   limit,
   serverTimestamp
-} from './mocked-firebase';
+} from 'firebase/firestore';
+import { db } from './firebase';
+import { adminDb } from './firebase-admin';
 
 // Types for audit records
 export interface AuditRecord {

@@ -13,13 +13,11 @@ import {
   query, 
   where, 
   orderBy,
-  DocumentData
-} from 'firebase/firestore';
-import {
+  DocumentData,
   Timestamp,
   startAfter,
   limit
-} from './mocked-firebase';
+} from 'firebase/firestore';
 import { db } from './firebase';
 import { Transaction } from './transaction-service';
 import { TradeTicket } from './types';
