@@ -160,10 +160,10 @@ export function ReferralList({ referrals, membership }: ReferralListProps) {
                   Tier {sortField === 'tier' && (sortDirection === 'asc' ? '↑' : '↓')}
                 </TableHead>
                 <TableHead onClick={() => handleSort('joinDate')} className="cursor-pointer">
-                  Joined {sortField === 'joinDate' && (sortDirection === 'asc' ? '↑' : &apos;↓&apos;)}
+                  Joined {sortField === 'joinDate' && (sortDirection === 'asc' ? '↑' : '↓')}
                 </TableHead>
                 <TableHead onClick={() => handleSort('commissionsEarned')} className="cursor-pointer text-right">
-                  Commission {sortField === 'commissionsEarned' && (sortDirection === 'asc' ? '↑' : &apos;↓&apos;)}
+                  Commission {sortField === 'commissionsEarned' && (sortDirection === 'asc' ? '↑' : '↓')}
                 </TableHead>
                 <TableHead className="text-right">Status</TableHead>
                 <TableHead></TableHead>
@@ -179,14 +179,14 @@ export function ReferralList({ referrals, membership }: ReferralListProps) {
                         <AvatarFallback>{getInitials(referral.displayName)}</AvatarFallback>
                       </Avatar>
                       <div className="flex flex-col">
-                        <span className="font-medium">{referral.displayName || 'User&apos;}</span>
+                        <span className="font-medium">{referral.displayName || 'User'}</span>
                         <span className="text-xs text-muted-foreground">{referral.email}</span>
                       </div>
                     </div>
                   </TableCell>
                   <TableCell>
                     <Badge variant="outline" className="capitalize">
-                      {referral.tier || &apos;Basic&apos;}
+                      {referral.tier || 'Basic'}
                     </Badge>
                   </TableCell>
                   <TableCell>
@@ -195,12 +195,12 @@ export function ReferralList({ referrals, membership }: ReferralListProps) {
                   <TableCell className="text-right">
                     {referral.commissionsEarned 
                       ? `R${referral.commissionsEarned.toFixed(2)}` 
-                      : `${getCommissionRate(referral.tier || &apos;basic&apos;)}%`
+                      : `${getCommissionRate(referral.tier || 'basic')}%`
                     }
                   </TableCell>
                   <TableCell className="text-right">
                     <Badge variant="outline" className={getStatusColor(referral.status)}>
-                      {referral.status || &apos;Active&apos;}
+                      {referral.status || 'Active'}
                     </Badge>
                   </TableCell>
                   <TableCell>

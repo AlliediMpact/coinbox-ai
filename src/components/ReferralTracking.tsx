@@ -566,28 +566,6 @@ export default function ReferralTracking() {
     </Card>
   );
 };
-                                <Badge variant="secondary" className="text-xs px-1.5 py-0">
-                                  {referral.tier || 'Basic'}
-                                </Badge>
-                              </div>
-                            </div>
-                          </div>
-                          
-                          <div className="text-right">
-                            <p className="font-semibold">
-                              {referral.commissionsEarned 
-                                ? `R${referral.commissionsEarned.toFixed(2)}` 
-                                : commissionTiers[referrerTier as keyof typeof commissionTiers]?.[referral.tier as keyof typeof commissionTiers["Basic"]] || &apos;N/A&apos;}
-                            </p>
-                            <p className="text-xs text-muted-foreground">
-                              commission
-                            </p>
-                          </div>
-                        </motion.li>
-                      ))}
-                    </motion.ul>
-                  </AnimatePresence>
-                </div>
               ) : (
                 <div className="p-8 flex flex-col items-center justify-center text-center">
                   <div className="h-12 w-12 rounded-full bg-neutral-100 flex items-center justify-center mb-3">

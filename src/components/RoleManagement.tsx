@@ -33,7 +33,7 @@ export default function RoleManagement() {
   // Fetch users when component mounts
   useEffect(() => {
     fetchUsers();
-  }, []);
+  }, [fetchUsers]);
   
   // Filter users when search query changes
   useEffect(() => {
@@ -260,7 +260,7 @@ export default function RoleManagement() {
                   <ul className="text-sm space-y-1">
                     <li>• Full access to admin panel and all features</li>
                     <li>• Can modify user accounts and settings</li>
-                    <li>• Can manage other users' roles</li>
+                    <li>• Can manage other users" roles</li>
                     <li>• Full access to analytics and reports</li>
                   </ul>
                 )}

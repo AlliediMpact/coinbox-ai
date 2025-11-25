@@ -450,7 +450,7 @@ export default function SystemMonitoringDashboard() {
                         </TableCell>
                         <TableCell>
                           <div className="flex space-x-2">
-                            {alert.status === &apos;active&apos; && (
+                            {alert.status === 'active' && (
                               <Button 
                                 size="sm" 
                                 variant="outline" 
@@ -523,7 +523,7 @@ export default function SystemMonitoringDashboard() {
                       'Database connection pool at 80% capacity',
                       'API request failed with status 500',
                       'Payment processing completed',
-                      &apos;System health check completed&apos;
+                      'System health check completed'
                     ];
                     
                     const type = logTypes[Math.floor(Math.random() * logTypes.length)];
@@ -533,7 +533,7 @@ export default function SystemMonitoringDashboard() {
                     
                     return (
                       <TableRow key={i}>
-                        <TableCell className="text-xs">{format(time, 'HH:mm:ss&apos;)}</TableCell>
+                        <TableCell className="text-xs">{format(time, 'HH:mm:ss')}</TableCell>
                         <TableCell>
                           <span className={`px-2 py-1 text-xs rounded-full ${
                             type === 'error' ? 'bg-red-100 text-red-800' : 

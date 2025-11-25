@@ -56,7 +56,12 @@ export function useNotifications(options: NotificationFilterOptions = {}) {
     
     subscribeToNotifications();
     
-    // Cleanup subscriptions when component unmounts or user changes
+    // Cleanup subscriptions when component unmounts or user/options change
+    return () => {
+      if (unsubscribeNotifications) {
+        unsubscribeNotifications();
+      }
+      if (unsubscribeCount) {
         unsubscribeCount();
       }
     };
