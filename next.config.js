@@ -21,8 +21,9 @@ const nextConfig = {
   },
   // Add WebSocket server initialization
   webpack: (config, { isServer }) => {
-    if (isServer) {
+    if (isServer && !global.webhookServerStarted) {
       try {
+        global.webhookServerStarted = true;
         const { webhookMonitoring } = require('./src/lib/webhook-monitoring');
         const server = require('http').createServer();
         webhookMonitoring.initialize(server);

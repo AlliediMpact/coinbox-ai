@@ -485,7 +485,7 @@ export default function CoinTrading() {
         );
 
         return () => unsubscribe();
-    }, [user, db]);
+    }, [user, db, loadUserData, toast]);
 
     return (
         <ErrorBoundary>
