@@ -619,7 +619,7 @@ export default function SystemMonitoringDashboard() {
                 </TableHeader>
                 <TableBody>
                   <TableRow>
-                    <TableCell>{lastBackupTime || 'Never&apos;}</TableCell>
+                    <TableCell>{lastBackupTime || 'Never'}</TableCell>
                     <TableCell>Full</TableCell>
                     <TableCell>2.7 GB</TableCell>
                     <TableCell>
@@ -637,7 +637,7 @@ export default function SystemMonitoringDashboard() {
                     </TableCell>
                   </TableRow>
                   <TableRow>
-                    <TableCell>{format(new Date(Date.now() - 2 * 24 * 60 * 60 * 1000), 'PPP p&apos;)}</TableCell>
+                    <TableCell>{format(new Date(Date.now() - 2 * 24 * 60 * 60 * 1000), 'PPP p')}</TableCell>
                     <TableCell>Full</TableCell>
                     <TableCell>2.5 GB</TableCell>
                     <TableCell>
@@ -655,7 +655,7 @@ export default function SystemMonitoringDashboard() {
                     </TableCell>
                   </TableRow>
                   <TableRow>
-                    <TableCell>{format(new Date(Date.now() - 3 * 24 * 60 * 60 * 1000), 'PPP p&apos;)}</TableCell>
+                    <TableCell>{format(new Date(Date.now() - 3 * 24 * 60 * 60 * 1000), 'PPP p')}</TableCell>
                     <TableCell>Full</TableCell>
                     <TableCell>2.4 GB</TableCell>
                     <TableCell>

@@ -827,7 +827,9 @@ export default function CoinTrading() {
                                     </div>
                                 )}
                             </div>
-                        </CardContent>
+                            </>
+                        )}
+                    </CardContent>
                     </Card>
                 </motion.div>
             </ErrorBoundary>
