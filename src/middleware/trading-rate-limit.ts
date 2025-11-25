@@ -23,15 +23,16 @@ const TRADE_WINDOW = 60 * 60 * 1000; // 1 hour in milliseconds
 const TRADE_AMOUNT_LIMIT = 50000; // Maximum amount in a single hour
 const FLAG_THRESHOLD = 3; // Number of times to exceed limit before flagging account
 
-export async function tradingRateLimit(reqOrOperation: any, maybeOperation?: 'create' | 'match' | 'confirm') {
+export function tradingRateLimit(reqOrOperation: any, maybeOperation?: 'create' | 'match' | 'confirm') {
   // Support two call styles:
-  // 1) Curried: tradingRateLimit('create')(req, res, next) -> tests expect this
+  // 1) Curried: tradingRateLimit('create')(req, res, next) -> tests expect this (synchronous curry)
   // 2) Direct: tradingRateLimit(req, 'create') -> original implementation
   if (typeof reqOrOperation === 'string') {
     const operationType = reqOrOperation as 'create' | 'match' | 'confirm';
+    // Return the middleware function synchronously (tests call this directly)
     return async (req: any, res: any, next?: any) => {
       try {
-        const allowed = await tradingRateLimit(req, operationType);
+        const allowed = await tradingRateLimit(req, operationType as any);
         if (typeof next === 'function') {
           if (allowed) return next();
           return next(new Error('Rate limit exceeded'));
@@ -52,7 +53,8 @@ export async function tradingRateLimit(reqOrOperation: any, maybeOperation?: 'cr
     return false;
   }
 
-  try {
+  return (async () => {
+    try {
     const ip = req.ip || 'unknown';
     let userId = null;
 
@@ -155,12 +157,13 @@ export async function tradingRateLimit(reqOrOperation: any, maybeOperation?: 'cr
       };
     }
 
-    await rateLimitRef.set(record);
-    return true;
-  } catch (error) {
-    console.error('Trading rate limiting error:', error);
-    return true; // Allow request through on error, but log it
-  }
+      await rateLimitRef.set(record);
+      return true;
+    } catch (error) {
+      console.error('Trading rate limiting error:', error);
+      return true; // Allow request through on error, but log it
+    }
+  })();
 }
 
 // Extract amount from request body

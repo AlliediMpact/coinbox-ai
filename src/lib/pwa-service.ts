@@ -180,11 +180,11 @@ class PWAService {
    */
   getStatus(): PWAStatus {
     return {
-      isInstalled: this.isStandalone(),
-      isInstallable: this.isInstallable(),
-      isOnline: typeof navigator !== 'undefined' ? navigator.onLine : true,
-      isServiceWorkerSupported: 'serviceWorker' in navigator,
-      isServiceWorkerRegistered: this.serviceWorkerRegistration !== null,
+      isInstalled: !!this.isStandalone(),
+      isInstallable: !!this.isInstallable(),
+      isOnline: typeof navigator !== 'undefined' ? Boolean(navigator.onLine) : true,
+      isServiceWorkerSupported: typeof navigator !== 'undefined' && 'serviceWorker' in navigator,
+      isServiceWorkerRegistered: !!this.serviceWorkerRegistration,
       installPromptEvent: this.installPromptEvent
     };
   }
@@ -483,3 +483,7 @@ class PWAService {
 }
 
 export const pwaService = new PWAService();
+
+// CommonJS compatibility for tests that use `require()`
+// (Vitest handles ESM imports, but some legacy tests call require())
+(module as any).exports = Object.assign((module as any).exports || {}, { pwaService });

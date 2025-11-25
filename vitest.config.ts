@@ -9,6 +9,13 @@ export default defineConfig({
     globals: true,
     setupFiles: ['./src/tests/setup.ts'],
     include: ['**/*.{test,spec}.{js,mjs,cjs,ts,mjs,cts,jsx,tsx}'],
+    exclude: [
+      // Exclude Playwright E2E tests and related config from Vitest discovery
+      'src/tests/e2e/**',
+      '**/*.e2e.*',
+      'playwright.config.*',
+      'src/tests/**/e2e/**'
+    ],
     coverage: {
       provider: 'v8',
       reporter: ['text', 'json', 'html'],

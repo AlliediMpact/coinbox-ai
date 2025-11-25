@@ -96,9 +96,11 @@ class PaystackService {
     private readonly publicKey: string;
 
     constructor() {
-        this.secretKey = process.env.PAYSTACK_SECRET_KEY || '';
-        this.publicKey = process.env.NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY || '';
-        
+        // In test environments provide defaults to avoid failing construction
+        const isTestEnv = !!process.env.VITEST || process.env.NODE_ENV === 'test';
+        this.secretKey = process.env.PAYSTACK_SECRET_KEY || (isTestEnv ? 'test-secret' : '');
+        this.publicKey = process.env.NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY || (isTestEnv ? 'test-public' : '');
+
         if (!this.secretKey || !this.publicKey) {
             throw new Error('Paystack configuration missing');
         }

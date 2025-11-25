@@ -46,6 +46,7 @@ if (typeof (globalThis as any).jest === 'undefined') {
     clearAllMocks: vi.clearAllMocks,
     fn: vi.fn,
     mock: vi.mock,
+    spyOn: vi.spyOn,
     requireActual: (p: string) => vi.importActual(p)
   };
 }
@@ -69,6 +70,11 @@ if (typeof window !== 'undefined' && typeof window.matchMedia !== 'function') {
 // Polyfill URL.createObjectURL in jsdom
 if (typeof (URL as any).createObjectURL !== 'function') {
   (URL as any).createObjectURL = (_blob: any) => 'blob://mocked-url';
+}
+
+// Polyfill URL.revokeObjectURL in jsdom
+if (typeof (URL as any).revokeObjectURL !== 'function') {
+  (URL as any).revokeObjectURL = (_url: string) => undefined;
 }
 
 // Mock firebase-admin exports used across the codebase tests

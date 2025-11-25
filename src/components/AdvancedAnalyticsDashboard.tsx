@@ -120,28 +120,30 @@ export default function AdvancedAnalyticsDashboard() {
   };
 
   const membershipTierData = useMemo(() => {
-    if (!metrics) return [];
+    if (!metrics || !metrics.users || !metrics.users.byMembershipTier) return [];
+    const total = metrics.users.total || 1;
     return Object.entries(metrics.users.byMembershipTier).map(([tier, count]) => ({
       name: tier,
       value: count,
-      percentage: (count / metrics.users.total * 100).toFixed(1)
+      percentage: ((count / total) * 100).toFixed(1)
     }));
   }, [metrics]);
 
   const transactionTrendData = useMemo(() => {
-    if (!metrics) return [];
+    if (!metrics || !metrics.transactions || !metrics.transactions.monthlyTrend) return [];
     return metrics.transactions.monthlyTrend.map(item => ({
       ...item,
-      volume: item.volume / 1000 // Convert to thousands
+      volume: (item.volume || 0) / 1000 // Convert to thousands
     }));
   }, [metrics]);
 
   const revenueData = useMemo(() => {
-    if (!metrics) return [];
+    if (!metrics || !metrics.financial || !metrics.financial.revenue || !metrics.financial.revenue.bySource) return [];
+    const totalRevenue = metrics.financial.revenue.total || 1;
     return Object.entries(metrics.financial.revenue.bySource).map(([source, amount]) => ({
       name: source.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase()),
       value: amount,
-      percentage: (amount / metrics.financial.revenue.total * 100).toFixed(1)
+      percentage: ((amount / totalRevenue) * 100).toFixed(1)
     }));
   }, [metrics]);
 
