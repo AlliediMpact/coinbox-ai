@@ -104,3 +104,12 @@ export async function rateLimit(req: NextRequest) {
     return true; // Allow request through on error, but log it
   }
 }
+
+// Specific error class used by trading-related middlewares/tests
+export class RateLimitExceededError extends Error {
+  constructor(message = 'Rate limit exceeded') {
+    super(message);
+    this.name = 'RateLimitExceededError';
+    if (Error.captureStackTrace) Error.captureStackTrace(this, RateLimitExceededError);
+  }
+}

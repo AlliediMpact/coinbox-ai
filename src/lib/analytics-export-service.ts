@@ -10,8 +10,19 @@ import * as pdfFonts from 'pdfmake/build/vfs_fonts';
 import * as XLSX from 'xlsx';
 import { saveAs } from 'file-saver';
 
-// Initialize pdfMake
-(pdfMake as any).vfs = pdfFonts.pdfMake.vfs;
+// Initialize pdfMake (guard in case vfs is not available in the test environment)
+try {
+  if ((pdfFonts as any)?.pdfMake?.vfs) {
+    (pdfMake as any).vfs = (pdfFonts as any).pdfMake.vfs;
+  } else if ((pdfFonts as any)?.vfs) {
+    (pdfMake as any).vfs = (pdfFonts as any).vfs;
+  } else {
+    // Provide an empty vfs to avoid runtime errors in tests
+    (pdfMake as any).vfs = {};
+  }
+} catch (e) {
+  (pdfMake as any).vfs = {};
+}
 
 // Export formats supported
 export type ExportFormat = 'csv' | 'json' | 'pdf' | 'excel';

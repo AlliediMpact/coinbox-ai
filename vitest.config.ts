@@ -8,9 +8,11 @@ export default defineConfig({
     environment: 'jsdom',
     globals: true,
     setupFiles: ['./src/tests/setup.ts'],
-    include: ['**/*.{test,spec}.{js,mjs,cjs,ts,mjs,cts,jsx,tsx}'],
+    // Only discover tests inside the `src` folder to avoid running node_modules tests
+    include: ['src/**/*.{test,spec}.{js,mjs,cjs,ts,cts,jsx,tsx}'],
     exclude: [
-      // Exclude Playwright E2E tests and related config from Vitest discovery
+      // Exclude node_modules and Playwright E2E tests from Vitest discovery
+      'node_modules/**',
       'src/tests/e2e/**',
       '**/*.e2e.*',
       'playwright.config.*',

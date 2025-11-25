@@ -137,3 +137,59 @@ process.env.PAYSTACK_SECRET_KEY = process.env.PAYSTACK_SECRET_KEY || 'test-payst
 process.env.NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY = process.env.NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY || 'test-paystack-pk';
 process.env.NEXT_PUBLIC_APP_URL = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost';
 
+// Mock axios globally so tests that call jest.mock('axios')/vi.mock('axios') get a predictable mocked instance
+vi.mock('axios', () => {
+  const fn = vi.fn();
+  const instance = {
+    post: vi.fn(),
+    get: vi.fn(),
+    create: vi.fn(() => ({ post: vi.fn(), get: vi.fn() }))
+  };
+  return {
+    default: instance,
+    post: instance.post,
+    get: instance.get,
+    create: instance.create
+  };
+});
+
+// Provide a compatibility mock for `@jest/globals` imports used in some test files
+vi.mock('@jest/globals', () => ({
+  jest: (globalThis as any).jest
+}));
+
+// Initialize a minimal Firebase App for client-side tests that use `getFirestore()`
+try {
+  // eslint-disable-next-line @typescript-eslint/no-var-requires
+  const firebaseApp = require('firebase/app');
+  const firebaseUtils = require('firebase/app');
+  if (firebaseApp && firebaseApp.getApps && firebaseApp.getApps().length === 0) {
+    firebaseApp.initializeApp({
+      apiKey: 'test-api-key',
+      authDomain: 'localhost',
+      projectId: 'test-project',
+      appId: '1:123:web:test'
+    });
+  }
+} catch (e) {
+  // ignore if firebase client isn't installed in test environment
+}
+
+// Ensure PWA service singleton state is reset between tests so tests that mutate
+// internal pwaService fields don't leak state across test cases.
+beforeEach(() => {
+  try {
+    // Try to require the pwaService and reset internal pieces
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
+    const pwaModule = require('../lib/pwa-service');
+    if (pwaModule && pwaModule.pwaService) {
+      const svc = pwaModule.pwaService as any;
+      try { svc.installPromptEvent = null; } catch (e) {}
+      try { svc.serviceWorkerRegistration = null; } catch (e) {}
+      try { if (typeof svc.statusCallbacks === 'object') svc.statusCallbacks.length = 0; } catch (e) {}
+    }
+  } catch (e) {
+    // ignore if module not present in test environment
+  }
+});
+
