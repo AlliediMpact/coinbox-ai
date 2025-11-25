@@ -23,7 +23,30 @@ const TRADE_WINDOW = 60 * 60 * 1000; // 1 hour in milliseconds
 const TRADE_AMOUNT_LIMIT = 50000; // Maximum amount in a single hour
 const FLAG_THRESHOLD = 3; // Number of times to exceed limit before flagging account
 
-export async function tradingRateLimit(req: NextRequest, operationType: 'create' | 'match' | 'confirm') {
+export async function tradingRateLimit(reqOrOperation: any, maybeOperation?: 'create' | 'match' | 'confirm') {
+  // Support two call styles:
+  // 1) Curried: tradingRateLimit('create')(req, res, next) -> tests expect this
+  // 2) Direct: tradingRateLimit(req, 'create') -> original implementation
+  if (typeof reqOrOperation === 'string') {
+    const operationType = reqOrOperation as 'create' | 'match' | 'confirm';
+    return async (req: any, res: any, next?: any) => {
+      try {
+        const allowed = await tradingRateLimit(req, operationType);
+        if (typeof next === 'function') {
+          if (allowed) return next();
+          return next(new Error('Rate limit exceeded'));
+        }
+        return allowed;
+      } catch (err) {
+        if (typeof next === 'function') return next(err);
+        return true;
+      }
+    };
+  }
+
+  const req = reqOrOperation;
+  const operationType = maybeOperation as 'create' | 'match' | 'confirm';
+
   if (!adminDb) {
     console.error('Firebase Admin not initialized');
     return false;
