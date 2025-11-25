@@ -43,9 +43,17 @@ import { advancedAnalyticsService, AnalyticsMetrics, PredictiveAnalytics } from 
 
 const COLORS = ['#193281', '#5e17eb', '#cb6ce6', '#8b5cf6', '#a855f7', '#c084fc'];
 
+const defaultMetrics: AnalyticsMetrics = {
+  overview: { totalRevenue: 0, totalTransactions: 0, activeUsers: 0, conversionRate: 0, averageTransactionValue: 0, revenueGrowth: 0, userGrowth: 0 },
+  users: { total: 0, active: 0, new: 0, returning: 0, churnRate: 0, retentionRate: 0, demographics: { ageGroups: [], locations: [] }, behavior: { averageSessionDuration: 0, pageViewsPerSession: 0, bounceRate: 0 } },
+  transactions: { total: 0, successful: 0, failed: 0, pending: 0, volume: 0, averageValue: 0, byType: [], byStatus: [], timeline: [] },
+  revenue: { total: 0, byPeriod: [], bySource: [], growth: 0, forecast: [] },
+  conversion: { rate: 0, funnel: [], dropoffPoints: [] }
+};
+
 export default function AdvancedAnalyticsDashboard() {
   const [loading, setLoading] = useState(true);
-  const [metrics, setMetrics] = useState<AnalyticsMetrics | null>(null);
+  const [metrics, setMetrics] = useState<AnalyticsMetrics>(defaultMetrics);
   const [predictions, setPredictions] = useState<PredictiveAnalytics | null>(null);
   const [timeRange, setTimeRange] = useState('30d');
   const [selectedView, setSelectedView] = useState('overview');

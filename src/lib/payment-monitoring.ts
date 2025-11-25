@@ -1,54 +1,8 @@
-// Use different implementations based on environment
-let adminDb: any = null;
-let FieldValue: any = null;
+import { getAdminDb, getFieldValue } from './admin-bridge';
 
-// Favor injected/mocked admin exports (tests mock '@/lib/firebase-admin')
-try {
-    // Use aliased path so Vitest/tsconfig path mocks are respected
-    // eslint-disable-next-line @typescript-eslint/no-var-requires
-    const adminModule = require('@/lib/firebase-admin');
-    if (adminModule && adminModule.adminDb) adminDb = adminModule.adminDb;
-} catch (e) {
-    // ignore - will fall back to client stub if needed
-}
-
-try {
-    // eslint-disable-next-line @typescript-eslint/no-var-requires
-    const firestore = require('firebase-admin/firestore');
-    if (firestore && firestore.FieldValue) FieldValue = firestore.FieldValue;
-} catch (e) {
-    // ignore - may not exist in client env
-}
-
-// If tests or other setup expose adminDb on the global, prefer that instance
-if (!adminDb && (globalThis as any).adminDb) {
-    adminDb = (globalThis as any).adminDb;
-}
-
-if (!FieldValue && (globalThis as any).FieldValue) {
-    FieldValue = (globalThis as any).FieldValue;
-}
-
-// Browser-compatible fallback stubs (used only if admin mocks are not provided)
-if (!adminDb) {
-    adminDb = {
-        collection: () => ({
-            doc: () => ({
-                get: async () => ({ exists: false, data: () => null }),
-                set: async () => console.log('Mock: Document set operation'),
-                update: async () => console.log('Mock: Document update operation')
-            }),
-            add: async () => ({ id: 'mock-id' })
-        })
-    };
-}
-
-if (!FieldValue) {
-    FieldValue = {
-        serverTimestamp: () => new Date(),
-        increment: (num: number) => num
-    };
-}
+// Use centralized admin bridge for consistent mock binding
+const adminDb = getAdminDb();
+const FieldValue = getFieldValue();
 
 interface PaymentMetrics {
     totalAttempts: number;

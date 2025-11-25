@@ -1,29 +1,6 @@
 import { WebSocketServer } from 'ws';
 import { Server } from 'http';
-
-// Defer resolving adminDb until runtime to avoid top-level require errors
-// in test environments where the admin SDK or local firebase-admin bridge
-// may not be resolvable at module-load time.
-function resolveAdminDb() {
-    try {
-        // Try alias first (mocked in tests)
-        // eslint-disable-next-line @typescript-eslint/no-var-requires
-        const mod = require('@/lib/firebase-admin');
-        if (mod && mod.adminDb) return mod.adminDb;
-    } catch (e) {}
-
-    // Try local file path
-    try {
-        // eslint-disable-next-line @typescript-eslint/no-var-requires
-        const mod = require('./firebase-admin');
-        if (mod && mod.adminDb) return mod.adminDb;
-    } catch (e) {}
-
-    // Fall back to any global-provided adminDb (test setup may expose this)
-    if ((globalThis as any).adminDb) return (globalThis as any).adminDb;
-
-    return null;
-}
+import { getAdminDb } from './admin-bridge';
 
 class WebhookMonitoring {
     private wss: WebSocketServer | null = null;
@@ -53,7 +30,7 @@ class WebhookMonitoring {
     }
 
     private setupFirestoreListeners() {
-        const adminDb = resolveAdminDb();
+        const adminDb = getAdminDb();
         if (!adminDb) return;
 
         try {
@@ -120,6 +97,10 @@ class WebhookMonitoring {
 
     public broadcastPaymentEvent(eventData: any) {
         this.broadcastEvent('payment_event', eventData);
+    }
+
+    get websocketServer() {
+        return this.wss;
     }
 }
 

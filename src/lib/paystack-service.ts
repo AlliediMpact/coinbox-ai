@@ -1,50 +1,11 @@
 import { MembershipTier, MEMBERSHIP_TIERS } from './membership-tiers';
 import axios from 'axios';
-// Import firebase admin differently based on environment
 import { paymentMonitoring } from './payment-monitoring';
+import { getAdminDb, getFieldValue } from './admin-bridge';
 
-// Dynamic imports to prevent issues on client-side
-let adminDb: any = null;
-let FieldValue: any = null;
-
-// This will only execute on the server
-if (typeof window === 'undefined') {
-  // Server-side only imports
-  try {
-    const admin = require('./firebase-admin');
-    const firestore = require('firebase-admin/firestore');
-    adminDb = admin.adminDb;
-    FieldValue = firestore.FieldValue;
-  } catch (e) {
-    console.error('Failed to import firebase-admin in paystack-service:', e);
-  }
-} else {
-  // Browser environment - create mock implementations
-  adminDb = {
-    collection: () => ({
-      doc: () => ({
-        set: async () => console.log('Mock: Document set operation'),
-        update: async () => console.log('Mock: Document update operation')
-      })
-    })
-  };
-  
-  FieldValue = {
-    serverTimestamp: () => new Date(),
-    increment: (num: number) => num
-  };
-}
-
-// Prefer any adminDb / FieldValue exposed on the global by test setup
-if (!adminDb && (globalThis as any).adminDb) {
-    adminDb = (globalThis as any).adminDb;
-}
-
-if (!FieldValue && (globalThis as any).FieldValue) {
-    FieldValue = (globalThis as any).FieldValue;
-}
-
-interface PaystackConfig {
+// Use centralized admin bridge for consistent mock binding
+const adminDb = getAdminDb();
+const FieldValue = getFieldValue();interface PaystackConfig {
     publicKey: string;
     testMode: boolean;
 }

@@ -151,6 +151,76 @@ vi.mock('ws', () => {
   return { WebSocketServer: MockWSS };
 });
 
+// Mock advanced-analytics-service to return safe defaults immediately
+vi.mock('@/lib/advanced-analytics-service', () => {
+  const mockMetrics = {
+    overview: {
+      totalRevenue: 0,
+      totalTransactions: 0,
+      activeUsers: 0,
+      conversionRate: 0,
+      averageTransactionValue: 0,
+      revenueGrowth: 0,
+      userGrowth: 0,
+    },
+    users: {
+      total: 0,
+      active: 0,
+      new: 0,
+      returning: 0,
+      churnRate: 0,
+      retentionRate: 0,
+      demographics: {
+        ageGroups: [],
+        locations: [],
+      },
+      behavior: {
+        averageSessionDuration: 0,
+        pageViewsPerSession: 0,
+        bounceRate: 0,
+      },
+    },
+    transactions: {
+      total: 0,
+      successful: 0,
+      failed: 0,
+      pending: 0,
+      volume: 0,
+      averageValue: 0,
+      byType: [],
+      byStatus: [],
+      timeline: [],
+    },
+    revenue: {
+      total: 0,
+      byPeriod: [],
+      bySource: [],
+      growth: 0,
+      forecast: [],
+    },
+    conversion: {
+      rate: 0,
+      funnel: [],
+      dropoffPoints: [],
+    },
+  };
+
+  return {
+    advancedAnalyticsService: {
+      getAnalyticsMetrics: vi.fn().mockResolvedValue(mockMetrics),
+      getPredictiveAnalytics: vi.fn().mockResolvedValue({
+        predictions: [],
+        confidence: 0,
+      }),
+      getRealtimeMetrics: vi.fn().mockResolvedValue(mockMetrics),
+      getUserMetrics: vi.fn().mockResolvedValue(mockMetrics.users),
+      getTransactionMetrics: vi.fn().mockResolvedValue(mockMetrics.transactions),
+      getRevenueMetrics: vi.fn().mockResolvedValue(mockMetrics.revenue),
+      getConversionMetrics: vi.fn().mockResolvedValue(mockMetrics.conversion),
+    },
+  };
+});
+
 // Provide common environment variables used by services (Paystack, app URL, etc.)
 process.env.PAYSTACK_SECRET_KEY = process.env.PAYSTACK_SECRET_KEY || 'test-paystack-secret';
 process.env.NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY = process.env.NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY || 'test-paystack-pk';
@@ -201,6 +271,20 @@ try {
 // Ensure PWA service singleton state is reset between tests so tests that mutate
 // internal pwaService fields don't leak state across test cases.
 beforeEach(() => {
+  // Reset admin bridge cache to ensure each test gets fresh mocks
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
+    const adminBridge = require('../lib/admin-bridge');
+    if (adminBridge && adminBridge.resetAdminCache) {
+      adminBridge.resetAdminCache();
+    }
+  } catch (e) {
+    // admin-bridge might not exist in all test contexts
+  }
+
+  // Reset global Redis instance for trading-rate-limit tests
+  (globalThis as any).__TEST_REDIS_INSTANCE__ = undefined;
+
   try {
     // Try to require the pwaService and reset internal pieces
     // eslint-disable-next-line @typescript-eslint/no-var-requires

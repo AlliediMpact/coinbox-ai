@@ -4,8 +4,7 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 import { rateLimit, RateLimitExceededError } from './rate-limit';
-import { adminDb as firebaseAdminDb, adminAuth as firebaseAdminAuth } from "@/lib/firebase-admin";
-import { FieldValue as FirestoreFieldValue } from 'firebase-admin/firestore';
+import { getAdminDb, getAdminAuth, getFieldValue } from '@/lib/admin-bridge';
 
 // We'll attempt to use Redis (ioredis) when available/tests mock it. If not present
 // we fall back to using Firestore-based storage (adminDb).
@@ -51,10 +50,10 @@ export function tradingRateLimit(reqOrOperation: any, maybeOperation?: 'create' 
   const req = reqOrOperation;
   const operationType = maybeOperation as 'create' | 'match' | 'confirm';
 
-  // prefer adminAuth/adminDb from mocked module when available
-  const adminDb = firebaseAdminDb || (global as any).adminDb || null;
-  const adminAuth = firebaseAdminAuth || (global as any).adminAuth || null;
-  const FieldValue = FirestoreFieldValue || (global as any).FieldValue || null;
+  // Use admin-bridge for consistent mock binding
+  const adminDb = getAdminDb();
+  const adminAuth = getAdminAuth();
+  const FieldValue = getFieldValue();
 
   return (async () => {
     try {
@@ -75,15 +74,23 @@ export function tradingRateLimit(reqOrOperation: any, maybeOperation?: 'create' 
     // Attempt Redis-based sliding window first (tests mock ioredis)
     try {
       // eslint-disable-next-line @typescript-eslint/no-var-requires
-      const RedisCtor = require('ioredis').default;
+      const ioredisModule = require('ioredis');
+      const RedisCtor = ioredisModule.default || ioredisModule;
+      
       // If tests already instantiated a Redis mock earlier, reuse that mock instance
       // so spies attached by tests will be observed. vi.fn() constructors store
       // created instances in `.mock.instances`.
       let redis: any;
       if (RedisCtor && RedisCtor.mock && Array.isArray(RedisCtor.mock.instances) && RedisCtor.mock.instances.length > 0) {
         redis = RedisCtor.mock.instances[0];
+      } else if ((globalThis as any).__TEST_REDIS_INSTANCE__) {
+        redis = (globalThis as any).__TEST_REDIS_INSTANCE__;
       } else {
         redis = new RedisCtor();
+        // Store for potential reuse in same test
+        if (typeof (globalThis as any).__TEST_REDIS_INSTANCE__ === 'undefined') {
+          (globalThis as any).__TEST_REDIS_INSTANCE__ = redis;
+        }
       }
 
       const keyCount = `trading:${operationType}:${userId || ip}`;
