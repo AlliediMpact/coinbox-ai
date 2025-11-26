@@ -1,9 +1,10 @@
 import { headers } from 'next/headers';
 import { NextResponse } from 'next/server';
 import { enhancedPaystackService, WebhookEvent } from '@/lib/paystack-service-enhanced';
-import { paymentValidator } from '@/lib/payment-validator';
+import { validatePaymentServer } from '@/lib/payment-validator';
 import { emailService } from '@/lib/email-service';
 import { receiptService } from '@/lib/receipt-service';
+import { adminDb } from '@/lib/firebase-admin';
 import crypto from 'crypto';
 
 const PAYSTACK_SECRET = process.env.PAYSTACK_SECRET_KEY;
@@ -98,14 +99,13 @@ async function handleSuccessfulPayment(data: any) {
     const { reference, amount, customer, metadata } = data;
     
     // Validate the payment data
-    const isValid = await paymentValidator.validatePayment({
+    const isValid = await validatePaymentServer(
       reference,
-      amount: amount / 100, // Paystack amount is in kobo
-      email: customer.email
-    });
+      amount // validatePaymentServer expects kobo
+    );
     
-    if (!isValid) {
-      console.error('Invalid payment data:', data);
+    if (!isValid.success) {
+      console.error('Invalid payment data:', isValid.error);
       return;
     }
     

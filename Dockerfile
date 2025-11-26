@@ -21,6 +21,15 @@ COPY . .
 # Uncomment the following line in case you want to disable telemetry during the build.
 ENV NEXT_TELEMETRY_DISABLED 1
 
+# Add dummy env vars for build time
+ENV NEXT_PUBLIC_FIREBASE_API_KEY="dummy"
+ENV NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN="dummy"
+ENV NEXT_PUBLIC_FIREBASE_PROJECT_ID="dummy"
+ENV FIREBASE_CLIENT_EMAIL="dummy@example.com"
+ENV FIREBASE_PRIVATE_KEY="dummy"
+ENV FIREBASE_DATABASE_URL="dummy"
+ENV PAYSTACK_SECRET_KEY="dummy"
+
 RUN npm run build
 
 # Production image, copy all the files and run next

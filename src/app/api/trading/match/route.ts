@@ -1,9 +1,19 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { adminDb, adminAuth } from '@/lib/firebase-admin';
 import { FieldValue } from 'firebase-admin/firestore';
+import { tradingRateLimit } from '@/middleware/trading-rate-limit';
 
 export async function POST(request: NextRequest) {
     try {
+        // Apply rate limiting
+        const isAllowed = await tradingRateLimit(request, 'match');
+        if (!isAllowed) {
+            return NextResponse.json({ 
+                success: false,
+                error: 'Rate limit exceeded for matching trades. Please try again later.' 
+            }, { status: 429 });
+        }
+
         if (!adminDb || !adminAuth) {
             return NextResponse.json({ error: 'Server configuration error' }, { status: 500 });
         }
