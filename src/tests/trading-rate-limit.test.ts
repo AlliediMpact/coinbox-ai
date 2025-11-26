@@ -32,6 +32,9 @@ describe('Trading Rate Limit Middleware', () => {
   let next: any;
   
   beforeEach(() => {
+    // Force the mock instance to be used
+    (globalThis as any).__TEST_REDIS_INSTANCE__ = mockRedisInstance;
+
     req = {
       ip: '127.0.0.1',
       method: 'POST',

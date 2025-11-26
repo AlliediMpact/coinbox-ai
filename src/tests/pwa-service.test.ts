@@ -1,5 +1,6 @@
-import { describe, test, expect, vi, beforeEach } from 'vitest';
-import { pwaService, PWAStatus } from '../lib/pwa-service';
+import { describe, test, expect, vi, beforeEach, beforeAll } from 'vitest';
+// Remove top-level import
+// import { pwaService, PWAStatus } from '../lib/pwa-service';
 
 // Mock service worker and related APIs
 const mockServiceWorker = {
@@ -8,36 +9,43 @@ const mockServiceWorker = {
   postMessage: vi.fn()
 };
 
-const mockBeforeInstallPrompt = {
-  preventDefault: vi.fn(),
-  prompt: vi.fn(() => Promise.resolve()),
-  userChoice: Promise.resolve({ outcome: 'accepted', platform: 'web' })
-};
-
 // Setup global mocks
-beforeEach(() => {
-  vi.clearAllMocks();
-  
+beforeAll(() => {
   // Mock navigator.serviceWorker
   Object.defineProperty(global.navigator, 'serviceWorker', {
     value: mockServiceWorker,
-    writable: true
+    writable: true,
+    configurable: true
   });
 
   // Mock window events
   Object.defineProperty(global.window, 'addEventListener', {
     value: vi.fn(),
-    writable: true
+    writable: true,
+    configurable: true
   });
 
   // Mock online status
   Object.defineProperty(global.navigator, 'onLine', {
     value: true,
-    writable: true
+    writable: true,
+    configurable: true
   });
 });
 
 describe('PWA Service', () => {
+  let pwaService: any;
+
+  beforeAll(async () => {
+    // Import service after mocks are set up
+    const module = await import('../lib/pwa-service');
+    pwaService = module.pwaService;
+  });
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
   test('should initialize PWA service', () => {
     expect(pwaService).toBeDefined();
   });

@@ -138,6 +138,7 @@ export function tradingRateLimit(reqOrOperation: any, maybeOperation?: 'create' 
 
       return true;
     } catch (redisErr) {
+      console.error('Redis error in trading rate limit:', redisErr);
       // No Redis available / mocked: fall back to Firestore-based counters
     }
 

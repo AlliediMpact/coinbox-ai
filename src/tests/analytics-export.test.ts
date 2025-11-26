@@ -1,37 +1,56 @@
-import { analyticsExportService } from '../lib/analytics-export-service';
-import { downloadFile, convertToCSV } from '../lib/export-utils';
+import { describe, test, expect, vi, beforeEach, beforeAll } from 'vitest';
 
 // Mock the download file functionality
-jest.mock('../lib/export-utils', () => ({
-  downloadFile: jest.fn((content, fileName) => fileName),
-  convertToCSV: jest.fn(data => {
+vi.mock('../lib/export-utils', () => ({
+  downloadFile: vi.fn((content, fileName) => fileName),
+  convertToCSV: vi.fn(data => {
     if (!data || !data.length) return '';
     const headers = Object.keys(data[0]).join(',');
-    const rows = data.map(item => Object.values(item).join(',')).join('\n');
+    const rows = data.map((item: any) => Object.values(item).join(',')).join('\n');
     return `${headers}\n${rows}`;
   })
 }));
 
 // Mock pdfMake
-jest.mock('pdfmake/build/pdfmake', () => ({
-  createPdf: jest.fn().mockReturnValue({
-    getBlob: jest.fn(callback => callback(new Blob(['pdf content'])))
-  })
+vi.mock('pdfmake/build/pdfmake', () => ({
+  createPdf: vi.fn().mockReturnValue({
+    getBlob: vi.fn(callback => callback(new Blob(['pdf content'])))
+  }),
+  vfs: {}
+}));
+
+// Mock pdfFonts
+vi.mock('pdfmake/build/vfs_fonts', () => ({
+  pdfMake: { vfs: {} }
 }));
 
 // Mock XLSX
-jest.mock('xlsx', () => ({
+vi.mock('xlsx', () => ({
   utils: {
-    json_to_sheet: jest.fn(() => ({})),
-    book_new: jest.fn(() => ({})),
-    book_append_sheet: jest.fn()
+    json_to_sheet: vi.fn(() => ({})),
+    book_new: vi.fn(() => ({})),
+    book_append_sheet: vi.fn()
   },
-  write: jest.fn(() => new ArrayBuffer(10))
+  write: vi.fn(() => new ArrayBuffer(10))
 }));
 
 describe('Analytics Export Service', () => {
+  let analyticsExportService: any;
+  let downloadFile: any;
+  let convertToCSV: any;
+
+  beforeAll(async () => {
+    // Import modules after mocks are set up
+    const utilsModule = await import('../lib/export-utils');
+    downloadFile = utilsModule.downloadFile;
+    convertToCSV = utilsModule.convertToCSV;
+    
+    const serviceModule = await import('../lib/analytics-export-service');
+    analyticsExportService = serviceModule.analyticsExportService;
+  });
+
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   test('should export transactions in JSON format', async () => {
@@ -112,7 +131,7 @@ describe('Analytics Export Service', () => {
 
   test('should handle errors gracefully', async () => {
     // Mock downloadFile to throw an error
-    (downloadFile as jest.Mock).mockImplementationOnce(() => {
+    (downloadFile as any).mockImplementationOnce(() => {
       throw new Error('Failed to download');
     });
 
