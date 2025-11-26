@@ -17,9 +17,27 @@ let adminDb: admin.firestore.Firestore | null = null;
 function getAdminConfig(): FirebaseAdminConfig {
   let projectId = process.env.FIREBASE_PROJECT_ID;
   let clientEmail = process.env.FIREBASE_CLIENT_EMAIL;
-  let privateKey = process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n');
+  let privateKey = process.env.FIREBASE_PRIVATE_KEY;
   const databaseURL = process.env.FIREBASE_DATABASE_URL;
   const privateKeyPath = process.env.FIREBASE_PRIVATE_KEY_PATH;
+
+  // Handle private key formatting (newlines)
+  if (privateKey) {
+    // If the key is base64 encoded (common in some CI environments), decode it
+    if (!privateKey.includes('-----BEGIN PRIVATE KEY-----')) {
+        try {
+            const decoded = Buffer.from(privateKey, 'base64').toString('utf8');
+            if (decoded.includes('-----BEGIN PRIVATE KEY-----')) {
+                privateKey = decoded;
+            }
+        } catch (e) {
+            // Not base64, continue
+        }
+    }
+    
+    // Handle escaped newlines which often happen in env vars
+    privateKey = privateKey.replace(/\\n/g, '\n');
+  }
 
   // If direct private key is not available, try to load from file path
   if (!privateKey && privateKeyPath) {
