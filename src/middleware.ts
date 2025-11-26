@@ -1,8 +1,17 @@
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
+import { tradingRateLimitMiddleware } from './middleware/trading-rate-limit'
 
 export async function middleware(request: NextRequest) {
     try {
+        // Apply trading rate limits
+        if (request.nextUrl.pathname.startsWith('/api/trading') || 
+            request.nextUrl.pathname.startsWith('/api/tickets') || 
+            request.nextUrl.pathname.startsWith('/api/escrow')) {
+            const rateLimitResponse = await tradingRateLimitMiddleware(request);
+            if (rateLimitResponse.status !== 200) return rateLimitResponse;
+        }
+
         const sessionCookie = request.cookies.get('session')?.value || '';
 
         if (!sessionCookie) {
