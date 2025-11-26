@@ -9,7 +9,12 @@ let cachedAdminAuth: any = null;
 let cachedFieldValue: any = null;
 
 export function getAdminDb(): any {
-  if (cachedAdminDb) return cachedAdminDb;
+  // Always attempt to resolve the admin module paths first. Returning a
+  // previously cached admin instance without checking the module system can
+  // cause tests that set up runtime mocks (or call `jest.mock`/`vi.mock`) to
+  // be ignored. We still store the resolved instance in the cache for
+  // performance, but we don't short-circuit resolution by returning the cache
+  // immediately.
 
   // Try multiple resolution paths to accommodate different import patterns
   // 1. Try aliased path (mocked by tests)
@@ -40,9 +45,8 @@ export function getAdminDb(): any {
 }
 
 export function getAdminAuth(): any {
-  if (cachedAdminAuth) return cachedAdminAuth;
-
-  // Try multiple resolution paths
+  // Attempt to resolve the auth instance each call so tests can override the
+  // module at runtime and have the new instance picked up.
   try {
     const mod = require('@/lib/firebase-admin');
     if (mod && mod.adminAuth) {
@@ -68,8 +72,7 @@ export function getAdminAuth(): any {
 }
 
 export function getFieldValue(): any {
-  if (cachedFieldValue) return cachedFieldValue;
-
+  // Resolve FieldValue each call to pick up test-provided mocks.
   try {
     const mod = require('firebase-admin/firestore');
     if (mod && mod.FieldValue) {

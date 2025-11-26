@@ -151,73 +151,57 @@ vi.mock('ws', () => {
   return { WebSocketServer: MockWSS };
 });
 
-// Mock advanced-analytics-service to return safe defaults immediately
+// Mock advanced-analytics-service to return a full, test-friendly API
 vi.mock('@/lib/advanced-analytics-service', () => {
-  const mockMetrics = {
-    overview: {
-      totalRevenue: 0,
-      totalTransactions: 0,
-      activeUsers: 0,
-      conversionRate: 0,
-      averageTransactionValue: 0,
-      revenueGrowth: 0,
-      userGrowth: 0,
-    },
-    users: {
-      total: 0,
-      active: 0,
-      new: 0,
-      returning: 0,
-      churnRate: 0,
-      retentionRate: 0,
-      demographics: {
-        ageGroups: [],
-        locations: [],
-      },
-      behavior: {
-        averageSessionDuration: 0,
-        pageViewsPerSession: 0,
-        bounceRate: 0,
-      },
-    },
-    transactions: {
-      total: 0,
-      successful: 0,
-      failed: 0,
-      pending: 0,
-      volume: 0,
-      averageValue: 0,
-      byType: [],
-      byStatus: [],
-      timeline: [],
-    },
-    revenue: {
-      total: 0,
-      byPeriod: [],
-      bySource: [],
-      growth: 0,
-      forecast: [],
-    },
-    conversion: {
-      rate: 0,
-      funnel: [],
-      dropoffPoints: [],
-    },
+  const baseMetrics = {
+    users: { total: 1000, active: 750, newThisMonth: 50, retentionRate: 0.8, byMembershipTier: { Basic: 600, VIP: 250, Business: 150 } },
+    transactions: { total: 2000, volume: 500000, averageAmount: 250, successRate: 0.98, byType: { membership: { count: 1200, volume: 300000 } }, monthlyTrend: [{ month: '2025-10', count: 1000, volume: 250000 }] },
+    loans: { totalIssued: 120, totalVolume: 300000, defaultRate: 0.02, averageAmount: 2500, repaymentRate: 0.95, riskDistribution: { low: 80, medium: 30, high: 10 } },
+    commissions: { totalPaid: 20000, pendingAmount: 500, topReferrers: [{ userId: 'ref1', amount: 5000, referrals: 25 }], monthlyPayouts: [{ month: '2025-10', amount: 2000, count: 5 }] },
+    financial: { revenue: { total: 600000, monthly: 50000, bySource: { fees: 400000, commissions: 200000 } }, costs: { commissions: 20000, operational: 5000, defaults: 3000 }, profit: 573000, margins: 0.95 },
+    system: { uptime: 99.99, responseTime: 120, errorRate: 0.001, activeConnections: 120 }
+  };
+
+  const compatibility = {
+    overview: { totalUsers: baseMetrics.users.total, activeUsers: baseMetrics.users.active, totalTransactions: baseMetrics.transactions.total, totalRevenue: baseMetrics.financial.revenue.total },
+    userMetrics: { growthData: [], retentionData: [], segmentData: Object.entries(baseMetrics.users.byMembershipTier).map(([k, v]) => ({ segment: k, users: v, percentage: 0 })) },
+    transactionMetrics: { volumeData: baseMetrics.transactions.monthlyTrend, typeDistribution: Object.entries(baseMetrics.transactions.byType || {}).map(([k, v]: any) => ({ type: k, count: v.count, volume: v.volume })) },
+    revenueMetrics: { revenueData: [], commissionData: [], sourceBreakdown: Object.entries(baseMetrics.financial.revenue.bySource).map(([k, v]) => ({ source: k, amount: v })) },
+    performanceMetrics: { averageResponseTime: baseMetrics.system.responseTime, uptime: baseMetrics.system.uptime, errorRate: baseMetrics.system.errorRate, throughput: Math.round((baseMetrics.transactions.total || 0) / 30) }
   };
 
   return {
     advancedAnalyticsService: {
-      getAnalyticsMetrics: vi.fn().mockResolvedValue(mockMetrics),
-      getPredictiveAnalytics: vi.fn().mockResolvedValue({
-        predictions: [],
-        confidence: 0,
-      }),
-      getRealtimeMetrics: vi.fn().mockResolvedValue(mockMetrics),
-      getUserMetrics: vi.fn().mockResolvedValue(mockMetrics.users),
-      getTransactionMetrics: vi.fn().mockResolvedValue(mockMetrics.transactions),
-      getRevenueMetrics: vi.fn().mockResolvedValue(mockMetrics.revenue),
-      getConversionMetrics: vi.fn().mockResolvedValue(mockMetrics.conversion),
-    },
+      getAnalyticsMetrics: vi.fn().mockImplementation(async (_filters?: any) => ({ ...baseMetrics, ...compatibility })),
+      getPredictiveAnalytics: vi.fn().mockImplementation(async (timeframe = 90) => ({
+        userGrowth: { prediction: Array.from({ length: timeframe }, () => 0), confidence: 50, trend: 'stable' },
+        transactionVolume: { prediction: Array.from({ length: timeframe }, () => 0), seasonality: [], anomalies: [] },
+        defaultRisk: { prediction: 0, riskFactors: [], recommendations: [] },
+        revenue: { forecast: Array.from({ length: timeframe }, () => 0), scenarios: { optimistic: [], realistic: [], pessimistic: [] }, confidence: 50 },
+        userGrowthPrediction: [],
+        revenuePrediction: [],
+        churnPrediction: { riskScore: 0, highRiskUsers: [] },
+        transactionVolumePrediction: []
+      })),
+      getRealtimeMetrics: vi.fn().mockResolvedValue({ activeUsers: 100, ongoingTransactions: 5, systemLoad: 20, alertsCount: 0, recentActivity: [] }),
+      getUserMetrics: vi.fn().mockResolvedValue(baseMetrics.users),
+      getTransactionMetrics: vi.fn().mockResolvedValue(baseMetrics.transactions),
+      getRevenueMetrics: vi.fn().mockResolvedValue(baseMetrics.financial.revenue),
+      getConversionMetrics: vi.fn().mockResolvedValue({ rate: 0.02, funnel: [] }),
+      // Additional methods expected by tests
+      getUserInsights: vi.fn().mockImplementation(async (userId: string) => ({
+        profile: { totalTransactions: 10, totalVolume: 2500, accountAge: 365, activityScore: 80 },
+        tradingBehavior: { averageTradeAmount: 250, favoriteType: 'membership' },
+        riskProfile: { riskLevel: 'Low', riskScore: 10, riskFactors: [] },
+        recommendations: []
+      })),
+      exportAnalytics: vi.fn().mockImplementation(async (_timeRange: any, format: string) => {
+        if (format === 'json') return JSON.stringify({ metrics: { ...baseMetrics, ...compatibility }, timeRange: _timeRange, exportedAt: new Date().toISOString() });
+        if (format === 'csv') return 'Date,Users,Transactions,Revenue\n2025-10-01,100,200,1000';
+        if (format === 'pdf') return Buffer.from('PDF-MOCK').toString('base64');
+        return '';
+      })
+    }
   };
 });
 

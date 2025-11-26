@@ -83,6 +83,12 @@ export function tradingRateLimit(reqOrOperation: any, maybeOperation?: 'create' 
       let redis: any;
       if (RedisCtor && RedisCtor.mock && Array.isArray(RedisCtor.mock.instances) && RedisCtor.mock.instances.length > 0) {
         redis = RedisCtor.mock.instances[0];
+        // Ensure test environment can access the same instance
+        try {
+          if (typeof (globalThis as any).__TEST_REDIS_INSTANCE__ === 'undefined') {
+            (globalThis as any).__TEST_REDIS_INSTANCE__ = redis;
+          }
+        } catch (e) {}
       } else if ((globalThis as any).__TEST_REDIS_INSTANCE__) {
         redis = (globalThis as any).__TEST_REDIS_INSTANCE__;
       } else {

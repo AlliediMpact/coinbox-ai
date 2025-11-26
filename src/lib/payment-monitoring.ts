@@ -1,9 +1,5 @@
 import { getAdminDb, getFieldValue } from './admin-bridge';
 
-// Use centralized admin bridge for consistent mock binding
-const adminDb = getAdminDb();
-const FieldValue = getFieldValue();
-
 interface PaymentMetrics {
     totalAttempts: number;
     successfulPayments: number;
@@ -27,6 +23,12 @@ class PaymentMonitoringService {
     private readonly analyticsCollection = 'payment_analytics';
 
     async logPaymentEvent(analytics: Omit<PaymentAnalytics, 'timestamp'>) {
+        // Resolve admin instances at runtime so tests that mock admin can inject
+        // the mock before this module executes. This prevents binding to a null
+        // admin instance at module load time.
+        const adminDb = getAdminDb();
+        const FieldValue = getFieldValue();
+
         // If adminDb/FieldValue aren't available we skip logging (safe no-op)
         if (!adminDb || !FieldValue) {
             console.warn('Firebase Admin not initialized - skipping payment event logging');
@@ -105,8 +107,33 @@ class PaymentMonitoringService {
             averageAmount: 0
         };
 
+        // Resolve admin instances at runtime so tests can inject mocks prior to
+        // calling this method (prevents referencing undefined `adminDb`/`FieldValue`).
+        const adminDb = getAdminDb();
+        const FieldValue = getFieldValue();
+
         // If adminDb/FieldValue aren't available return default metrics
-        if (!adminDb || !FieldValue) {
+        let resolvedAdminDb = adminDb;
+        let resolvedFieldValue = FieldValue;
+
+        // Try test-local relative require as a last-resort to pick up jest.mock
+        if (!resolvedAdminDb) {
+            try {
+                // eslint-disable-next-line @typescript-eslint/no-var-requires
+                const mod = require('../firebase-admin');
+                if (mod && mod.adminDb) resolvedAdminDb = mod.adminDb;
+            } catch (e) {}
+        }
+
+        if (!resolvedFieldValue) {
+            try {
+                // eslint-disable-next-line @typescript-eslint/no-var-requires
+                const fv = require('firebase-admin/firestore');
+                if (fv && fv.FieldValue) resolvedFieldValue = fv.FieldValue;
+            } catch (e) {}
+        }
+
+        if (!resolvedAdminDb || !resolvedFieldValue) {
             console.warn('Firebase Admin not initialized - returning default payment metrics');
             return defaultMetrics;
         }

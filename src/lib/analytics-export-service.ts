@@ -4,24 +4,34 @@
  * This service provides functions to export analytics data in various formats.
  */
 
-import { downloadFile, convertToCSV } from './export-utils';
-import * as pdfMake from 'pdfmake/build/pdfmake';
-import * as pdfFonts from 'pdfmake/build/vfs_fonts';
-import * as XLSX from 'xlsx';
-import { saveAs } from 'file-saver';
+// Note: `export-utils`, `pdfmake` and `xlsx` are required at call-time
+// inside `exportData` so test-time mocks (jest/vi) can replace them.
 
 // Initialize pdfMake (guard in case vfs is not available in the test environment)
 try {
-  if ((pdfFonts as any)?.pdfMake?.vfs) {
-    (pdfMake as any).vfs = (pdfFonts as any).pdfMake.vfs;
-  } else if ((pdfFonts as any)?.vfs) {
-    (pdfMake as any).vfs = (pdfFonts as any).vfs;
-  } else {
-    // Provide an empty vfs to avoid runtime errors in tests
-    (pdfMake as any).vfs = {};
+  // Only set `vfs` when it's undefined. Assigning to a non-configurable
+  // property can throw in some test environments (causing the "Cannot redefine
+  // property: vfs" error). Check for existence first to avoid redefinition.
+  const existingVfs = (pdfMake as any).vfs;
+  if (typeof existingVfs === 'undefined') {
+    if ((pdfFonts as any)?.pdfMake?.vfs) {
+      (pdfMake as any).vfs = (pdfFonts as any).pdfMake.vfs;
+    } else if ((pdfFonts as any)?.vfs) {
+      (pdfMake as any).vfs = (pdfFonts as any).vfs;
+    } else {
+      // Provide an empty vfs to avoid runtime errors in tests
+      (pdfMake as any).vfs = {};
+    }
   }
 } catch (e) {
-  (pdfMake as any).vfs = {};
+  // Swallow and fallback — tests should not break due to pdf vfs issues
+  try {
+    if (typeof (pdfMake as any).vfs === 'undefined') {
+      (pdfMake as any).vfs = {};
+    }
+  } catch (inner) {
+    // If even this fails, there's nothing we can do safely here — continue.
+  }
 }
 
 // Export formats supported
@@ -203,11 +213,19 @@ class AnalyticsExportService {
   /**
    * Generic method to export data in the specified format
    */
-  private exportData(
+    private exportData(
     data: any[],
     baseFileName: string,
     format: ExportFormat
   ): string {
+    // Require utilities at call time so test mocks can replace them via
+    // CommonJS/ESM interop. Some tests mock `downloadFile`/`convertToCSV` and
+    // importing them at module top-level prevents those mocks from taking
+    // effect.
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
+    const utils = require('./export-utils');
+    const downloadFile = utils.downloadFile;
+    const convertToCSV = utils.convertToCSV;
     let content: string | Blob;
     let mimeType: string;
     let fileName: string;
@@ -228,16 +246,38 @@ class AnalyticsExportService {
         break;
         
       case 'pdf':
+        // Require pdfMake at call-time so tests can mock it
+        // eslint-disable-next-line @typescript-eslint/no-var-requires
+        const pdfMake = require('pdfmake/build/pdfmake');
+        // eslint-disable-next-line @typescript-eslint/no-var-requires
+        const pdfFonts = require('pdfmake/build/vfs_fonts');
+
+        // Ensure vfs is only assigned if not defined to avoid redefinition errors
+        try {
+          const existingVfs = (pdfMake as any).vfs;
+          if (typeof existingVfs === 'undefined') {
+            if ((pdfFonts as any)?.pdfMake?.vfs) {
+              (pdfMake as any).vfs = (pdfFonts as any).pdfMake.vfs;
+            } else if ((pdfFonts as any)?.vfs) {
+              (pdfMake as any).vfs = (pdfFonts as any).vfs;
+            } else {
+              (pdfMake as any).vfs = {};
+            }
+          }
+        } catch (e) {
+          try { if (typeof (pdfMake as any).vfs === 'undefined') (pdfMake as any).vfs = {}; } catch (_) {}
+        }
+
         // Create PDF document definition
         const docDefinition = this.createPdfDocDefinition(data, baseFileName);
-        
+
         // Create a PDF blob
         const pdfDocGenerator = pdfMake.createPdf(docDefinition);
-        
+
         // Use a promise to get the blob
         return new Promise<string>((resolve, reject) => {
           try {
-            pdfDocGenerator.getBlob((blob) => {
+            pdfDocGenerator.getBlob((blob: any) => {
               fileName = `${baseFileName}.pdf`;
               downloadFile(blob, fileName, 'application/pdf');
               resolve(fileName);
@@ -255,21 +295,25 @@ class AnalyticsExportService {
         
       case 'excel':
         try {
+          // Require XLSX at call-time to let tests mock it
+          // eslint-disable-next-line @typescript-eslint/no-var-requires
+          const XLSX = require('xlsx');
+
           // Create a worksheet from the data
           const worksheet = XLSX.utils.json_to_sheet(data);
-          
+
           // Create a workbook and add the worksheet
           const workbook = XLSX.utils.book_new();
           XLSX.utils.book_append_sheet(workbook, worksheet, 'Data');
-          
+
           // Generate Excel file buffer
           const excelBuffer = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' });
-          
+
           // Create blob from buffer
           const excelBlob = new Blob([excelBuffer], {
             type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
           });
-          
+
           // Download the file
           fileName = `${baseFileName}.xlsx`;
           return downloadFile(excelBlob, fileName, 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
