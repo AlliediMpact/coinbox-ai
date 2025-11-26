@@ -385,12 +385,7 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
     }
   };
 
-  // Import the auth logger and MFA service
-import { authLogger } from '@/lib/auth-logger';
-import { AuthEventType } from '@/lib/auth-events';
-// import { mfaService } from '@/lib/mfa-service';
 
-// ...
 
   const enrollMfa = async (phoneNumber: string, recaptchaVerifier: RecaptchaVerifier, displayName?: string): Promise<string> => {
     if (!user) {
