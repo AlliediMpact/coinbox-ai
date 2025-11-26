@@ -1,6 +1,9 @@
 import { NextResponse } from 'next/server';
 import { adminDb, adminAuth } from '@/lib/firebase-admin'; // Correct import
-import { serverAuthLogger, AuthEventType } from '@/lib/auth-logger';
+import { NextRequest, NextResponse } from 'next/server';
+import { serverAuthLogger } from '@/lib/server-auth-logger';
+import { AuthEventType } from '@/lib/auth-logger';
+import { adminAuth } from '@/lib/firebase-admin';
 import { hasAdminAccess } from '@/lib/auth-utils'; // Import the utility function
 
 /**
