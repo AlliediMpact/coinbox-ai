@@ -47,5 +47,8 @@ function redirectToLogin(request: NextRequest) {
 export const config = {
     matcher: [
         '/dashboard/:path*',
+        '/api/trading/:path*',
+        '/api/tickets/:path*',
+        '/api/escrow/:path*',
     ],
 }
