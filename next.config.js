@@ -9,6 +9,7 @@ const nextConfig = {
   experimental: {
     serverActions: true,
   },
+  output: 'standalone',
   transpilePackages: ['firebase', 'firebase-admin', '@firebase'],
   async headers() {
     return [
