@@ -1,21 +1,28 @@
 import { paystackService } from '../paystack-service';
 import axios from 'axios';
-import { adminDb } from '../firebase-admin';
 import { MEMBERSHIP_TIERS } from '../membership-tiers';
+import { resetAdminCache } from '../admin-bridge';
 
 // Mock axios
 jest.mock('axios');
 const mockedAxios = axios as jest.Mocked<typeof axios>;
 
-// Mock Firebase Admin
-jest.mock('../firebase-admin', () => ({
-    adminDb: {
-        collection: jest.fn().mockReturnThis(),
-        doc: jest.fn().mockReturnThis(),
-        set: jest.fn().mockResolvedValue(true),
-        update: jest.fn().mockResolvedValue(true)
-    }
-}));
+// Define mocks
+const mockAdminDb = {
+    collection: jest.fn().mockReturnThis(),
+    doc: jest.fn().mockReturnThis(),
+    set: jest.fn().mockResolvedValue(true),
+    update: jest.fn().mockResolvedValue(true)
+};
+
+const mockFieldValue = {
+    serverTimestamp: jest.fn(),
+    increment: jest.fn()
+};
+
+// Inject mocks into global scope for admin-bridge to pick up
+(globalThis as any).adminDb = mockAdminDb;
+(globalThis as any).FieldValue = mockFieldValue;
 
 describe('PaystackService', () => {
     const mockUserId = 'test-user-123';
@@ -26,6 +33,16 @@ describe('PaystackService', () => {
     beforeEach(() => {
         jest.clearAllMocks();
         process.env.NEXT_PUBLIC_APP_URL = 'http://localhost:9004';
+        
+        // Ensure globals are set before each test
+        (globalThis as any).adminDb = mockAdminDb;
+        (globalThis as any).FieldValue = mockFieldValue;
+        resetAdminCache();
+    });
+
+    afterAll(() => {
+        delete (globalThis as any).adminDb;
+        delete (globalThis as any).FieldValue;
     });
 
     describe('initializePayment', () => {
@@ -101,9 +118,9 @@ describe('PaystackService', () => {
                 }
             );
 
-            expect(adminDb.collection).toHaveBeenCalledWith('payments');
-            expect(adminDb.doc).toHaveBeenCalledWith(mockReference);
-            expect(adminDb.set).toHaveBeenCalledWith(
+            expect(mockAdminDb.collection).toHaveBeenCalledWith('payments');
+            expect(mockAdminDb.doc).toHaveBeenCalledWith(mockReference);
+            expect(mockAdminDb.set).toHaveBeenCalledWith(
                 expect.objectContaining({
                     userId: mockUserId,
                     amount: mockAmount,
@@ -137,9 +154,9 @@ describe('PaystackService', () => {
                 success: true,
                 data: mockVerifyResponse.data
             });
-            expect(adminDb.collection).toHaveBeenCalledWith('payments');
-            expect(adminDb.doc).toHaveBeenCalledWith(mockReference);
-            expect(adminDb.update).toHaveBeenCalledWith(
+            expect(mockAdminDb.collection).toHaveBeenCalledWith('payments');
+            expect(mockAdminDb.doc).toHaveBeenCalledWith(mockReference);
+            expect(mockAdminDb.update).toHaveBeenCalledWith(
                 expect.objectContaining({
                     status: 'success'
                 })
@@ -159,7 +176,7 @@ describe('PaystackService', () => {
                 success: false,
                 error: expect.any(String)
             });
-            expect(adminDb.update).toHaveBeenCalledWith(
+            expect(mockAdminDb.update).toHaveBeenCalledWith(
                 expect.objectContaining({
                     status: 'failed'
                 })

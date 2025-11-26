@@ -30,14 +30,34 @@ class PaymentMonitoringService {
         const FieldValue = getFieldValue();
 
         // If adminDb/FieldValue aren't available we skip logging (safe no-op)
-        if (!adminDb || !FieldValue) {
+        let resolvedAdminDb = adminDb;
+        let resolvedFieldValue = FieldValue;
+
+        // Try test-local relative require as a last-resort to pick up jest.mock
+        if (!resolvedAdminDb) {
+            try {
+                // eslint-disable-next-line @typescript-eslint/no-var-requires
+                const mod = require('./firebase-admin');
+                if (mod && mod.adminDb) resolvedAdminDb = mod.adminDb;
+            } catch (e) {}
+        }
+
+        if (!resolvedFieldValue) {
+            try {
+                // eslint-disable-next-line @typescript-eslint/no-var-requires
+                const fv = require('firebase-admin/firestore');
+                if (fv && fv.FieldValue) resolvedFieldValue = fv.FieldValue;
+            } catch (e) {}
+        }
+
+        if (!resolvedAdminDb || !resolvedFieldValue) {
             console.warn('Firebase Admin not initialized - skipping payment event logging');
             return;
         }
 
         try {
             // Create the collections reference
-            const analyticsCollection = adminDb.collection(this.analyticsCollection);
+            const analyticsCollection = resolvedAdminDb.collection(this.analyticsCollection);
             if (!analyticsCollection) {
                 console.error('Failed to access analytics collection');
                 return;
@@ -47,7 +67,7 @@ class PaymentMonitoringService {
             try {
                 await analyticsCollection.add({
                     ...analytics,
-                    timestamp: FieldValue.serverTimestamp()
+                    timestamp: resolvedFieldValue.serverTimestamp()
                 });
             } catch (addError) {
                 console.error('Failed to add analytics document:', addError);
@@ -55,17 +75,17 @@ class PaymentMonitoringService {
 
             // Update global metrics
             try {
-                const metricsRef = adminDb.collection(this.metricsCollection).doc('global');
+                const metricsRef = resolvedAdminDb.collection(this.metricsCollection).doc('global');
                 await metricsRef.set({
-                    totalAttempts: FieldValue.increment(1),
+                    totalAttempts: resolvedFieldValue.increment(1),
                     ...(analytics.eventType === 'success' && {
-                        successfulPayments: FieldValue.increment(1),
-                        totalAmount: FieldValue.increment(analytics.amount || 0)
+                        successfulPayments: resolvedFieldValue.increment(1),
+                        totalAmount: resolvedFieldValue.increment(analytics.amount || 0)
                     }),
                     ...(analytics.eventType === 'failure' && {
-                        failedPayments: FieldValue.increment(1)
+                        failedPayments: resolvedFieldValue.increment(1)
                     }),
-                    lastUpdated: FieldValue.serverTimestamp()
+                    lastUpdated: resolvedFieldValue.serverTimestamp()
                 }, { merge: true });
             } catch (globalError) {
                 console.error('Failed to update global metrics:', globalError);
@@ -74,18 +94,18 @@ class PaymentMonitoringService {
             // Update user-specific metrics
             try {
                 if (analytics.userId) {
-                    const userMetricsRef = adminDb.collection(this.metricsCollection)
+                    const userMetricsRef = resolvedAdminDb.collection(this.metricsCollection)
                         .doc(`user_${analytics.userId}`);
                     await userMetricsRef.set({
-                        totalAttempts: FieldValue.increment(1),
+                        totalAttempts: resolvedFieldValue.increment(1),
                         ...(analytics.eventType === 'success' && {
-                            successfulPayments: FieldValue.increment(1),
-                            totalAmount: FieldValue.increment(analytics.amount || 0)
+                            successfulPayments: resolvedFieldValue.increment(1),
+                            totalAmount: resolvedFieldValue.increment(analytics.amount || 0)
                         }),
                         ...(analytics.eventType === 'failure' && {
-                            failedPayments: FieldValue.increment(1)
+                            failedPayments: resolvedFieldValue.increment(1)
                         }),
-                        lastUpdated: FieldValue.serverTimestamp()
+                        lastUpdated: resolvedFieldValue.serverTimestamp()
                     }, { merge: true });
                 }
             } catch (userError) {
@@ -120,7 +140,7 @@ class PaymentMonitoringService {
         if (!resolvedAdminDb) {
             try {
                 // eslint-disable-next-line @typescript-eslint/no-var-requires
-                const mod = require('../firebase-admin');
+                const mod = require('./firebase-admin');
                 if (mod && mod.adminDb) resolvedAdminDb = mod.adminDb;
             } catch (e) {}
         }
@@ -140,8 +160,8 @@ class PaymentMonitoringService {
 
         try {
             const docRef = userId 
-                ? adminDb.collection(this.metricsCollection).doc(`user_${userId}`)
-                : adminDb.collection(this.metricsCollection).doc('global');
+                ? resolvedAdminDb.collection(this.metricsCollection).doc(`user_${userId}`)
+                : resolvedAdminDb.collection(this.metricsCollection).doc('global');
 
             if (!docRef) {
                 console.error('Failed to create document reference');

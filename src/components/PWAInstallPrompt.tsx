@@ -86,6 +86,7 @@ export default function PWAInstallPrompt() {
             size="sm"
             onClick={handleDismiss}
             className="text-blue-600 hover:text-blue-800 hover:bg-blue-100"
+            aria-label="Close"
           >
             <X className="h-4 w-4" />
           </Button>

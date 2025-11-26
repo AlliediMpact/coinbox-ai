@@ -8,6 +8,8 @@ function makeMockable(fn, ctx) {
     return fn.apply(ctx, args);
   };
   wrapper.mockReturnValue = (v) => { wrapper.__mockReturnValue = v; };
+  wrapper.mockResolvedValue = (v) => { wrapper.__mockReturnValue = Promise.resolve(v); };
+  wrapper.mockRejectedValue = (v) => { wrapper.__mockReturnValue = Promise.reject(v); };
   wrapper.mockImplementation = (f) => { wrapper.__mockImpl = f; };
   wrapper.mockReset = () => { delete wrapper.__mockReturnValue; delete wrapper.__mockImpl; };
   return wrapper;
@@ -72,13 +74,4 @@ try {
 
   module.exports = { pwaService };
 }
-// Compatibility shim for tests that call `require('../lib/pwa-service')`.
-// Some tests (and older require-based helpers) expect a plain CommonJS
-// module at this path. Forward to the `.cjs` wrapper if present.
-try {
-  // eslint-disable-next-line @typescript-eslint/no-var-requires
-  module.exports = require('./pwa-service.cjs');
-} catch (e) {
-  // Fallback: export an empty object to avoid breaking tests that `require` this.
-  module.exports = {};
-}
+

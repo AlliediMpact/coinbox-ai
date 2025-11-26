@@ -239,7 +239,7 @@ class PaystackService {
         if (!adminDb) {
             try {
                 // eslint-disable-next-line @typescript-eslint/no-var-requires
-                const mod = require('../firebase-admin');
+                const mod = require('./firebase-admin');
                 if (mod && mod.adminDb) adminDb = mod.adminDb;
             } catch (e) {}
         }
@@ -269,7 +269,7 @@ class PaystackService {
         if (!adminDb) {
             try {
                 // eslint-disable-next-line @typescript-eslint/no-var-requires
-                const mod = require('../firebase-admin');
+                const mod = require('./firebase-admin');
                 if (mod && mod.adminDb) adminDb = mod.adminDb;
             } catch (e) {}
         }

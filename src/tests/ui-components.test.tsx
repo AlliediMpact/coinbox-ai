@@ -35,35 +35,72 @@ vi.mock('../lib/advanced-analytics-service', () => ({
         totalTransactions: 5000,
         totalRevenue: 100000,
         growthRate: 15.5,
-        retentionRate: 85.2
+        retentionRate: 85.2,
+        conversionRate: 2.5,
+        averageTransactionValue: 20,
+        revenueGrowth: 10,
+        userGrowth: 5
       },
-      userMetrics: {
-        growthData: [],
-        retentionData: [],
-        segmentData: []
+      users: {
+        total: 1000,
+        active: 750,
+        new: 50,
+        returning: 700,
+        churnRate: 2.5,
+        retentionRate: 85.2,
+        newThisMonth: 50,
+        demographics: { ageGroups: [], locations: [] },
+        behavior: { averageSessionDuration: 300, pageViewsPerSession: 5, bounceRate: 40 },
+        byMembershipTier: { 'Free': 800, 'Premium': 200 }
       },
-      transactionMetrics: {
-        volumeData: [],
-        typeDistribution: [],
-        statusBreakdown: []
+      transactions: {
+        total: 5000,
+        successful: 4800,
+        failed: 100,
+        pending: 100,
+        volume: 100000,
+        averageValue: 20,
+        successRate: 96,
+        averageAmount: 20,
+        byType: {},
+        byStatus: [],
+        timeline: [],
+        monthlyTrend: []
       },
-      revenueMetrics: {
-        revenueData: [],
-        commissionData: [],
-        sourceBreakdown: []
+      financial: {
+        revenue: { total: 100000, monthly: 10000, byPeriod: [], bySource: {}, growth: 10, forecast: [] },
+        costs: { commissions: 5000, operational: 2000, defaults: 100 },
+        profit: 92900,
+        margins: 92.9
       },
-      performanceMetrics: {
-        averageResponseTime: 250,
-        uptime: 99.9,
-        errorRate: 0.1,
-        throughput: 1200
-      }
+      loans: {
+        totalIssued: 100,
+        activeLoans: 80,
+        defaultRate: 2.0,
+        repaymentRate: 98.0,
+        averageAmount: 500,
+        totalVolume: 50000
+      },
+      commissions: {
+        totalPaid: 5000,
+        pendingPayouts: 500,
+        averageCommission: 10,
+        monthlyPayouts: []
+      },
+      conversion: { rate: 2.5, funnel: [], dropoffPoints: [] }
     })),
     getPredictiveAnalytics: vi.fn(() => Promise.resolve({
       userGrowthPrediction: [],
       revenuePrediction: [],
       churnPrediction: { riskScore: 15, highRiskUsers: [] },
-      transactionVolumePrediction: []
+      transactionVolumePrediction: [],
+      userGrowth: { trend: 'up', confidence: 85 },
+      defaultRisk: { prediction: 2.5, riskFactors: ['Economic downturn', 'High leverage'] }
+    })),
+    getRealtimeMetrics: vi.fn(() => Promise.resolve({
+      activeUsers: 120,
+      ongoingTransactions: 45,
+      systemLoad: 35.5
     }))
   }
 }));

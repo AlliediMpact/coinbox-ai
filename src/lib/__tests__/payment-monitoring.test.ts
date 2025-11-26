@@ -1,23 +1,33 @@
 import { paymentMonitoring } from '../payment-monitoring';
-import { adminDb } from '../firebase-admin';
+import { resetAdminCache } from '../admin-bridge';
 
-jest.mock('../firebase-admin', () => ({
-    adminDb: {
-        collection: jest.fn().mockReturnThis(),
-        doc: jest.fn().mockReturnThis(),
-        add: jest.fn().mockResolvedValue(true),
-        set: jest.fn().mockResolvedValue(true),
-        get: jest.fn().mockResolvedValue({
-            exists: true,
-            data: () => ({
-                totalAttempts: 10,
-                successfulPayments: 8,
-                failedPayments: 2,
-                totalAmount: 1000
-            })
+// Define mocks
+const mockAdminDb = {
+    collection: jest.fn().mockReturnThis(),
+    doc: jest.fn().mockReturnThis(),
+    add: jest.fn().mockResolvedValue(true),
+    set: jest.fn().mockResolvedValue(true),
+    update: jest.fn().mockResolvedValue(true),
+    get: jest.fn().mockResolvedValue({
+        exists: true,
+        data: () => ({
+            totalAttempts: 10,
+            successfulPayments: 8,
+            failedPayments: 2,
+            totalAmount: 1000
         })
-    }
-}));
+    })
+};
+
+const mockFieldValue = {
+    serverTimestamp: jest.fn(),
+    increment: jest.fn()
+};
+
+// Inject mocks into global scope for admin-bridge to pick up
+// This bypasses the need to mock the module directly and works with the bridge's fallback logic
+(globalThis as any).adminDb = mockAdminDb;
+(globalThis as any).FieldValue = mockFieldValue;
 
 describe('PaymentMonitoringService', () => {
     const mockUserId = 'test-user-123';
@@ -25,6 +35,15 @@ describe('PaymentMonitoringService', () => {
 
     beforeEach(() => {
         jest.clearAllMocks();
+        // Ensure globals are set before each test
+        (globalThis as any).adminDb = mockAdminDb;
+        (globalThis as any).FieldValue = mockFieldValue;
+        resetAdminCache();
+    });
+
+    afterAll(() => {
+        delete (globalThis as any).adminDb;
+        delete (globalThis as any).FieldValue;
     });
 
     describe('logPaymentEvent', () => {
@@ -37,8 +56,8 @@ describe('PaymentMonitoringService', () => {
                 metadata: { membershipTier: 'Basic' }
             });
 
-            expect(adminDb.collection).toHaveBeenCalledWith('payment_analytics');
-            expect(adminDb.add).toHaveBeenCalledWith(
+            expect(mockAdminDb.collection).toHaveBeenCalledWith('payment_analytics');
+            expect(mockAdminDb.add).toHaveBeenCalledWith(
                 expect.objectContaining({
                     userId: mockUserId,
                     paymentId: mockPaymentId,
@@ -56,9 +75,9 @@ describe('PaymentMonitoringService', () => {
                 amount: 100
             });
 
-            expect(adminDb.collection).toHaveBeenCalledWith('payment_metrics');
-            expect(adminDb.doc).toHaveBeenCalledWith('global');
-            expect(adminDb.set).toHaveBeenCalledWith(
+            expect(mockAdminDb.collection).toHaveBeenCalledWith('payment_metrics');
+            expect(mockAdminDb.doc).toHaveBeenCalledWith('global');
+            expect(mockAdminDb.set).toHaveBeenCalledWith(
                 expect.objectContaining({
                     totalAttempts: expect.any(Object), // FieldValue.increment
                     successfulPayments: expect.any(Object),
@@ -76,9 +95,9 @@ describe('PaymentMonitoringService', () => {
                 errorDetails: 'Test error'
             });
 
-            expect(adminDb.collection).toHaveBeenCalledWith('payment_metrics');
-            expect(adminDb.doc).toHaveBeenCalledWith(`user_${mockUserId}`);
-            expect(adminDb.set).toHaveBeenCalledWith(
+            expect(mockAdminDb.collection).toHaveBeenCalledWith('payment_metrics');
+            expect(mockAdminDb.doc).toHaveBeenCalledWith(`user_${mockUserId}`);
+            expect(mockAdminDb.set).toHaveBeenCalledWith(
                 expect.objectContaining({
                     totalAttempts: expect.any(Object),
                     failedPayments: expect.any(Object)
@@ -92,8 +111,8 @@ describe('PaymentMonitoringService', () => {
         it('should return global metrics when no userId provided', async () => {
             const metrics = await paymentMonitoring.getPaymentMetrics();
 
-            expect(adminDb.collection).toHaveBeenCalledWith('payment_metrics');
-            expect(adminDb.doc).toHaveBeenCalledWith('global');
+            expect(mockAdminDb.collection).toHaveBeenCalledWith('payment_metrics');
+            expect(mockAdminDb.doc).toHaveBeenCalledWith('global');
             expect(metrics).toEqual({
                 totalAttempts: 10,
                 successfulPayments: 8,
@@ -106,8 +125,8 @@ describe('PaymentMonitoringService', () => {
         it('should return user-specific metrics when userId provided', async () => {
             const metrics = await paymentMonitoring.getPaymentMetrics(mockUserId);
 
-            expect(adminDb.collection).toHaveBeenCalledWith('payment_metrics');
-            expect(adminDb.doc).toHaveBeenCalledWith(`user_${mockUserId}`);
+            expect(mockAdminDb.collection).toHaveBeenCalledWith('payment_metrics');
+            expect(mockAdminDb.doc).toHaveBeenCalledWith(`user_${mockUserId}`);
             expect(metrics).toEqual({
                 totalAttempts: 10,
                 successfulPayments: 8,
@@ -118,10 +137,11 @@ describe('PaymentMonitoringService', () => {
         });
 
         it('should return zero metrics for non-existent records', async () => {
-            jest.spyOn(adminDb, 'get').mockResolvedValueOnce({
+            // We need to override the mock implementation for this test
+            mockAdminDb.get.mockResolvedValueOnce({
                 exists: false,
                 data: () => null
-            } as any);
+            });
 
             const metrics = await paymentMonitoring.getPaymentMetrics(mockUserId);
 

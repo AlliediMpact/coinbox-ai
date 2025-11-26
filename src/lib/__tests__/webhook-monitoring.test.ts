@@ -1,26 +1,29 @@
 import { Server } from 'http';
 import WebSocket from 'ws';
-import { webhookMonitoring } from '../webhook-monitoring';
 
-// Mock Firebase admin
-jest.mock('../firebase-admin', () => {
-    const mockAdminDb = {
-        collection: jest.fn(() => ({
-            where: jest.fn(() => ({
-                onSnapshot: jest.fn()
-            })),
-            doc: jest.fn(() => ({
-                onSnapshot: jest.fn()
-            })),
-            orderBy: jest.fn().mockReturnThis(),
-            limit: jest.fn().mockReturnThis()
-        }))
-    };
-    
-    return {
-        adminDb: mockAdminDb
-    };
-});
+// Mock admin-bridge before importing webhook-monitoring
+const mockAdminDb = {
+    collection: vi.fn(() => ({
+        where: vi.fn(() => ({
+            onSnapshot: vi.fn()
+        })),
+        doc: vi.fn(() => ({
+            onSnapshot: vi.fn()
+        })),
+        orderBy: vi.fn().mockReturnThis(),
+        limit: vi.fn().mockReturnThis()
+    }))
+};
+
+vi.mock('../admin-bridge', () => ({
+    adminDb: mockAdminDb,
+    getAdminDb: () => mockAdminDb,
+    resetAdminCache: vi.fn()
+}));
+
+// Import after mocking
+import { webhookMonitoring } from '../webhook-monitoring';
+import { resetAdminCache } from '../admin-bridge';
 
 describe('WebhookMonitoring', () => {
     let server: Server;
@@ -30,9 +33,16 @@ describe('WebhookMonitoring', () => {
         server = new Server();
         mockWebSocket = {
             readyState: 1, // WebSocket.OPEN
-            send: jest.fn()
+            send: vi.fn()
         };
-        jest.clearAllMocks();
+        vi.clearAllMocks();
+        
+        // Reset admin cache if needed (mocked function)
+        (resetAdminCache as any).mockClear();
+    });
+
+    afterAll(() => {
+        delete (globalThis as any).adminDb;
     });
 
     afterEach(() => {
