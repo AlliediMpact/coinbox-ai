@@ -150,9 +150,11 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
          }
 
         // Corrected AuthEventType usage
-        authLogger.logEvent(AuthEventType.SIGN_IN_SUCCESS, currentUser.uid, { 
-            email: currentUser.email,
-          });
+        // authLogger.logEvent(AuthEventType.SIGN_IN_SUCCESS, currentUser.uid, { 
+        //     email: currentUser.email,
+        //   });
+        console.log('Sign in success', currentUser.uid);
+
         
         setLoading(false);
 
