@@ -36,7 +36,7 @@ class PaymentMonitoringService {
         // Try test-local relative require as a last-resort to pick up jest.mock
         if (!resolvedAdminDb) {
             try {
-                // eslint-disable-next-line @typescript-eslint/no-var-requires
+                // eslint-disable-next-line
                 const mod = require('./firebase-admin');
                 if (mod && mod.adminDb) resolvedAdminDb = mod.adminDb;
             } catch (e) {}
@@ -44,7 +44,7 @@ class PaymentMonitoringService {
 
         if (!resolvedFieldValue) {
             try {
-                // eslint-disable-next-line @typescript-eslint/no-var-requires
+                // eslint-disable-next-line
                 const fv = require('firebase-admin/firestore');
                 if (fv && fv.FieldValue) resolvedFieldValue = fv.FieldValue;
             } catch (e) {}
@@ -139,7 +139,7 @@ class PaymentMonitoringService {
         // Try test-local relative require as a last-resort to pick up jest.mock
         if (!resolvedAdminDb) {
             try {
-                // eslint-disable-next-line @typescript-eslint/no-var-requires
+                // eslint-disable-next-line
                 const mod = require('./firebase-admin');
                 if (mod && mod.adminDb) resolvedAdminDb = mod.adminDb;
             } catch (e) {}
@@ -147,7 +147,7 @@ class PaymentMonitoringService {
 
         if (!resolvedFieldValue) {
             try {
-                // eslint-disable-next-line @typescript-eslint/no-var-requires
+                // eslint-disable-next-line
                 const fv = require('firebase-admin/firestore');
                 if (fv && fv.FieldValue) resolvedFieldValue = fv.FieldValue;
             } catch (e) {}

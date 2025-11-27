@@ -238,9 +238,9 @@ class AnalyticsExportService {
         
       case 'pdf':
         // Require pdfMake at call-time so tests can mock it
-        // eslint-disable-next-line @typescript-eslint/no-var-requires
+        // eslint-disable-next-line
         const pdfMake = require('pdfmake/build/pdfmake');
-        // eslint-disable-next-line @typescript-eslint/no-var-requires
+        // eslint-disable-next-line
         const pdfFonts = require('pdfmake/build/vfs_fonts');
 
         // Ensure vfs is only assigned if not defined to avoid redefinition errors
@@ -287,7 +287,7 @@ class AnalyticsExportService {
       case 'excel':
         try {
           // Require XLSX at call-time to let tests mock it
-          // eslint-disable-next-line @typescript-eslint/no-var-requires
+          // eslint-disable-next-line
           const XLSX = require('xlsx');
 
           // Create a worksheet from the data
