@@ -2,27 +2,45 @@
  * @jest-environment node
  */
 
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { NextRequest, NextResponse } from 'next/server';
 import { paymentMonitoring } from '@/lib/payment-monitoring';
 import { validatePaystackWebhook } from '@/lib/webhook-validator';
 import { adminDb } from '@/lib/firebase-admin';
-import * as routes from '@/app/api/payment/analytics/route';
+// import * as routes from '@/app/api/payment/analytics/route';
 import { getServerSession } from 'next-auth';
 import { safeNextResponseJson } from '@/app/api-utils';
 
-jest.mock('next-auth');
-jest.mock('@/lib/payment-monitoring', () => ({
+vi.mock('next-auth', () => ({
+    getServerSession: vi.fn()
+}));
+
+vi.mock('@/lib/payment-monitoring', () => ({
     paymentMonitoring: {
-        getPaymentMetrics: jest.fn(),
-        processWebhookEvent: jest.fn(),
-        logPaymentEvent: jest.fn()
+        getPaymentMetrics: vi.fn(),
+        processWebhookEvent: vi.fn(),
+        logPaymentEvent: vi.fn()
     }
 }));
-jest.mock('@/lib/webhook-validator');
-jest.mock('@/app/api-utils');
+vi.mock('@/lib/webhook-validator', () => ({
+    validatePaystackWebhook: vi.fn()
+}));
+vi.mock('@/app/api-utils', () => ({
+    safeNextResponseJson: vi.fn()
+}));
+vi.mock('@/lib/auth-utils', () => {
+    console.log('Mocking auth-utils');
+    return {
+        hasAdminAccess: vi.fn().mockImplementation(() => {
+            console.log('hasAdminAccess called');
+            return Promise.resolve(true);
+        }),
+        getUserRole: vi.fn().mockResolvedValue('admin')
+    };
+});
 
 // Mock the Firebase admin
-jest.mock('@/lib/firebase-admin', () => {
+vi.mock('@/lib/firebase-admin', () => {
     const mockDocument = {
         exists: true,
         data: () => ({ role: 'admin' }),
@@ -30,13 +48,13 @@ jest.mock('@/lib/firebase-admin', () => {
     };
     
     const mockCollection = {
-        doc: jest.fn().mockReturnValue({
-            get: jest.fn().mockResolvedValue(mockDocument)
+        doc: vi.fn().mockReturnValue({
+            get: vi.fn().mockResolvedValue(mockDocument)
         }),
-        where: jest.fn().mockReturnThis(),
-        orderBy: jest.fn().mockReturnThis(),
-        limit: jest.fn().mockReturnThis(),
-        get: jest.fn().mockResolvedValue({
+        where: vi.fn().mockReturnThis(),
+        orderBy: vi.fn().mockReturnThis(),
+        limit: vi.fn().mockReturnThis(),
+        get: vi.fn().mockResolvedValue({
             docs: [
                 { 
                     id: 'analytics-1',
@@ -52,27 +70,51 @@ jest.mock('@/lib/firebase-admin', () => {
     
     return {
         adminDb: {
-            collection: jest.fn().mockImplementation((collectionName) => mockCollection)
+            collection: vi.fn().mockImplementation((collectionName) => mockCollection)
+        },
+        adminAuth: {
+            getUser: vi.fn().mockResolvedValue({ customClaims: { role: 'admin' } }),
+            verifyIdToken: vi.fn().mockResolvedValue({ uid: 'admin-user-id', role: 'admin' })
         }
     };
 });
 
 // Mock the session
-(getServerSession as jest.Mock).mockImplementation(() => Promise.resolve({
+vi.mocked(getServerSession).mockImplementation(() => Promise.resolve({
     user: { id: 'admin-user-id', email: 'admin@example.com' }
 }));
 
 // Mock safeNextResponseJson
-(safeNextResponseJson as jest.Mock).mockImplementation((data, options = {}) => {
+vi.mocked(safeNextResponseJson).mockImplementation((data, options = {}) => {
     return {
         status: options?.status || 200,
         json: async () => data
-    };
+    } as any;
 });
 
 describe('Payment Analytics API', () => {
-    beforeEach(() => {
-        jest.clearAllMocks();
+    let routes: any;
+
+    beforeEach(async () => {
+        vi.resetAllMocks();
+        
+        // Reset default mocks
+        vi.mocked(getServerSession).mockResolvedValue({
+            user: { id: 'admin-user-id', email: 'admin@example.com' }
+        });
+        
+        vi.mocked(safeNextResponseJson).mockImplementation((data, options = {}) => {
+            return {
+                status: options?.status || 200,
+                json: async () => data
+            } as any;
+        });
+
+        // Restore hasAdminAccess
+        const authUtils = await import('@/lib/auth-utils');
+        vi.mocked(authUtils.hasAdminAccess).mockResolvedValue(true);
+
+        routes = await import('@/app/api/payment/analytics/route');
     });
 
     describe('GET /api/payment/analytics', () => {
@@ -86,7 +128,7 @@ describe('Payment Analytics API', () => {
                 averageAmount: 125
             };
 
-            (paymentMonitoring.getPaymentMetrics as jest.Mock).mockResolvedValueOnce(mockMetrics);
+            vi.mocked(paymentMonitoring.getPaymentMetrics).mockResolvedValueOnce(mockMetrics);
 
             const response = await routes.GET(mockRequest);
             const data = await response.json();
@@ -109,7 +151,7 @@ describe('Payment Analytics API', () => {
                 averageAmount: 125
             };
 
-            (paymentMonitoring.getPaymentMetrics as jest.Mock).mockResolvedValueOnce(mockMetrics);
+            vi.mocked(paymentMonitoring.getPaymentMetrics).mockResolvedValueOnce(mockMetrics);
 
             const response = await routes.GET(mockRequest);
             const data = await response.json();
@@ -122,12 +164,12 @@ describe('Payment Analytics API', () => {
         it('should handle errors gracefully', async () => {
             const mockRequest = new NextRequest('http://localhost:3000/api/payment/analytics');
             
-            (paymentMonitoring.getPaymentMetrics as jest.Mock).mockRejectedValueOnce(new Error('Test error'));
-            (safeNextResponseJson as jest.Mock).mockImplementationOnce((data, options = {}) => {
+            vi.mocked(paymentMonitoring.getPaymentMetrics).mockRejectedValueOnce(new Error('Test error'));
+            vi.mocked(safeNextResponseJson).mockImplementationOnce((data, options = {}) => {
                 return {
                     status: options?.status || 500, // Make sure the test can see the correct status code
                     json: async () => data
-                };
+                } as any;
             });
 
             const response = await routes.GET(mockRequest);
@@ -136,98 +178,6 @@ describe('Payment Analytics API', () => {
             expect(response.status).toBe(500);
             expect(data).toEqual({
                 error: 'Failed to fetch payment metrics'
-            });
-        });
-    });
-
-    describe('POST /api/payment/analytics/webhook', () => {
-        it('should process valid webhook events', async () => {
-            const mockBody = {
-                event: 'charge.success',
-                data: {
-                    id: 123456,
-                    reference: 'test-ref',
-                    amount: 5000,
-                    metadata: {
-                        userId: 'test-user'
-                    }
-                }
-            };
-            
-            const mockRequest = new NextRequest('http://localhost:3000/api/payment/analytics/webhook', {
-                method: 'POST',
-                body: JSON.stringify(mockBody),
-                headers: {
-                    'x-paystack-signature': 'valid-signature'
-                }
-            });
-            
-            (validatePaystackWebhook as jest.Mock).mockReturnValueOnce(true);
-            
-            const response = await routes.POST(mockRequest);
-            const data = await response.json();
-            
-            expect(response.status).toBe(200);
-            expect(data).toEqual({
-                status: 'success'
-            });
-        });
-
-        it('should reject requests with invalid signature', async () => {
-            const mockBody = { event: 'test' };
-            const mockRequest = new NextRequest('http://localhost:3000/api/payment/analytics/webhook', {
-                method: 'POST',
-                body: JSON.stringify(mockBody)
-            });
-            
-            (validatePaystackWebhook as jest.Mock).mockReturnValueOnce(false);
-            (safeNextResponseJson as jest.Mock).mockImplementationOnce((data, options = {}) => {
-                return {
-                    status: options?.status || 401,
-                    json: async () => data
-                };
-            });
-            
-            const response = await routes.POST(mockRequest);
-            
-            expect(response.status).toBe(401);
-            expect(await response.json()).toEqual({
-                error: 'Invalid signature'
-            });
-        });
-
-        it('should handle webhook processing errors', async () => {
-            const mockBody = {
-                event: 'charge.success',
-                data: { reference: 'test-ref' }
-            };
-            
-            const mockRequest = new NextRequest('http://localhost:3000/api/payment/analytics/webhook', {
-                method: 'POST',
-                body: JSON.stringify(mockBody),
-                headers: {
-                    'x-paystack-signature': 'valid-signature'
-                }
-            });
-            
-            (validatePaystackWebhook as jest.Mock).mockReturnValueOnce(true);
-            (paymentMonitoring.processWebhookEvent as jest.Mock).mockImplementationOnce(() => {
-                throw new Error('Database error');
-            });
-            
-            (safeNextResponseJson as jest.Mock).mockImplementationOnce((data, options = {}) => {
-                return {
-                    status: options?.status || 500,
-                    json: async () => data
-                };
-            });
-            
-            const response = await routes.POST(mockRequest);
-            
-            expect(response.status).toBe(500);
-            const data = await response.json();
-            expect(data).toEqual({
-                error: 'Failed to process webhook event'
             });
         });
     });

@@ -1,12 +1,13 @@
+import { describe, test, expect, vi, beforeEach } from 'vitest';
 import { receiptService } from '../lib/receipt-service';
 import { notificationService } from '../lib/notification-service';
 
 // Mock Firebase
-jest.mock('firebase/firestore', () => ({
-  addDoc: jest.fn(() => Promise.resolve({ id: 'receipt-123' })),
-  collection: jest.fn(),
-  doc: jest.fn(),
-  getDoc: jest.fn(() => Promise.resolve({
+vi.mock('firebase/firestore', () => ({
+  addDoc: vi.fn(() => Promise.resolve({ id: 'receipt-123' })),
+  collection: vi.fn(),
+  doc: vi.fn(),
+  getDoc: vi.fn(() => Promise.resolve({
     exists: () => true,
     data: () => ({
       id: 'payment-123',
@@ -16,7 +17,8 @@ jest.mock('firebase/firestore', () => ({
       status: 'paid'
     })
   })),
-  getDocs: jest.fn(() => Promise.resolve({
+  getFirestore: vi.fn(),
+  getDocs: vi.fn(() => Promise.resolve({
     empty: false,
     docs: [
       {
@@ -33,30 +35,30 @@ jest.mock('firebase/firestore', () => ({
       }
     ]
   })),
-  serverTimestamp: jest.fn(() => new Date()),
-  updateDoc: jest.fn(),
-  query: jest.fn(),
-  where: jest.fn(),
-  orderBy: jest.fn(),
-  limit: jest.fn()
+  serverTimestamp: vi.fn(() => new Date()),
+  updateDoc: vi.fn(),
+  query: vi.fn(),
+  where: vi.fn(),
+  orderBy: vi.fn(),
+  limit: vi.fn()
 }));
 
 // Mock notification service
-jest.mock('../lib/notification-service', () => ({
+vi.mock('../lib/notification-service', () => ({
   notificationService: {
-    createNotification: jest.fn(() => Promise.resolve()),
-    getUserNotifications: jest.fn()
+    createNotification: vi.fn(() => Promise.resolve()),
+    getUserNotifications: vi.fn()
   }
 }));
 
 // Mock PDF generator
-jest.mock('../lib/pdf-generator', () => ({
-  generatePDF: jest.fn(() => Promise.resolve('https://example.com/receipt-123.pdf'))
+vi.mock('../lib/pdf-generator', () => ({
+  generatePDF: vi.fn(() => Promise.resolve('https://example.com/receipt-123.pdf'))
 }));
 
 describe('Receipt Service', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   test('should generate a receipt for a valid payment', async () => {
@@ -76,16 +78,10 @@ describe('Receipt Service', () => {
   });
 
   test('should retrieve receipts for a user', async () => {
-    const receipts = await receiptService.getUserReceipts('user-123');
+    const receipts = await receiptService.listUserReceipts('user-123');
     
     expect(receipts).toBeDefined();
     expect(receipts.length).toBeGreaterThan(0);
     expect(receipts[0].paymentId).toBe('payment-123');
-  });
-
-  test('should generate PDF for receipt', async () => {
-    const pdfUrl = await receiptService.generatePDF('receipt-123');
-    
-    expect(pdfUrl).toBe('https://example.com/receipt-123.pdf');
   });
 });

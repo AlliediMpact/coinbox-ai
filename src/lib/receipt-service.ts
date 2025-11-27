@@ -1,8 +1,7 @@
 import { db } from './firebase';
-import { paystackService } from './paystack-service';
-import { notificationService } from './notification-service';
-import { addDoc, collection, doc, getDoc, serverTimestamp, updateDoc } from 'firebase/firestore';
+import { addDoc, collection, doc, getDoc, serverTimestamp, updateDoc, query, where, orderBy, getDocs } from 'firebase/firestore';
 import { generatePDF } from './pdf-generator';
+import { notificationService } from './notification-service';
 
 interface Receipt {
   id: string;
@@ -165,11 +164,12 @@ class ReceiptService {
    */
   async listUserReceipts(userId: string): Promise<Receipt[]> {
     try {
-      const receiptsSnapshot = await db
-        .collection('receipts')
-        .where('userId', '==', userId)
-        .orderBy('date', 'desc')
-        .get();
+      const q = query(
+        collection(db, 'receipts'),
+        where('userId', '==', userId),
+        orderBy('date', 'desc')
+      );
+      const receiptsSnapshot = await getDocs(q);
       
       return receiptsSnapshot.docs.map(doc => ({
         id: doc.id,

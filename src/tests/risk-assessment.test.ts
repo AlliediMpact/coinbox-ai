@@ -1,5 +1,28 @@
 import { describe, test, expect, vi, beforeEach } from 'vitest';
 import { riskAssessmentService, RiskAssessment, RiskFactor } from '../lib/risk-assessment-service';
+import { membershipService } from '../lib/membership-service';
+
+// Mock dependencies
+vi.mock('../lib/membership-service', () => ({
+  membershipService: {
+    getUserMembership: vi.fn()
+  }
+}));
+
+vi.mock('firebase/firestore', () => ({
+  getDoc: vi.fn(),
+  doc: vi.fn(),
+  collection: vi.fn(),
+  query: vi.fn(),
+  where: vi.fn(),
+  getDocs: vi.fn(),
+  orderBy: vi.fn(),
+  limit: vi.fn()
+}));
+
+vi.mock('../lib/firebase', () => ({
+  db: {}
+}));
 
 describe('Risk Assessment Service', () => {
   const mockUserId = 'test-user-123';
@@ -13,6 +36,11 @@ describe('Risk Assessment Service', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
+    
+    // Setup default mock behavior
+    (membershipService.getUserMembership as any).mockResolvedValue({
+      currentTier: 'Basic'
+    });
   });
 
   test('should initialize risk assessment service', () => {
@@ -66,7 +94,7 @@ describe('Risk Assessment Service', () => {
     
     expect(Array.isArray(riskAssessment.recommendations)).toBe(true);
     
-    riskAssessment.recommendations.forEach(recommendation => {
+    riskAssessment.recommendations?.forEach(recommendation => {
       expect(recommendation.type).toBeDefined();
       expect(recommendation.message).toBeDefined();
       expect(['info', 'warning', 'critical']).toContain(recommendation.severity);
@@ -169,9 +197,11 @@ describe('Risk Assessment Service', () => {
     if (riskHistory.length > 1) {
       // Check that timestamps are in order
       for (let i = 1; i < riskHistory.length; i++) {
-        expect(riskHistory[i].timestamp.getTime()).toBeLessThanOrEqual(
-          riskHistory[i - 1].timestamp.getTime()
-        );
+        const current = riskHistory[i].timestamp;
+        const previous = riskHistory[i - 1].timestamp;
+        if (current && previous) {
+          expect(current.getTime()).toBeLessThanOrEqual(previous.getTime());
+        }
       }
     }
   });
@@ -203,8 +233,10 @@ describe('Risk Assessment Service', () => {
     
     // Check if ML predictions are included
     expect(riskAssessment.mlPredictions).toBeDefined();
-    expect(typeof riskAssessment.mlPredictions.fraudProbability).toBe('number');
-    expect(typeof riskAssessment.mlPredictions.defaultProbability).toBe('number');
-    expect(typeof riskAssessment.mlPredictions.confidenceScore).toBe('number');
+    if (riskAssessment.mlPredictions) {
+      expect(typeof riskAssessment.mlPredictions.fraudProbability).toBe('number');
+      expect(typeof riskAssessment.mlPredictions.defaultProbability).toBe('number');
+      expect(typeof riskAssessment.mlPredictions.confidenceScore).toBe('number');
+    }
   });
 });

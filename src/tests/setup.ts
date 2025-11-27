@@ -165,7 +165,25 @@ vi.mock('firebase/firestore', () => {
   });
 
   // Return named exports
-  return mk();
+  const mod = mk();
+  // Provide Jest-style convenience helpers for promise mocks
+  const addPromiseHelpers = (fn: any) => {
+    if (typeof fn === 'function') {
+      if (!fn.mockResolvedValue) {
+        fn.mockResolvedValue = (val: any) => fn.mockImplementation(() => Promise.resolve(val));
+      }
+      if (!fn.mockRejectedValue) {
+        fn.mockRejectedValue = (err: any) => fn.mockImplementation(() => Promise.reject(err));
+      }
+    }
+  };
+  addPromiseHelpers(mod.getDoc);
+  addPromiseHelpers(mod.getDocs);
+  addPromiseHelpers(mod.setDoc);
+  addPromiseHelpers(mod.updateDoc);
+  addPromiseHelpers(mod.deleteDoc);
+  addPromiseHelpers(mod.addDoc);
+  return mod;
 });
 
 // Minimal WebSocket mock so server-side websocket modules don't crash in tests

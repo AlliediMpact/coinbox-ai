@@ -110,6 +110,102 @@ export interface ExportResult {
 
 class AnalyticsService {
   /**
+   * Get transaction analytics with detailed breakdown
+   */
+  async getTransactionAnalytics(options: {
+    startDate?: Date;
+    endDate?: Date;
+    interval?: 'daily' | 'weekly' | 'monthly';
+    [key: string]: any;
+  }): Promise<{ data: any[], summary: any }> {
+    try {
+      const startDate = options.startDate || new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+      const endDate = options.endDate || new Date();
+      
+      const transactions = await this.queryTransactions(startDate, endDate);
+      
+      // Group by interval
+      // This is a simplified implementation
+      return {
+        data: transactions,
+        summary: {
+          total: transactions.length,
+          volume: transactions.reduce((sum, t) => sum + (t.amount || 0), 0)
+        }
+      };
+    } catch (error) {
+      console.error('Failed to get transaction analytics:', error);
+      return { data: [], summary: {} };
+    }
+  }
+
+  /**
+   * Get user growth metrics
+   */
+  async getUserGrowthMetrics(options: {
+    period: string;
+    startDate?: Date;
+    endDate?: Date;
+    [key: string]: any;
+  }): Promise<{ total: number, trend: any[] }> {
+    try {
+      const startDate = options.startDate || new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+      const endDate = options.endDate || new Date();
+      
+      const usersQuery = query(
+        collection(db, 'users'),
+        where('createdAt', '>=', Timestamp.fromDate(startDate)),
+        where('createdAt', '<=', Timestamp.fromDate(endDate))
+      );
+      
+      const snapshot = await getDocs(usersQuery);
+      const users = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+      
+      return {
+        total: users.length,
+        trend: users // Simplified
+      };
+    } catch (error) {
+      console.error('Failed to get user growth metrics:', error);
+      return { total: 0, trend: [] };
+    }
+  }
+
+  /**
+   * Get revenue analytics
+   */
+  async getRevenueAnalytics(options: {
+    startDate?: Date;
+    endDate?: Date;
+    [key: string]: any;
+  }): Promise<{ total: number, breakdown: any[] }> {
+    try {
+      const startDate = options.startDate || new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+      const endDate = options.endDate || new Date();
+      
+      const transactions = await this.queryTransactions(startDate, endDate);
+      const revenueTransactions = transactions.filter(t => t.type === 'payment' || t.type === 'subscription');
+      
+      const total = revenueTransactions.reduce((sum, t) => sum + (t.amount || 0), 0);
+      
+      return {
+        total,
+        breakdown: revenueTransactions
+      };
+    } catch (error) {
+      console.error('Failed to get revenue analytics:', error);
+      return { total: 0, breakdown: [] };
+    }
+  }
+
+  /**
+   * Get system performance metrics
+   */
+  async getSystemPerformanceMetrics(): Promise<{ uptime: number, responseTime: number, errorRate: number }> {
+    return this.getSystemHealthMetrics();
+  }
+
+  /**
    * Get transaction metrics for a user or the entire platform
    */
   async getTransactionMetrics(userId?: string, period: 'day' | 'week' | 'month' | 'year' = 'month'): Promise<TransactionSummary> {
@@ -918,7 +1014,7 @@ class AnalyticsService {
     return snap.docs.map(doc => ({
       id: doc.id,
       ...doc.data()
-    }));
+    })) as any[];
   }
   
   /**

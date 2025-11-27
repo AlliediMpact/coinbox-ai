@@ -1,18 +1,19 @@
+import { describe, test, expect, vi, beforeEach } from 'vitest';
 import { disputeResolutionService } from '../lib/dispute-resolution-service';
 import { disputeNotificationService } from '../lib/dispute-notification-service';
 import { notificationService } from '../lib/notification-service';
 import { Timestamp } from 'firebase/firestore';
 
 // Mock Firebase
-jest.mock('firebase/firestore', () => {
-  const originalModule = jest.requireActual('firebase/firestore');
+vi.mock('firebase/firestore', async (importOriginal) => {
+  const originalModule = await importOriginal<typeof import('firebase/firestore')>();
   
   return {
     ...originalModule,
-    addDoc: jest.fn(() => Promise.resolve({ id: 'dispute-123' })),
-    collection: jest.fn(),
-    doc: jest.fn(),
-    getDoc: jest.fn(() => Promise.resolve({
+    addDoc: vi.fn(() => Promise.resolve({ id: 'dispute-123' })),
+    collection: vi.fn(),
+    doc: vi.fn(),
+    getDoc: vi.fn(() => Promise.resolve({
       exists: () => true,
       data: () => ({
         id: 'dispute-123',
@@ -36,46 +37,46 @@ jest.mock('firebase/firestore', () => {
         priority: 'medium'
       })
     })),
-    getDocs: jest.fn(() => Promise.resolve({
-      empty: false,
+    getDocs: vi.fn(() => Promise.resolve({
+      empty: true,
       docs: []
     })),
     Timestamp: {
       now: () => ({ toDate: () => new Date() })
     },
-    updateDoc: jest.fn(),
-    query: jest.fn(),
-    where: jest.fn(),
-    orderBy: jest.fn(),
-    arrayUnion: jest.fn(val => val)
+    updateDoc: vi.fn(),
+    query: vi.fn(),
+    where: vi.fn(),
+    orderBy: vi.fn(),
+    arrayUnion: vi.fn(val => val)
   };
 });
 
 // Mock notification service
-jest.mock('../lib/notification-service', () => ({
+vi.mock('../lib/notification-service', () => ({
   notificationService: {
-    createNotification: jest.fn(() => Promise.resolve()),
-    notifyDispute: jest.fn(() => Promise.resolve())
+    createNotification: vi.fn(() => Promise.resolve()),
+    notifyDispute: vi.fn(() => Promise.resolve())
   }
 }));
 
 // Mock dispute notification service
-jest.mock('../lib/dispute-notification-service', () => ({
+vi.mock('../lib/dispute-notification-service', () => ({
   disputeNotificationService: {
-    notifyDisputeCreated: jest.fn(() => Promise.resolve()),
-    notifyDisputeStatusUpdate: jest.fn(() => Promise.resolve()),
-    notifyAdminNewDispute: jest.fn(() => Promise.resolve())
+    notifyDisputeCreated: vi.fn(() => Promise.resolve()),
+    notifyDisputeStatusUpdate: vi.fn(() => Promise.resolve()),
+    notifyAdminNewDispute: vi.fn(() => Promise.resolve())
   }
 }));
 
 // Mock user roles
-jest.mock('../lib/user-roles', () => ({
-  getUsersWithRole: jest.fn(() => Promise.resolve(['admin-123']))
+vi.mock('../lib/user-roles', () => ({
+  getUsersWithRole: vi.fn(() => Promise.resolve(['admin-123']))
 }));
 
 describe('Dispute Resolution Service', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   test('should create a dispute', async () => {

@@ -141,9 +141,11 @@ class PWAService {
    * Backwards-compatible wrapper expected by tests: `installApp`
    */
   async installApp(): Promise<{ success: boolean; error?: string }> {
+    console.log('installApp called. installPromptEvent:', !!this.installPromptEvent);
     if (!this.installPromptEvent) {
       return { success: false, error: 'No install prompt available' };
     }
+
 
     try {
       const accepted = await this.promptInstall();
@@ -179,6 +181,10 @@ class PWAService {
    * Get current PWA status
    */
   getStatus(): PWAStatus {
+    if (typeof navigator !== 'undefined') {
+      console.log('PWA Service Navigator Keys:', Object.keys(navigator));
+      console.log('PWA Service has serviceWorker:', 'serviceWorker' in navigator);
+    }
     return {
       isInstalled: !!this.isStandalone(),
       isInstallable: !!this.isInstallable(),

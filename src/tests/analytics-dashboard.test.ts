@@ -1,61 +1,68 @@
+import { describe, test, expect, vi } from 'vitest';
 import { analyticsService } from '../lib/analytics-service';
 
 // Mock Firebase
-jest.mock('firebase/firestore', () => {
-  const mockData = {
-    transactions: [
-      {
-        id: 'trans-1',
-        amount: 1000,
-        currency: 'ZAR',
-        type: 'deposit',
-        userId: 'user-123',
-        status: 'completed',
-        createdAt: new Date('2025-05-01')
-      },
-      {
-        id: 'trans-2',
-        amount: 2000,
-        currency: 'ZAR',
-        type: 'withdrawal',
-        userId: 'user-456',
-        status: 'completed',
-        createdAt: new Date('2025-05-02')
-      }
-    ],
-    users: [
-      {
-        id: 'user-123',
-        displayName: 'Test User 1',
-        createdAt: new Date('2025-04-15')
-      },
-      {
-        id: 'user-456',
-        displayName: 'Test User 2',
-        createdAt: new Date('2025-05-01')
-      }
-    ]
-  };
+vi.mock('firebase/firestore', () => {
+  const mockTransactions = [
+    {
+      id: 'trans-1',
+      amount: 1000,
+      currency: 'ZAR',
+      type: 'payment',
+      userId: 'user-123',
+      status: 'completed',
+      createdAt: new Date('2025-05-01')
+    },
+    {
+      id: 'trans-2',
+      amount: 2000,
+      currency: 'ZAR',
+      type: 'subscription',
+      userId: 'user-456',
+      status: 'completed',
+      createdAt: new Date('2025-05-02')
+    }
+  ];
+
+  const mockUsers = [
+    {
+      id: 'user-123',
+      displayName: 'Test User 1',
+      createdAt: new Date('2025-04-15')
+    },
+    {
+      id: 'user-456',
+      displayName: 'Test User 2',
+      createdAt: new Date('2025-05-01')
+    }
+  ];
 
   return {
-    collection: jest.fn(),
-    query: jest.fn(),
-    where: jest.fn(),
-    orderBy: jest.fn(),
-    limit: jest.fn(),
-    startAfter: jest.fn(),
-    getDocs: jest.fn(() => Promise.resolve({
+    getFirestore: vi.fn(),
+    collection: vi.fn(),
+    query: vi.fn(),
+    where: vi.fn(),
+    orderBy: vi.fn(),
+    limit: vi.fn(),
+    startAfter: vi.fn(),
+    getDocs: vi.fn(() => Promise.resolve({
       empty: false,
-      docs: mockData.transactions.map(trans => ({
-        id: trans.id,
-        data: () => trans
-      }))
+      docs: [...mockTransactions, ...mockUsers].map(item => ({
+        id: item.id,
+        data: () => item
+      })),
+      size: mockTransactions.length + mockUsers.length
     })),
-    doc: jest.fn(),
-    getDoc: jest.fn(() => Promise.resolve({
+    doc: vi.fn(),
+    getDoc: vi.fn(() => Promise.resolve({
       exists: () => true,
-      data: () => mockData.users[0]
-    }))
+      data: () => ({ uptime: 99.9, responseTime: 200, errorRate: 0.01 })
+    })),
+    addDoc: vi.fn(),
+    Timestamp: {
+      fromDate: (date: Date) => date,
+      now: () => new Date()
+    }
   };
 });
 
@@ -100,5 +107,6 @@ describe('Analytics Service', () => {
     expect(result).toBeDefined();
     expect(result.total).toBeDefined();
     expect(result.breakdown).toBeDefined();
+    expect(result.breakdown.length).toBeGreaterThan(0);
   });
 });

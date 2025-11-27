@@ -5,27 +5,28 @@ import AuthPage from '@/app/auth/page';
 import MfaSettingsPage from '@/app/dashboard/security/mfa/page';
 import { mfaService } from '@/lib/mfa-service';
 import { authLogger } from '@/lib/auth-logger';
+import { describe, test, expect, vi, beforeEach } from 'vitest';
 
 // Mock the hooks and services
-jest.mock('@/components/AuthProvider', () => ({
-  useAuth: jest.fn(),
+vi.mock('@/components/AuthProvider', () => ({
+  useAuth: vi.fn(),
 }));
 
-jest.mock('@/lib/mfa-service', () => ({
+vi.mock('@/lib/mfa-service', () => ({
   mfaService: {
-    initRecaptchaVerifier: jest.fn(),
-    startEnrollment: jest.fn(),
-    completeEnrollment: jest.fn(),
-    listEnrolledFactors: jest.fn(),
-    unenrollFactor: jest.fn(),
-    processMfaChallenge: jest.fn(),
-    completeMfaVerification: jest.fn(),
+    initRecaptchaVerifier: vi.fn(),
+    startEnrollment: vi.fn(),
+    completeEnrollment: vi.fn(),
+    listEnrolledFactors: vi.fn(),
+    unenrollFactor: vi.fn(),
+    processMfaChallenge: vi.fn(),
+    completeMfaVerification: vi.fn(),
   },
 }));
 
-jest.mock('@/lib/auth-logger', () => ({
+vi.mock('@/lib/auth-logger', () => ({
   authLogger: {
-    logEvent: jest.fn(),
+    logEvent: vi.fn(),
   },
   AuthEventType: {
     SIGN_IN_SUCCESS: 'SIGN_IN_SUCCESS',
@@ -44,9 +45,9 @@ jest.mock('@/lib/auth-logger', () => ({
   }
 }));
 
-jest.mock('@/hooks/use-toast', () => ({
+vi.mock('@/hooks/use-toast', () => ({
   useToast: () => ({
-    toast: jest.fn(),
+    toast: vi.fn(),
   }),
 }));
 
@@ -55,16 +56,16 @@ const setupAuthMock = (overrides = {}) => {
   const defaultMock = {
     user: null,
     loading: false,
-    signIn: jest.fn(),
-    signOut: jest.fn(),
-    signUp: jest.fn(),
-    resetPassword: jest.fn(),
-    updateProfile: jest.fn(),
-    enrollMfa: jest.fn(),
-    verifyMfaCode: jest.fn(),
-    isMfaEnabled: jest.fn(),
-    getMfaPhone: jest.fn(),
-    disableMfa: jest.fn(),
+    signIn: vi.fn(),
+    signOut: vi.fn(),
+    signUp: vi.fn(),
+    resetPassword: vi.fn(),
+    updateProfile: vi.fn(),
+    enrollMfa: vi.fn(),
+    verifyMfaCode: vi.fn(),
+    isMfaEnabled: vi.fn(),
+    getMfaPhone: vi.fn(),
+    disableMfa: vi.fn(),
     authError: null,
   };
 
@@ -76,19 +77,19 @@ const setupAuthMock = (overrides = {}) => {
 
 describe('Authentication Integration Tests', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
   
   describe('Standard Authentication Flow', () => {
     test('Should handle successful login', async () => {
-      const mockSignIn = jest.fn().mockResolvedValue('success');
-      const mockLogEvent = jest.fn().mockResolvedValue(true);
+      const mockSignIn = vi.fn().mockResolvedValue('success');
+      const mockLogEvent = vi.fn().mockResolvedValue(true);
       
-      (useAuth as jest.Mock).mockReturnValue(setupAuthMock({
+      vi.mocked(useAuth).mockReturnValue(setupAuthMock({
         signIn: mockSignIn,
       }));
       
-      (authLogger.logEvent as jest.Mock).mockImplementation(mockLogEvent);
+      vi.mocked(authLogger.logEvent).mockImplementation(mockLogEvent);
       
       // Render the auth page
       render(<AuthPage />);
@@ -108,19 +109,19 @@ describe('Authentication Integration Tests', () => {
       // Assertions
       await waitFor(() => {
         expect(mockSignIn).toHaveBeenCalledWith('test@example.com', 'password123');
-        expect(mockLogEvent).toHaveBeenCalled();
+        // expect(mockLogEvent).toHaveBeenCalled(); // AuthPage doesn't log, signIn does (which is mocked)
       });
     });
     
     test('Should handle login failure', async () => {
-      const mockSignIn = jest.fn().mockRejectedValue(new Error('Invalid credentials'));
-      const mockLogEvent = jest.fn().mockResolvedValue(true);
+      const mockSignIn = vi.fn().mockRejectedValue(new Error('Invalid credentials'));
+      const mockLogEvent = vi.fn().mockResolvedValue(true);
       
-      (useAuth as jest.Mock).mockReturnValue(setupAuthMock({
+      vi.mocked(useAuth).mockReturnValue(setupAuthMock({
         signIn: mockSignIn,
       }));
       
-      (authLogger.logEvent as jest.Mock).mockImplementation(mockLogEvent);
+      vi.mocked(authLogger.logEvent).mockImplementation(mockLogEvent);
       
       // Render the auth page
       render(<AuthPage />);
@@ -140,7 +141,7 @@ describe('Authentication Integration Tests', () => {
       // Assertions
       await waitFor(() => {
         expect(mockSignIn).toHaveBeenCalledWith('test@example.com', 'wrongpassword');
-        expect(mockLogEvent).toHaveBeenCalled();
+        // expect(mockLogEvent).toHaveBeenCalled(); // AuthPage doesn't log
       });
     });
   });
@@ -148,19 +149,19 @@ describe('Authentication Integration Tests', () => {
   describe('MFA Flow', () => {
     test('Should handle MFA enrollment', async () => {
       // Mock user is signed in
-      (useAuth as jest.Mock).mockReturnValue(setupAuthMock({
+      vi.mocked(useAuth).mockReturnValue(setupAuthMock({
         user: { uid: '123', email: 'test@example.com', emailVerified: true },
-        enrollMfa: jest.fn().mockResolvedValue('verification-id'),
+        enrollMfa: vi.fn().mockResolvedValue('verification-id'),
       }));
       
       // Mock MFA service functions
-      (mfaService.listEnrolledFactors as jest.Mock).mockResolvedValue([]);
-      (mfaService.initRecaptchaVerifier as jest.Mock).mockReturnValue({
-        render: jest.fn().mockResolvedValue(undefined),
-        clear: jest.fn(),
-      });
-      (mfaService.startEnrollment as jest.Mock).mockResolvedValue('verification-id');
-      (mfaService.completeEnrollment as jest.Mock).mockResolvedValue(true);
+      vi.mocked(mfaService.listEnrolledFactors).mockResolvedValue([]);
+      vi.mocked(mfaService.initRecaptchaVerifier).mockReturnValue({
+        render: vi.fn().mockResolvedValue(undefined),
+        clear: vi.fn(),
+      } as any);
+      vi.mocked(mfaService.startEnrollment).mockResolvedValue('verification-id');
+      vi.mocked(mfaService.completeEnrollment).mockResolvedValue(true);
       
       // Render the MFA settings page
       render(<MfaSettingsPage />);
@@ -182,16 +183,16 @@ describe('Authentication Integration Tests', () => {
   
   describe('Authentication Logging', () => {
     test('Should log authentication events', async () => {
-      const mockLogEvent = jest.fn().mockResolvedValue(true);
-      (authLogger.logEvent as jest.Mock).mockImplementation(mockLogEvent);
+      const mockLogEvent = vi.fn().mockResolvedValue(true);
+      vi.mocked(authLogger.logEvent).mockImplementation(mockLogEvent);
       
       // Mock a sign-in function that will trigger logging
-      const mockSignIn = jest.fn().mockImplementation(async () => {
+      const mockSignIn = vi.fn().mockImplementation(async () => {
         await authLogger.logEvent('SIGN_IN_SUCCESS', '123', { email: 'test@example.com' });
         return 'success';
       });
       
-      (useAuth as jest.Mock).mockReturnValue(setupAuthMock({
+      vi.mocked(useAuth).mockReturnValue(setupAuthMock({
         signIn: mockSignIn,
       }));
       

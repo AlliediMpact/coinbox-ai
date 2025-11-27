@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useAuth } from "@/components/AuthProvider";
 import { transactionMonitoringAPI } from "@/lib/transaction-monitoring-api";
 import { useToast } from "@/hooks/use-toast";

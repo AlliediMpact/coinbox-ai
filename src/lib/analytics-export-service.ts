@@ -4,8 +4,7 @@
  * This service provides functions to export analytics data in various formats.
  */
 
-// Note: `export-utils`, `pdfmake` and `xlsx` are required at call-time
-// inside `exportData` so test-time mocks (jest/vi) can replace them.
+import { downloadFile, convertToCSV } from './export-utils';
 
 // Initialize pdfMake (guard in case vfs is not available in the test environment)
 try {
@@ -218,14 +217,6 @@ class AnalyticsExportService {
     baseFileName: string,
     format: ExportFormat
   ): string {
-    // Require utilities at call time so test mocks can replace them via
-    // CommonJS/ESM interop. Some tests mock `downloadFile`/`convertToCSV` and
-    // importing them at module top-level prevents those mocks from taking
-    // effect.
-    // eslint-disable-next-line @typescript-eslint/no-var-requires
-    const utils = require('./export-utils');
-    const downloadFile = utils.downloadFile;
-    const convertToCSV = utils.convertToCSV;
     let content: string | Blob;
     let mimeType: string;
     let fileName: string;
