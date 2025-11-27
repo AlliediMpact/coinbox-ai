@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { safeParseBody, depositBodySchema } from '@/lib/validation';
 import { validatePaystackRequest } from '@/lib/webhook-validator';
 import { paystackService } from '@/lib/paystack-service';
 import { membershipService } from '@/lib/membership-service';
@@ -45,8 +46,22 @@ export async function POST(request: NextRequest) {
             );
         }
 
+        // Validate core payload structure
+        const parsed = safeParseBody(depositBodySchema, {
+            amountKobo: data?.amount,
+            currency: data?.currency,
+            reference: data?.reference,
+            email: data?.customer?.email,
+        });
+        if (!parsed.success) {
+            return NextResponse.json(
+                { status: 'error', message: 'Invalid payment payload', issues: parsed.error },
+                { status: 400 }
+            );
+        }
+
         // Verify the payment with Paystack
-        const verification = await paystackService.verifyPayment(data.reference);
+        const verification = await paystackService.verifyPayment(parsed.data.reference);
         if (!verification.success) {
             return NextResponse.json(
                 { status: 'error', message: verification.error },
@@ -55,7 +70,7 @@ export async function POST(request: NextRequest) {
         }
 
         // Get payment record
-        const paymentDoc = await adminDb.collection('payments').doc(data.reference).get();
+        const paymentDoc = await adminDb.collection('payments').doc(parsed.data.reference).get();
         if (!paymentDoc?.exists) {
             return NextResponse.json(
                 { status: 'error', message: 'Payment record not found' },
@@ -97,7 +112,7 @@ export async function POST(request: NextRequest) {
                     type: 'membership_payment',
                     amount: verification.data?.amount,
                     status: 'completed',
-                    reference: data.reference,
+                    reference: parsed.data.reference,
                     metadata: paymentData.metadata,
                     createdAt: FieldValue.serverTimestamp()
                 });

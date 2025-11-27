@@ -134,6 +134,9 @@ vi.mock('firebase-admin/firestore', () => ({
   }
 }));
 
+// Note: Do not mock firebase/firestore globally here to avoid conflicts
+// with tests that define their own mocks and override return values.
+
 // Minimal WebSocket mock so server-side websocket modules don't crash in tests
 vi.mock('ws', () => {
   class MockWSS {
@@ -299,5 +302,25 @@ beforeEach(() => {
   } catch (e) {
     // ignore if module not present in test environment
   }
+
+  // Ensure firebase/firestore test doubles are spyable for suites that override them
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
+    const ff = require('firebase/firestore');
+    const makeSpyable = (obj: any, key: string) => {
+      try {
+        if (obj && typeof obj[key] === 'function' && !(obj[key] && obj[key]._isMockFunction)) {
+          const orig = obj[key].bind(obj);
+          obj[key] = vi.fn((...args: any[]) => orig(...args));
+        } else if (obj && typeof obj[key] !== 'function') {
+          obj[key] = vi.fn();
+        }
+      } catch {}
+    };
+    if (ff) {
+      makeSpyable(ff, 'getDocs');
+      makeSpyable(ff, 'getDoc');
+    }
+  } catch (_) {}
 });
 

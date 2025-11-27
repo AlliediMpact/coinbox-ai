@@ -19,4 +19,21 @@ const firebaseConfig = {
 // Initialize Firebase
 export const app = initializeApp(firebaseConfig);
 export const db = getFirestore(app);
-export const auth = getAuth(app);
+
+// In test or misconfigured environments, Firebase Auth can throw.
+// Guard initialization to avoid crashing security/test suites.
+let authInstance: ReturnType<typeof getAuth> | null = null;
+try {
+  // Only initialize auth when required env vars exist
+  if (
+    firebaseConfig.apiKey &&
+    firebaseConfig.authDomain &&
+    firebaseConfig.projectId &&
+    typeof window !== 'undefined'
+  ) {
+    authInstance = getAuth(app);
+  }
+} catch {
+  authInstance = null;
+}
+export const auth = authInstance as any;

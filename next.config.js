@@ -16,6 +16,7 @@ const nextConfig = {
       {
         source: '/:path*',
         headers: [
+          // Hardened security headers
           {
             key: 'X-DNS-Prefetch-Control',
             value: 'on'
@@ -39,6 +40,31 @@ const nextConfig = {
           {
             key: 'Referrer-Policy',
             value: 'origin-when-cross-origin'
+          }
+          {
+            key: 'Permissions-Policy',
+            value:
+              'accelerometer=(), camera=(), microphone=(), geolocation=(), gyroscope=(), magnetometer=(), payment=(), usb=()'
+          },
+          {
+            key: 'Content-Security-Policy',
+            value: [
+              "default-src 'self'",
+              // scripts and styles
+              "script-src 'self' 'unsafe-inline'",
+              "style-src 'self' 'unsafe-inline'",
+              // images and fonts
+              "img-src 'self' data: https:",
+              "font-src 'self' data:",
+              // XHR/WebSockets/API calls
+              "connect-src 'self' https: wss:",
+              // media
+              "media-src 'self' https:",
+              // disallow framing
+              "frame-ancestors 'none'",
+              // prevent base tag changes
+              "base-uri 'self'",
+            ].join('; ')
           }
         ]
       }
