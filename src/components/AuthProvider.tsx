@@ -34,9 +34,9 @@ import {
 } from "firebase/firestore";
 import { useToast } from "@/hooks/use-toast";
 import { useRouter } from 'next/navigation';
-// Import the auth logger and MFA service
-import { authLogger, AuthEventType } from '@/lib/auth-logger';
-import { mfaService } from '@/lib/mfa-service';
+// Auth logging (client-safe) and event types
+import { authLogger } from '@/lib/auth-logger';
+import { AuthEventType } from '@/lib/auth-events';
 
 interface AuthContextProps {
   user: User | null;
