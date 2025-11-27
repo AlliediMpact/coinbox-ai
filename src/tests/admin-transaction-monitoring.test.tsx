@@ -1,13 +1,9 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, waitFor, fireEvent } from '@testing-library/react';
 import '@testing-library/jest-dom';
-import TransactionMonitoring from '../components/admin/TransactionMonitoring';
-import { useAuth } from '../components/AuthProvider';
 
-// Mock Auth Provider
-vi.mock('../components/AuthProvider', () => ({
-  useAuth: vi.fn()
-}));
+// Mock modules BEFORE importing components to ensure mocks apply
+vi.mock('../components/AuthProvider', () => ({ useAuth: vi.fn() }));
 
 // Mock Firebase
 vi.mock('firebase/firestore', () => ({
@@ -36,6 +32,10 @@ vi.mock('../components/ui/dialog', () => ({
   DialogDescription: ({ children }: any) => <div data-testid="dialog-description">{children}</div>,
   DialogFooter: ({ children }: any) => <div data-testid="dialog-footer">{children}</div>,
 }));
+
+// Now import components and hooks that will see the mocks
+import TransactionMonitoring from '../components/admin/TransactionMonitoring';
+import { useAuth } from '../components/AuthProvider';
 
 describe('Admin Transaction Monitoring', () => {
   beforeEach(() => {

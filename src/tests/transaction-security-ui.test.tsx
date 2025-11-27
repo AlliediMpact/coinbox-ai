@@ -1,13 +1,9 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, waitFor, fireEvent } from '@testing-library/react';
 import '@testing-library/jest-dom';
-import TransactionSecurity from '../components/TransactionSecurity';
-import { useAuth } from '../components/AuthProvider';
 
-// Mock Auth Provider
-vi.mock('../components/AuthProvider', () => ({
-  useAuth: vi.fn()
-}));
+// Mock modules BEFORE importing components to ensure mocks apply
+vi.mock('../components/AuthProvider', () => ({ useAuth: vi.fn() }));
 
 // Mock Firebase
 vi.mock('firebase/firestore', () => ({
@@ -22,6 +18,10 @@ vi.mock('firebase/firestore', () => ({
   getDoc: vi.fn(),
   onSnapshot: vi.fn(() => () => {}),
 }));
+
+// Now import component and hooks that will see the mocks
+import TransactionSecurity from '../components/TransactionSecurity';
+import { useAuth } from '../components/AuthProvider';
 
 describe('Transaction Security UI', () => {
   beforeEach(() => {

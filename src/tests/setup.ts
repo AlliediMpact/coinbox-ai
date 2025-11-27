@@ -136,6 +136,37 @@ vi.mock('firebase-admin/firestore', () => ({
 
 // Note: Do not mock firebase/firestore globally here to avoid conflicts
 // with tests that define their own mocks and override return values.
+// IMPORTANT: Some test files import components BEFORE declaring their own
+// vi.mock('firebase/firestore', ...). That causes the real module to load
+// too early and breaks `.mockResolvedValue` calls. To ensure a consistent,
+// spyable surface, provide a minimal global mock here. Test files can still
+// override specific function implementations via `.mockImplementation` or
+// `.mockResolvedValue` on these spies.
+vi.mock('firebase/firestore', () => {
+  const mk = () => ({
+    // Query builders
+    collection: vi.fn(),
+    query: vi.fn(),
+    where: vi.fn(),
+    orderBy: vi.fn(),
+    limit: vi.fn(),
+    // Core ops
+    getFirestore: vi.fn(),
+    doc: vi.fn(),
+    getDoc: vi.fn(),
+    getDocs: vi.fn(),
+    setDoc: vi.fn(),
+    updateDoc: vi.fn(),
+    deleteDoc: vi.fn(),
+    addDoc: vi.fn(),
+    onSnapshot: vi.fn(() => () => {}),
+    // Common field values
+    serverTimestamp: vi.fn(() => new Date())
+  });
+
+  // Return named exports
+  return mk();
+});
 
 // Minimal WebSocket mock so server-side websocket modules don't crash in tests
 vi.mock('ws', () => {
