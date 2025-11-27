@@ -13,6 +13,7 @@ export default defineConfig({
     exclude: [
       // Exclude node_modules and Playwright E2E tests from Vitest discovery
       'node_modules/**',
+      'src/e2e-tests/**',
       'src/tests/e2e/**',
       '**/*.e2e.*',
       'playwright.config.*',

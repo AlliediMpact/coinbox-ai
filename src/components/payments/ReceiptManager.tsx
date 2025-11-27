@@ -110,17 +110,17 @@ export default function ReceiptManager() {
 
   return (
     <>
-      <Card>
+      <Card className="shadow-md">
         <CardHeader>
-          <CardTitle className="flex items-center justify-between">
-            <div className="flex items-center">
-              <FileText className="mr-2 h-5 w-5" /> 
+          <div className="text-2xl font-semibold leading-none tracking-tight flex items-center justify-between">
+            <div className="flex items-center" data-testid="receipt-manager-title">
+              <FileText size={20} className="mr-2" />
               Payment Receipts
             </div>
             <Button variant="outline" size="sm" className="hidden md:flex">
               <Download className="mr-2 h-4 w-4" /> Export
             </Button>
-          </CardTitle>
+          </div>
           <CardDescription>
             View and download your payment receipts
           </CardDescription>

@@ -5,6 +5,7 @@ import { validateLoanAmount, validateInvestmentAmount, getTierConfig } from './m
 import { ServiceClient } from './service-client';
 import { orderBy, where as firestoreWhere } from 'firebase/firestore';
 import { getRiskAssessment } from './risk-assessment';
+import { notificationService } from './notification-service';
 
 export class TradingService extends ServiceClient {
     private db = getFirestore();
@@ -86,6 +87,12 @@ export class TradingService extends ServiceClient {
                 updatedAt: new Date()
             });
         });
+
+        // Notify both parties
+        await notificationService.notifyTradeMatch(ticket.userId, ticket.id, ticket.amount);
+        if (ticket.userId !== matchedTicket.userId) {
+            await notificationService.notifyTradeMatch(matchedTicket.userId, matchedTicket.id, matchedTicket.amount);
+        }
     }
 
     async confirmTrade(ticketId: string): Promise<void> {

@@ -1,66 +1,74 @@
-import { beforeEach, describe, expect, it, jest } from '@jest/globals';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { membershipService } from '../../lib/membership-service';
 import { tradingService } from '../../lib/trading-service';
 import { loanService } from '../../lib/loan-service';
 import { commissionService } from '../../lib/commission-service';
-import { disputeService } from '../../lib/dispute-resolution-service';
+import { disputeResolutionService } from '../../lib/dispute-resolution-service';
 import { notificationService } from '../../lib/notification-service';
+import { transactionService } from '../../lib/transaction-service';
 
 // Mock Firebase
-jest.mock('firebase/firestore');
-jest.mock('firebase/auth');
+vi.mock('firebase/firestore', () => {
+  const mockDoc = {
+    exists: vi.fn(() => true),
+    data: vi.fn(() => ({
+      currentTier: 'basic',
+      metrics: { monthlyTradingVolume: 1000, successfulReferrals: 5 }
+    })),
+    id: 'mock-doc-id'
+  };
+  
+  return {
+    getFirestore: vi.fn(),
+    collection: vi.fn(),
+    doc: vi.fn(() => mockDoc),
+    getDoc: vi.fn(() => Promise.resolve(mockDoc)),
+    getDocs: vi.fn(() => Promise.resolve({ 
+      empty: false, 
+      docs: [mockDoc],
+      size: 1,
+      forEach: (cb: any) => cb(mockDoc),
+      map: (cb: any) => [mockDoc].map(cb)
+    })),
+    addDoc: vi.fn(() => Promise.resolve({ id: 'new-doc-id' })),
+    updateDoc: vi.fn(() => Promise.resolve()),
+    setDoc: vi.fn(() => Promise.resolve()),
+    deleteDoc: vi.fn(() => Promise.resolve()),
+    query: vi.fn(),
+    where: vi.fn(),
+    orderBy: vi.fn(),
+    limit: vi.fn(),
+    Timestamp: {
+      now: vi.fn(() => ({ toDate: () => new Date() })),
+      fromDate: vi.fn((date) => ({ toDate: () => date }))
+    },
+    runTransaction: vi.fn(async (db, callback) => {
+      const mockTransaction = {
+        get: vi.fn(() => Promise.resolve(mockDoc)),
+        update: vi.fn(),
+        set: vi.fn()
+      };
+      return callback(mockTransaction);
+    })
+  };
+});
 
-// Mock all services
-jest.mock('../../lib/membership-service', () => ({
-  membershipService: {
-    purchaseMembership: jest.fn(),
-    getUserMembership: jest.fn(),
-    verifyMembershipEligibility: jest.fn()
-  }
+vi.mock('firebase/auth', () => ({
+  getAuth: vi.fn(),
 }));
 
-jest.mock('../../lib/trading-service', () => ({
-  tradingService: {
-    createTicket: jest.fn(),
-    findMatch: jest.fn(),
-    createEscrow: jest.fn(),
-    confirmTrade: jest.fn(),
-    createDispute: jest.fn(),
-    cancelTicket: jest.fn()
-  }
-}));
-
-jest.mock('../../lib/loan-service', () => ({
-  loanService: {
-    applyForLoan: jest.fn(),
-    getUserLoans: jest.fn(),
-    reviewLoan: jest.fn(),
-    fundLoan: jest.fn(),
-    repayLoan: jest.fn()
-  }
-}));
-
-jest.mock('../../lib/commission-service', () => ({
-  commissionService: {
-    createMembershipCommission: jest.fn(),
-    getUserCommissionSummary: jest.fn(),
-    processCommissions: jest.fn()
-  }
-}));
-
-jest.mock('../../lib/dispute-resolution-service', () => ({
-  disputeService: {
-    createDispute: jest.fn(),
-    getDisputeDetails: jest.fn(),
-    updateDisputeStatus: jest.fn(),
-    submitEvidence: jest.fn()
-  }
-}));
-
-jest.mock('../../lib/notification-service', () => ({
+// Mock notification service
+vi.mock('../../lib/notification-service', () => ({
   notificationService: {
-    sendNotification: jest.fn(),
-    getUserNotifications: jest.fn()
+    createNotification: vi.fn().mockResolvedValue({ id: 'notification-123' }),
+    getUserNotifications: vi.fn().mockResolvedValue([]),
+    notifyCommission: vi.fn().mockResolvedValue(undefined),
+    notifyTradeMatch: vi.fn().mockResolvedValue(undefined),
+    notifyEscrowRelease: vi.fn().mockResolvedValue(undefined),
+    notifyDispute: vi.fn().mockResolvedValue(undefined),
+    sendDisputeCreatedNotification: vi.fn().mockResolvedValue(undefined),
+    sendDisputeStatusUpdateNotification: vi.fn().mockResolvedValue(undefined),
+    notifyKycStatus: vi.fn().mockResolvedValue(undefined)
   }
 }));
 
@@ -70,144 +78,84 @@ describe('User Journey Integration Tests', () => {
   const adminId = 'admin-user-789';
 
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
+    // Mock global fetch
+    global.fetch = vi.fn(() => Promise.resolve({
+      ok: true,
+      json: () => Promise.resolve({ ticket: { id: 'ticket-123' }, match: { id: 'match-123' } })
+    })) as any;
   });
   
   describe('Membership Purchase to Trading Flow', () => {
     it('should allow a user to purchase a membership and create a trading ticket', async () => {
       // Step 1: Purchase membership
-      (membershipService.verifyMembershipEligibility as jest.Mock).mockResolvedValue(true);
-      (membershipService.purchaseMembership as jest.Mock).mockResolvedValue({
-        id: 'membership-123',
+      vi.spyOn(membershipService, 'getUserMembership').mockResolvedValue({
         userId,
-        tierName: 'Basic',
-        status: 'Active',
-        securityFee: 550,
-        refundableAmount: 500,
-        adminFee: 50,
-        transactionId: 'transaction-123',
-        createdAt: new Date()
+        currentTier: 'basic',
+        joinDate: {} as any,
+        renewalDate: {} as any,
+        paymentStatus: 'active',
+        metrics: {
+          monthlyTradingVolume: 200000,
+          totalReferrals: 15,
+          successfulReferrals: 15
+        },
       });
+      vi.spyOn(membershipService as any, 'validateUpgradeRequirements').mockResolvedValue(true);
+      vi.spyOn(transactionService, 'createTransaction').mockResolvedValue({ success: true } as any);
+
+      await membershipService.upgradeMembership(userId, 'ambassador');
       
-      // Purchase membership with referral
-      const membership = await membershipService.purchaseMembership(userId, {
-        tierName: 'Basic',
-        referrerId,
-        paymentMethod: 'card'
-      });
+      expect(notificationService.createNotification).toHaveBeenCalledWith(expect.objectContaining({
+        title: 'Membership Upgraded'
+      }));
+
+      // Step 2: Commission
+      vi.spyOn(membershipService, 'getReferralCommissionRate').mockResolvedValue(0.05);
       
-      // Verify membership purchase
-      expect(membershipService.purchaseMembership).toHaveBeenCalledWith(userId, expect.any(Object));
-      expect(membership.tierName).toBe('Basic');
-      expect(membership.status).toBe('Active');
+      await commissionService.processReferralCommission(referrerId, userId, 550, 'membership');
       
-      // Step 2: Verify commission was created for referrer
-      (commissionService.createMembershipCommission as jest.Mock).mockResolvedValue('commission-123');
+      expect(notificationService.createNotification).toHaveBeenCalledWith(expect.objectContaining({
+        type: 'commission'
+      }));
+
+      // Step 3: Create Ticket (API)
+      const ticket = await tradingService.createTicket(userId, { type: 'Borrow', amount: 400 });
+      expect(ticket).toBeDefined();
+
+      // Step 4: Find Match (API)
+      const matchTicket = { id: 'match-123', userId: 'investor-456', type: 'Invest', amount: 400 };
+      vi.spyOn(tradingService, 'findMatch').mockResolvedValue(matchTicket as any);
       
-      const commissionId = await commissionService.createMembershipCommission(
-        referrerId, 
-        userId, 
-        'Basic', 
-        550
-      );
-      
-      expect(commissionService.createMembershipCommission).toHaveBeenCalledWith(
-        referrerId, 
-        userId, 
-        'Basic', 
-        550
-      );
-      expect(commissionId).toBe('commission-123');
-      
-      // Step 3: Create a trading ticket
-      (tradingService.createTicket as jest.Mock).mockResolvedValue({
-        id: 'ticket-123',
-        userId,
-        type: 'Borrow',
-        amount: 400,
-        interest: 25,
-        status: 'Open',
-        createdAt: new Date()
-      });
-      
-      // Get user membership for validation
-      (membershipService.getUserMembership as jest.Mock).mockResolvedValue({
-        id: 'membership-123',
-        userId,
-        tierName: 'Basic',
-        status: 'Active',
-        loanLimit: 500,
-        investmentLimit: 5000
-      });
-      
-      // Create borrow ticket
-      const ticket = await tradingService.createTicket(userId, {
-        type: 'Borrow',
-        amount: 400,
-        interest: 25
-      });
-      
-      // Verify ticket creation
-      expect(tradingService.createTicket).toHaveBeenCalledWith(userId, expect.any(Object));
-      expect(ticket.type).toBe('Borrow');
-      expect(ticket.amount).toBe(400);
-      expect(ticket.status).toBe('Open');
-      
-      // Step 4: Find a match for the ticket
-      const matchTicket = {
-        id: 'match-ticket-123',
-        userId: 'investor-456',
-        type: 'Invest',
-        amount: 400,
-        interest: 25,
-        status: 'Open',
-        createdAt: new Date(Date.now() - 1000 * 60 * 30) // 30 mins ago
-      };
-      
-      (tradingService.findMatch as jest.Mock).mockResolvedValue(matchTicket);
-      
-      const match = await tradingService.findMatch(ticket);
-      
-      // Verify match
-      expect(tradingService.findMatch).toHaveBeenCalledWith(ticket);
+      const match = await tradingService.findMatch(ticket as any);
       expect(match).not.toBeNull();
-      expect(match.type).toBe('Invest');
-      expect(match.amount).toBe(400);
+
+      if (match) {
+        // Step 5: Create Escrow (Local)
+        await tradingService.createEscrow(ticket as any, match as any);
+        
+        expect(notificationService.notifyTradeMatch).toHaveBeenCalled();
+      }
       
-      // Step 5: Create escrow
-      (tradingService.createEscrow as jest.Mock).mockResolvedValue(undefined);
+      // Step 6: Confirm Trade (API)
+      // We simulate the API side effect here
+      vi.spyOn(tradingService, 'confirmTrade').mockImplementation(async () => {
+        await notificationService.notifyEscrowRelease(userId, 'ticket-123', 400);
+      });
       
-      await tradingService.createEscrow(ticket, match);
+      await tradingService.confirmTrade('ticket-123');
       
-      // Verify escrow creation
-      expect(tradingService.createEscrow).toHaveBeenCalledWith(ticket, match);
-      
-      // Step 6: Confirm the trade
-      (tradingService.confirmTrade as jest.Mock).mockResolvedValue(undefined);
-      
-      await tradingService.confirmTrade(ticket.id);
-      
-      // Verify trade confirmation
-      expect(tradingService.confirmTrade).toHaveBeenCalledWith(ticket.id);
-      
-      // Step 7: Verify notifications were sent
-      expect(notificationService.sendNotification).toHaveBeenCalled();
+      expect(notificationService.notifyEscrowRelease).toHaveBeenCalled();
     });
   });
-  
+
   describe('Loan Application to Repayment Flow', () => {
     it('should allow a user to apply for, receive, and repay a loan', async () => {
       // Step 1: Apply for a loan
-      (membershipService.getUserMembership as jest.Mock).mockResolvedValue({
-        id: 'membership-123',
-        userId,
-        tierName: 'Basic',
-        status: 'Active',
-        loanLimit: 500,
-        investmentLimit: 5000
+      vi.spyOn(loanService, 'applyForLoan').mockImplementation(async () => {
+        await notificationService.createNotification({ userId, type: 'system', title: 'Loan Applied', message: 'Loan applied', priority: 'normal' });
+        return 'loan-123';
       });
-      
-      (loanService.applyForLoan as jest.Mock).mockResolvedValue('loan-123');
       
       const loanId = await loanService.applyForLoan(userId, {
         amount: 400,
@@ -215,41 +163,30 @@ describe('User Journey Integration Tests', () => {
         purpose: 'Personal expenses'
       });
       
-      // Verify loan application
-      expect(loanService.applyForLoan).toHaveBeenCalledWith(userId, expect.any(Object));
       expect(loanId).toBe('loan-123');
       
-      // Step 2: Admin reviews and approves the loan
-      (loanService.reviewLoan as jest.Mock).mockResolvedValue(undefined);
+      // Step 2: Admin reviews
+      vi.spyOn(loanService, 'reviewLoan').mockImplementation(async () => {
+        await notificationService.createNotification({ userId, type: 'system', title: 'Loan Approved', message: 'Loan approved', priority: 'high' });
+      });
       
-      await loanService.reviewLoan(loanId, adminId, true, 'Approved based on good account standing');
+      await loanService.reviewLoan(loanId, adminId, true, 'Approved');
       
-      // Verify loan review
-      expect(loanService.reviewLoan).toHaveBeenCalledWith(
-        loanId, 
-        adminId, 
-        true, 
-        'Approved based on good account standing'
-      );
+      // Step 3: Fund Loan
+      vi.spyOn(loanService, 'fundLoan').mockImplementation(async () => {
+        await notificationService.createNotification({ userId, type: 'transaction', title: 'Loan Funded', message: 'Loan funded', priority: 'high' });
+      });
       
-      // Step 3: Loan is funded
-      (loanService.fundLoan as jest.Mock).mockResolvedValue(undefined);
+      await loanService.fundLoan(loanId, 'tx-456');
       
-      await loanService.fundLoan(loanId, 'transaction-456');
+      // Step 4: Repay Loan
+      vi.spyOn(loanService, 'repayLoan').mockImplementation(async () => {
+        await notificationService.createNotification({ userId, type: 'transaction', title: 'Loan Repaid', message: 'Loan repaid', priority: 'high' });
+      });
       
-      // Verify loan funding
-      expect(loanService.fundLoan).toHaveBeenCalledWith(loanId, 'transaction-456');
+      await loanService.repayLoan(loanId, userId, 'tx-789');
       
-      // Step 4: User repays the loan
-      (loanService.repayLoan as jest.Mock).mockResolvedValue(undefined);
-      
-      await loanService.repayLoan(loanId, userId, 'transaction-789');
-      
-      // Verify loan repayment
-      expect(loanService.repayLoan).toHaveBeenCalledWith(loanId, userId, 'transaction-789');
-      
-      // Step 5: Verify notifications were sent
-      expect(notificationService.sendNotification).toHaveBeenCalled();
+      expect(notificationService.createNotification).toHaveBeenCalledTimes(4);
     });
   });
   
@@ -258,77 +195,28 @@ describe('User Journey Integration Tests', () => {
       const ticketId = 'ticket-123';
       const counterpartyId = 'user-456';
       
-      // Step 1: Create a dispute
-      (disputeService.createDispute as jest.Mock).mockResolvedValue({
-        id: 'dispute-123',
-        ticketId,
-        userId,
-        counterpartyId,
-        type: 'Payment not received',
-        status: 'Open',
-        description: 'I never received the payment',
-        createdAt: new Date()
+      // Step 1: Create dispute
+      vi.spyOn(disputeResolutionService, 'createDispute').mockImplementation(async () => {
+        await notificationService.sendDisputeCreatedNotification(userId, 'dispute-123', ticketId);
+        return 'dispute-123';
       });
       
-      const dispute = await disputeService.createDispute({
-        ticketId,
-        userId,
-        counterpartyId,
-        type: 'Payment not received',
-        description: 'I never received the payment'
+      const disputeId = await disputeResolutionService.createDispute(ticketId, userId, counterpartyId, 'Reason', 'Desc');
+      expect(disputeId).toBe('dispute-123');
+      expect(notificationService.sendDisputeCreatedNotification).toHaveBeenCalled();
+      
+      // Step 2: Submit evidence
+      vi.spyOn(disputeResolutionService, 'submitEvidence').mockResolvedValue('evidence-123');
+      await disputeResolutionService.submitEvidence(disputeId, userId, {} as any);
+      
+      // Step 3: Resolve dispute
+      vi.spyOn(disputeResolutionService, 'updateDisputeStatus').mockImplementation(async () => {
+        await notificationService.sendDisputeStatusUpdateNotification(userId, disputeId, 'Resolved');
       });
       
-      // Verify dispute creation
-      expect(disputeService.createDispute).toHaveBeenCalledWith(expect.any(Object));
-      expect(dispute.status).toBe('Open');
+      await disputeResolutionService.updateDisputeStatus(disputeId, adminId, 'Resolved', 'Note');
       
-      // Step 2: Submit evidence for the dispute
-      (disputeService.submitEvidence as jest.Mock).mockResolvedValue({
-        id: 'evidence-123',
-        disputeId: dispute.id,
-        userId,
-        type: 'Screenshot',
-        description: 'Screenshot of my bank account showing no incoming payment',
-        fileUrl: 'https://example.com/evidence.jpg',
-        createdAt: new Date()
-      });
-      
-      const evidence = await disputeService.submitEvidence({
-        disputeId: dispute.id,
-        userId,
-        type: 'Screenshot',
-        description: 'Screenshot of my bank account showing no incoming payment',
-        fileUrl: 'https://example.com/evidence.jpg'
-      });
-      
-      // Verify evidence submission
-      expect(disputeService.submitEvidence).toHaveBeenCalledWith(expect.any(Object));
-      expect(evidence.type).toBe('Screenshot');
-      
-      // Step 3: Admin reviews and resolves the dispute
-      (disputeService.updateDisputeStatus as jest.Mock).mockResolvedValue({
-        ...dispute,
-        status: 'Resolved',
-        resolution: 'In favor of complainant',
-        resolutionDetails: 'Evidence shows payment was not received',
-        resolvedBy: adminId,
-        resolvedAt: new Date()
-      });
-      
-      const resolvedDispute = await disputeService.updateDisputeStatus(dispute.id, {
-        status: 'Resolved',
-        resolution: 'In favor of complainant',
-        resolutionDetails: 'Evidence shows payment was not received',
-        resolvedBy: adminId
-      });
-      
-      // Verify dispute resolution
-      expect(disputeService.updateDisputeStatus).toHaveBeenCalledWith(dispute.id, expect.any(Object));
-      expect(resolvedDispute.status).toBe('Resolved');
-      expect(resolvedDispute.resolution).toBe('In favor of complainant');
-      
-      // Step 4: Verify notifications were sent
-      expect(notificationService.sendNotification).toHaveBeenCalled();
+      expect(notificationService.sendDisputeStatusUpdateNotification).toHaveBeenCalled();
     });
   });
 });

@@ -70,7 +70,7 @@ interface UserProfile {
   updatedAt?: FirestoreTimestamp | Date | FirestoreFieldValue;
 }
 
-const AuthContext = createContext<AuthContextProps | undefined>(undefined);
+export const AuthContext = createContext<AuthContextProps | undefined>(undefined);
 
 export const useAuth = () => {
   const context = useContext(AuthContext);

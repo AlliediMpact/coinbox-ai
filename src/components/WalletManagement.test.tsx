@@ -2,13 +2,14 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import WalletManagement from './WalletManagement'
 import { useAuth } from '@/components/AuthProvider'
 import * as firestore from 'firebase/firestore';
+import { vi, Mock } from 'vitest';
 
 // Mock Firebase Firestore methods
-jest.mock('firebase/firestore', () => ({
-  getFirestore: jest.fn(),
-  doc: jest.fn(),
-  collection: jest.fn(),
-  onSnapshot: jest.fn().mockImplementation((ref, callback) => {
+vi.mock('firebase/firestore', () => ({
+  getFirestore: vi.fn(),
+  doc: vi.fn(),
+  collection: vi.fn(),
+  onSnapshot: vi.fn().mockImplementation((ref, callback) => {
     callback({
       exists: () => true,
       data: () => ({
@@ -16,13 +17,13 @@ jest.mock('firebase/firestore', () => ({
         lockedBalance: 200
       })
     });
-    return jest.fn();
+    return vi.fn();
   }),
-  query: jest.fn(),
-  orderBy: jest.fn(),
-  limit: jest.fn(),
-  startAfter: jest.fn(),
-  getDocs: jest.fn().mockResolvedValue({
+  query: vi.fn(),
+  orderBy: vi.fn(),
+  limit: vi.fn(),
+  startAfter: vi.fn(),
+  getDocs: vi.fn().mockResolvedValue({
     docs: [
       {
         id: 'txn1',
@@ -36,25 +37,25 @@ jest.mock('firebase/firestore', () => ({
       }
     ]
   }),
-  addDoc: jest.fn().mockResolvedValue({ id: 'mock-txn-id' })
+  addDoc: vi.fn().mockResolvedValue({ id: 'mock-txn-id' })
 }));
 
 // Mock AuthProvider
-jest.mock('@/components/AuthProvider', () => ({
-  useAuth: jest.fn()
+vi.mock('@/components/AuthProvider', () => ({
+  useAuth: vi.fn()
 }));
 
 // Mock useToast hook
-jest.mock('@/hooks/use-toast', () => ({
+vi.mock('@/hooks/use-toast', () => ({
   useToast: () => ({
-    toast: jest.fn()
+    toast: vi.fn()
   })
 }));
 
 // Mock paystack-service
-jest.mock('@/lib/paystack-service', () => ({
+vi.mock('@/lib/paystack-service', () => ({
   paystackService: {
-    initializePayment: jest.fn().mockResolvedValue({
+    initializePayment: vi.fn().mockResolvedValue({
       status: true,
       data: {
         authorization_url: 'https://checkout.paystack.com/123456'
@@ -65,10 +66,10 @@ jest.mock('@/lib/paystack-service', () => ({
 
 describe('WalletManagement', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
     
     // Setup mock auth
-    (useAuth as jest.Mock).mockReturnValue({
+    (useAuth as Mock).mockReturnValue({
       user: { uid: 'test-user-id', email: 'test@example.com' }
     });
   })

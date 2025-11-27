@@ -4,20 +4,21 @@ import { MEMBERSHIP_TIERS } from '../membership-tiers';
 import { resetAdminCache } from '../admin-bridge';
 
 // Mock axios
-jest.mock('axios');
-const mockedAxios = axios as jest.Mocked<typeof axios>;
+vi.mock('axios');
+const mockedAxios = axios as vi.Mocked<typeof axios>;
 
 // Define mocks
 const mockAdminDb = {
-    collection: jest.fn().mockReturnThis(),
-    doc: jest.fn().mockReturnThis(),
-    set: jest.fn().mockResolvedValue(true),
-    update: jest.fn().mockResolvedValue(true)
+    collection: vi.fn().mockReturnThis(),
+    doc: vi.fn().mockReturnThis(),
+    set: vi.fn().mockResolvedValue(true),
+    update: vi.fn().mockResolvedValue(true),
+    add: vi.fn().mockResolvedValue(true)
 };
 
 const mockFieldValue = {
-    serverTimestamp: jest.fn(),
-    increment: jest.fn()
+    serverTimestamp: vi.fn(),
+    increment: vi.fn()
 };
 
 // Inject mocks into global scope for admin-bridge to pick up
@@ -31,7 +32,7 @@ describe('PaystackService', () => {
     const mockReference = 'test-ref-123';
 
     beforeEach(() => {
-        jest.clearAllMocks();
+        vi.clearAllMocks();
         process.env.NEXT_PUBLIC_APP_URL = 'http://localhost:9004';
         
         // Ensure globals are set before each test

@@ -4,30 +4,21 @@ import { getAdminDb } from './admin-bridge';
 
 class WebhookMonitoring {
     private wss: WebSocketServer | null = null;
-    private connectedClients: Set<WebSocket> = new Set();
+    private connectedClients: Set<any> = new Set();
 
     initialize(server: Server) {
         this.wss = new WebSocketServer({ server });
 
-        this.wss.on('connection', (ws: WebSocket) => {
+        this.wss.on('connection', (ws: any) => {
             this.connectedClients.add(ws);
-
-            // Handle both browser WebSocket and Node.js ws package
-            if (typeof ws.on === 'function') {
-                ws.on('close', () => {
-                    this.connectedClients.delete(ws);
-                });
-            } else {
-                // For browser WebSocket or our mock
-                ws.addEventListener?.('close', () => {
-                    this.connectedClients.delete(ws);
-                });
-            }
+            ws.on('close', () => {
+                this.connectedClients.delete(ws);
+            });
         });
-
-        // Set up Firestore listeners for real-time updates
+        console.log('WebSocket server for webhook monitoring initialized');
         this.setupFirestoreListeners();
     }
+
 
     private setupFirestoreListeners() {
         const adminDb = getAdminDb();
@@ -105,3 +96,4 @@ class WebhookMonitoring {
 }
 
 export const webhookMonitoring = new WebhookMonitoring();
+

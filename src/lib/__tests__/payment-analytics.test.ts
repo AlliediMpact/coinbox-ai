@@ -47,13 +47,7 @@ vi.mock('@/lib/firebase-admin', () => {
         id: 'user-doc'
     };
     
-    const mockCollection = {
-        doc: vi.fn().mockReturnValue({
-            get: vi.fn().mockResolvedValue(mockDocument)
-        }),
-        where: vi.fn().mockReturnThis(),
-        orderBy: vi.fn().mockReturnThis(),
-        limit: vi.fn().mockReturnThis(),
+    const mockQuery: any = {
         get: vi.fn().mockResolvedValue({
             docs: [
                 { 
@@ -68,9 +62,18 @@ vi.mock('@/lib/firebase-admin', () => {
         })
     };
     
+    // Setup chaining
+    mockQuery.where = vi.fn().mockReturnValue(mockQuery);
+    mockQuery.orderBy = vi.fn().mockReturnValue(mockQuery);
+    mockQuery.limit = vi.fn().mockReturnValue(mockQuery);
+    mockQuery.doc = vi.fn().mockReturnValue({
+        get: vi.fn().mockResolvedValue(mockDocument)
+    });
+    mockQuery.add = vi.fn();
+
     return {
         adminDb: {
-            collection: vi.fn().mockImplementation((collectionName) => mockCollection)
+            collection: vi.fn().mockReturnValue(mockQuery)
         },
         adminAuth: {
             getUser: vi.fn().mockResolvedValue({ customClaims: { role: 'admin' } }),

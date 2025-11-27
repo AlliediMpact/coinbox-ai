@@ -4,74 +4,105 @@ import '@testing-library/jest-dom';
 import ReceiptManager from '@/components/payments/ReceiptManager';
 import AnalyticsDashboard from '@/components/analytics/AnalyticsDashboard';
 import EnhancedDisputeManagement from '@/components/disputes/EnhancedDisputeManagement';
-import { AuthContext } from '@/contexts/AuthContext';
+import { User } from 'firebase/auth';
+import { AuthContext } from '@/components/AuthProvider';
+import { vi, Mock } from 'vitest';
 
-// Mock dependencies
-jest.mock('@/lib/receipt-service', () => ({
-  receiptService: {
-    getUserReceipts: jest.fn().mockResolvedValue([]),
-    generateReceipt: jest.fn().mockResolvedValue({ id: 'test-receipt' }),
-  }
+// Mock Firebase to prevent initialization errors
+vi.mock('@/lib/firebase', () => ({
+  app: {},
+  auth: {},
+  db: {},
+  storage: {},
+  functions: {}
 }));
 
-jest.mock('@/lib/analytics-service', () => ({
-  analyticsService: {
-    getTransactionAnalytics: jest.fn().mockResolvedValue({ data: [] }),
-    getUserAnalytics: jest.fn().mockResolvedValue({ data: [] }),
-    getSystemPerformanceMetrics: jest.fn().mockResolvedValue({ data: [] }),
-  }
+vi.mock('firebase/auth', () => ({
+  getAuth: vi.fn(),
+  GoogleAuthProvider: vi.fn(),
+  FacebookAuthProvider: vi.fn(),
+  signInWithPopup: vi.fn(),
+  signOut: vi.fn(),
+  onAuthStateChanged: vi.fn(),
 }));
 
-jest.mock('@/lib/dispute-resolution-service', () => ({
-  disputeResolutionService: {
-    getUserDisputes: jest.fn().mockResolvedValue([]),
-    getDisputeDetails: jest.fn().mockResolvedValue(null),
-  }
-}));
+const mockUser = {
+  uid: 'test-user-id',
+  email: 'test@example.com',
+  getIdToken: async () => 'test-token',
+} as User;
 
-// Mock auth context
-const mockAuthContext = {
-  user: { uid: 'test-user-id', email: 'test@example.com' },
+const authContextValue = {
+  user: mockUser,
   loading: false,
-  signin: jest.fn(),
-  signup: jest.fn(),
-  signout: jest.fn(),
-  sendPasswordReset: jest.fn(),
-  updateProfile: jest.fn(),
+  signIn: vi.fn(),
+  signOut: vi.fn(),
+  sendPasswordReset: vi.fn(),
+  resetPassword: vi.fn(),
+  verifyEmail: vi.fn(),
+  updateUserProfile: vi.fn(),
+  resendVerificationEmail: vi.fn(),
+  checkEmailVerification: vi.fn(),
+  enrollMfa: vi.fn(),
+  verifyMfaCode: vi.fn(),
+  isMfaEnabled: vi.fn(),
+  getMfaPhone: vi.fn(),
+  disableMfa: vi.fn(),
+  userClaims: null,
 };
 
+const renderWithAuth = (ui: React.ReactElement) => {
+  return render(
+    <AuthContext.Provider value={authContextValue}>
+      {ui}
+    </AuthContext.Provider>
+  );
+};
+
+// Mock dependencies
+vi.mock('@/lib/receipt-service', () => ({
+  receiptService: {
+    listUserReceipts: vi.fn().mockResolvedValue([]),
+    generateReceipt: vi.fn().mockResolvedValue({ id: 'test-receipt' }),
+  }
+}));
+
+vi.mock('@/lib/analytics-service', () => ({
+  analyticsService: {
+    getTransactionAnalytics: vi.fn().mockResolvedValue({ data: [] }),
+    getUserAnalytics: vi.fn().mockResolvedValue({ data: [] }),
+    getSystemPerformanceMetrics: vi.fn().mockResolvedValue({ data: [] }),
+    getPlatformMetrics: vi.fn().mockResolvedValue({ data: [] }),
+  }
+}));
+
+vi.mock('@/lib/dispute-resolution-service', () => ({
+  disputeResolutionService: {
+    getUserDisputes: vi.fn().mockResolvedValue([]),
+    getDisputeDetails: vi.fn().mockResolvedValue(null),
+  }
+}));
+
 // Mock toast hook
-jest.mock('@/hooks/use-toast', () => ({
+vi.mock('@/hooks/use-toast', () => ({
   useToast: () => ({
-    toast: jest.fn()
+    toast: vi.fn()
   })
 }));
 
 describe('Component Integration Tests', () => {
   test('ReceiptManager renders without errors', () => {
-    render(
-      <AuthContext.Provider value={mockAuthContext}>
-        <ReceiptManager />
-      </AuthContext.Provider>
-    );
-    expect(screen.getByText(/receipts/i)).toBeInTheDocument();
+    renderWithAuth(<ReceiptManager />);
+    expect(screen.getByTestId('receipt-manager-title')).toBeInTheDocument();
   });
 
   test('AnalyticsDashboard renders without errors', () => {
-    render(
-      <AuthContext.Provider value={mockAuthContext}>
-        <AnalyticsDashboard />
-      </AuthContext.Provider>
-    );
-    expect(screen.getByText(/analytics/i)).toBeInTheDocument();
+    renderWithAuth(<AnalyticsDashboard />);
+    expect(screen.getByRole('heading', { name: /analytics dashboard/i })).toBeInTheDocument();
   });
 
   test('EnhancedDisputeManagement renders without errors', () => {
-    render(
-      <AuthContext.Provider value={mockAuthContext}>
-        <EnhancedDisputeManagement />
-      </AuthContext.Provider>
-    );
-    expect(screen.getByText(/disputes/i)).toBeInTheDocument();
+    renderWithAuth(<EnhancedDisputeManagement />);
+    expect(screen.getByText(/dispute management/i)).toBeInTheDocument();
   });
 });
