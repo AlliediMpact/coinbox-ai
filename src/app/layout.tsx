@@ -35,11 +35,11 @@ export default function RootLayout({
           <AuthProvider>
             <OnboardingProvider>
               <SidebarProvider>
-                {/* Initial App Loading Splash Screen - displayed during first load */}
-                <AppLoading minimumLoadTimeMs={3000} />
+                {/* Temporarily disabled loading screens for debugging */}
+                {/* <AppLoading minimumLoadTimeMs={1000} /> */}
               
               {/* Enhanced Route Change Progress Indicator - for subsequent navigation */}
-              <RouteChangeIndicator />
+              {/* <RouteChangeIndicator /> */}
               
               <HeaderSidebarLayout>
                 {/* Page Transitions for smooth content changes */}

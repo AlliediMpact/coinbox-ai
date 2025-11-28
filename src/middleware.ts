@@ -3,6 +3,14 @@ import type { NextRequest } from 'next/server'
 
 export async function middleware(request: NextRequest) {
     try {
+        // Bypass all auth in development mode
+        const isDevelopment = process.env.NODE_ENV === 'development';
+        
+        if (isDevelopment) {
+            console.log('⚠️ Running in dev mode - bypassing all auth middleware');
+            return NextResponse.next();
+        }
+
         const sessionCookie = request.cookies.get('session')?.value || '';
 
         if (!sessionCookie) {
