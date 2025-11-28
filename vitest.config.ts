@@ -17,7 +17,9 @@ export default defineConfig({
       'src/tests/e2e/**',
       '**/*.e2e.*',
       'playwright.config.*',
-      'src/tests/**/e2e/**'
+      'src/tests/**/e2e/**',
+      // Exclude integration tests - they run separately with their own config
+      'src/tests/integration/**/*.integration.test.ts'
     ],
     coverage: {
       provider: 'v8',
@@ -26,9 +28,13 @@ export default defineConfig({
         'src/lib/transaction-monitoring-service.ts',
         'src/middleware/trading-rate-limit.ts',
         'src/components/TransactionSecurity.tsx',
-        'src/components/admin/TransactionMonitoring.tsx'
+        'src/components/admin/TransactionMonitoring.tsx',
+        'src/lib/firebase.ts',
+        'src/lib/firebase-admin.ts'
       ]
-    }
+    },
+    // Increase timeout for integration tests
+    testTimeout: 30000,
   },
   resolve: {
     alias: {

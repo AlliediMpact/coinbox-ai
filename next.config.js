@@ -70,15 +70,16 @@ const nextConfig = {
       }
     ]
   },
-  async rewrites() {
-    const port = process.env.PORT || 9004;
-    return [
-      {
-        source: '/:path*',
-        destination: `http://localhost:${port}/:path*`,
-      },
-    ];
-  },
+  // Commented out rewrites to avoid proxy loop in development
+  // async rewrites() {
+  //   const port = process.env.PORT || 9004;
+  //   return [
+  //     {
+  //       source: '/:path*',
+  //       destination: `http://localhost:${port}/:path*`,
+  //     },
+  //   ];
+  // },
   // Add WebSocket server initialization
   webpack: (config, { isServer }) => {
     if (isServer && !global.webhookServerStarted) {

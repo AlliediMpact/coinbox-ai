@@ -94,6 +94,24 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
   const { toast } = useToast();
   const router = useRouter();
 
+  // Define signOutUser before useEffect to avoid reference before initialization error
+  const signOutUser = useCallback(async () => {
+    try {
+      await firebaseSignOut(auth);
+      toast({
+         title: "Signed Out",
+         description: "You have been successfully signed out.",
+      });
+    } catch (error) {
+      console.error("Sign out error: ", error);
+      toast({
+        title: "Sign Out Failed",
+        description: "An error occurred while signing out.",
+        variant: "destructive",
+      });
+    }
+  }, [auth, toast]);
+
   useEffect(() => {
     const unsubscribeAuth = onAuthStateChanged(auth, async (currentUser) => {
       if (currentUser) {
@@ -173,23 +191,6 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
       unsubscribeAuth();
     };
   }, [auth, db, toast, router, signOutUser]);
-
-  const signOutUser = useCallback(async () => {
-    try {
-      await firebaseSignOut(auth);
-      toast({
-         title: "Signed Out",
-         description: "You have been successfully signed out.",
-      });
-    } catch (error) {
-      console.error("Sign out error: ", error);
-      toast({
-        title: "Sign Out Failed",
-        description: "An error occurred while signing out.",
-        variant: "destructive",
-      });
-    }
-  }, [auth, toast]);
 
   const signIn = async (email: string, password: string) => {
     setLoading(true);
