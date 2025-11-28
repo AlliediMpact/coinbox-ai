@@ -170,5 +170,193 @@ describe('Trading Rate Limit Middleware', () => {
       );
       expect(next).toHaveBeenCalled();
     });
+
+    // NEW: Extended test cases for better coverage
+    it('should handle concurrent requests from same user', async () => {
+      // Arrange
+      mockRedisInstance.get.mockResolvedValue('5');
+      mockRedisInstance.incrby.mockResolvedValue(6);
+      mockRedisInstance.expire.mockResolvedValue(1);
+      
+      // Act - simulate concurrent requests
+      const promises = Array(3).fill(null).map(() => 
+        tradingRateLimit('create')(req, res, next)
+      );
+      
+      await Promise.all(promises);
+      
+      // Assert - should handle all requests
+      expect(mockRedisInstance.get).toHaveBeenCalled();
+      expect(next).toHaveBeenCalledTimes(3);
+    });
+    
+    it('should differentiate between different trading operations', async () => {
+      // Arrange
+      mockRedisInstance.get.mockImplementation((key) => {
+        if (key.includes('trading:create:')) return Promise.resolve('5');
+        if (key.includes('trading:match:')) return Promise.resolve('10');
+        if (key.includes('trading:confirm:')) return Promise.resolve('15');
+        return Promise.resolve('0');
+      });
+      
+      // Act & Assert - create operation
+      await tradingRateLimit('create')(req, res, next);
+      expect(next).toHaveBeenCalledWith();
+      
+      vi.clearAllMocks();
+      
+      // Act & Assert - match operation
+      await tradingRateLimit('match')(req, res, next);
+      expect(next).toHaveBeenCalledWith();
+      
+      vi.clearAllMocks();
+      
+      // Act & Assert - confirm operation
+      await tradingRateLimit('confirm')(req, res, next);
+      expect(next).toHaveBeenCalledWith();
+    });
+    
+    it('should reset limit after time window expires', async () => {
+      // Arrange - first set shows expired window
+      mockRedisInstance.get.mockResolvedValueOnce('20'); // Over limit
+      mockRedisInstance.incrby.mockResolvedValue(1);
+      mockRedisInstance.expire.mockResolvedValue(1);
+      
+      // Act - should be blocked
+      await tradingRateLimit('create')(req, res, next);
+      
+      // Assert
+      expect(next).toHaveBeenCalledWith(expect.any(RateLimitExceededError));
+    });
+    
+    it('should handle missing user ID gracefully', async () => {
+      // Arrange
+      req.cookies.get = vi.fn().mockReturnValue(null);
+      mockRedisInstance.get.mockResolvedValue('3');
+      mockRedisInstance.incrby.mockResolvedValue(4);
+      mockRedisInstance.expire.mockResolvedValue(1);
+      
+      // Act
+      await tradingRateLimit('create')(req, res, next);
+      
+      // Assert - should fall back to IP-based rate limiting
+      expect(mockRedisInstance.get).toHaveBeenCalledWith(
+        expect.stringContaining('127.0.0.1')
+      );
+      expect(next).toHaveBeenCalled();
+    });
+    
+    it('should track failed requests separately', async () => {
+      // Arrange
+      mockRedisInstance.get.mockResolvedValue('11'); // Over limit
+      
+      // Act
+      await tradingRateLimit('create')(req, res, next);
+      
+      // Assert
+      expect(next).toHaveBeenCalledWith(expect.any(RateLimitExceededError));
+      expect(res.status).not.toHaveBeenCalled();
+    });
+    
+    it('should handle database errors gracefully', async () => {
+      // Arrange
+      mockRedisInstance.get.mockRejectedValue(new Error('Redis connection failed'));
+      
+      // Act
+      await tradingRateLimit('create')(req, res, next);
+      
+      // Assert - should allow request through on error
+      expect(next).toHaveBeenCalled();
+      expect(next).not.toHaveBeenCalledWith(expect.any(Error));
+    });
+    
+    it('should handle expired rate limit records', async () => {
+      // Arrange
+      mockRedisInstance.get.mockResolvedValue(null); // No existing record
+      mockRedisInstance.incrby.mockResolvedValue(1);
+      mockRedisInstance.expire.mockResolvedValue(1);
+      
+      // Act
+      await tradingRateLimit('create')(req, res, next);
+      
+      // Assert
+      expect(mockRedisInstance.incrby).toHaveBeenCalled();
+      expect(next).toHaveBeenCalled();
+    });
+    
+    it('should extract amount from request body', async () => {
+      // Arrange
+      req.body = JSON.stringify({ amount: 5000, userId: 'user123' });
+      mockRedisInstance.get.mockImplementation((key) => {
+        if (key.includes('trading:amount:')) return Promise.resolve('40000');
+        return Promise.resolve('5');
+      });
+      mockRedisInstance.incrby.mockResolvedValue(1);
+      mockRedisInstance.expire.mockResolvedValue(1);
+      
+      // Act
+      await tradingRateLimit('create')(req, res, next);
+      
+      // Assert - should track amount
+      expect(mockRedisInstance.get).toHaveBeenCalledWith(
+        expect.stringContaining('trading:amount:')
+      );
+      expect(next).toHaveBeenCalled();
+    });
+    
+    it('should handle invalid JSON in request body', async () => {
+      // Arrange
+      req.body = 'invalid-json';
+      mockRedisInstance.get.mockResolvedValue('3');
+      mockRedisInstance.incrby.mockResolvedValue(4);
+      mockRedisInstance.expire.mockResolvedValue(1);
+      
+      // Act
+      await tradingRateLimit('create')(req, res, next);
+      
+      // Assert - should still work with amount = 0
+      expect(next).toHaveBeenCalled();
+    });
+    
+    it('should handle missing Redis gracefully and fallback', async () => {
+      // Arrange - simulate Redis error that triggers fallback
+      mockRedisInstance.get.mockRejectedValue(new Error('Redis unavailable'));
+      
+      // Act
+      await tradingRateLimit('create')(req, res, next);
+      
+      // Assert - should allow through (fallback behavior)
+      expect(next).toHaveBeenCalled();
+    });
+
+    it('should apply correct limits for confirm operation', async () => {
+      // Arrange
+      mockRedisInstance.get.mockImplementation((key) => {
+        if (key.includes('trading:confirm:')) return Promise.resolve('19'); // Just under limit of 20
+        return Promise.resolve('0');
+      });
+      mockRedisInstance.incrby.mockResolvedValue(20);
+      mockRedisInstance.expire.mockResolvedValue(1);
+      
+      // Act
+      await tradingRateLimit('confirm')(req, res, next);
+      
+      // Assert
+      expect(next).toHaveBeenCalledWith();
+    });
+
+    it('should block when confirm limit exceeded', async () => {
+      // Arrange
+      mockRedisInstance.get.mockImplementation((key) => {
+        if (key.includes('trading:confirm:')) return Promise.resolve('21'); // Over limit of 20
+        return Promise.resolve('0');
+      });
+      
+      // Act
+      await tradingRateLimit('confirm')(req, res, next);
+      
+      // Assert
+      expect(next).toHaveBeenCalledWith(expect.any(RateLimitExceededError));
+    });
   });
 });

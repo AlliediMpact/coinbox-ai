@@ -55,14 +55,15 @@ function getAdminConfig(): FirebaseAdminConfig {
         if (!clientEmail) clientEmail = serviceAccount.client_email;
       }
     } catch (error) {
-      console.error('Error loading Firebase private key from file:', error);
+      console.warn('Could not load Firebase private key from file:', error);
     }
   }
 
-  if (!projectId || !clientEmail || (!privateKey && !privateKeyPath) || !databaseURL) {
+  if (!projectId || !clientEmail || !privateKey || !databaseURL) {
     // During build time or if env vars are missing, we shouldn't crash immediately
     // This allows the build to proceed even without secrets
-    console.warn('Missing Firebase Admin configuration. Skipping initialization.');
+    console.warn('⚠️ Firebase Admin configuration incomplete. Running in limited mode (UI only).');
+    console.warn('   To enable backend features, configure Firebase credentials in .env.local');
     return {
       projectId: projectId || 'dummy',
       clientEmail: clientEmail || 'dummy',
@@ -85,7 +86,7 @@ if (typeof window === 'undefined') {
     try {
       const config = getAdminConfig();
       // Only initialize if we have a real key (not dummy from above fallback)
-      if (config.privateKey !== 'dummy') {
+      if (config.privateKey !== 'dummy' && config.privateKey.includes('-----BEGIN PRIVATE KEY-----')) {
         admin.initializeApp({
           credential: admin.credential.cert({
             projectId: config.projectId,
@@ -94,10 +95,14 @@ if (typeof window === 'undefined') {
           }),
           databaseURL: config.databaseURL,
         });
-        console.log("Firebase Admin SDK initialized successfully.");
+        console.log("✅ Firebase Admin SDK initialized successfully.");
+      } else {
+        console.warn('⚠️ Firebase Admin SDK not initialized - missing valid credentials.');
+        console.warn('   App will run in UI-only mode. Backend features require proper Firebase setup.');
       }
     } catch (error) {
-      console.error("Firebase Admin SDK initialization error:", error);
+      console.error("❌ Firebase Admin SDK initialization error:", error);
+      console.warn('   Continuing without Firebase Admin - UI will load but backend features disabled.');
       // Do not throw here, so build can succeed
     }
   }
@@ -106,6 +111,8 @@ if (typeof window === 'undefined') {
     const app = admin.app();
     adminAuth = admin.auth(app);
     adminDb = admin.firestore(app);
+  } else {
+    console.warn('⚠️ Firebase Admin not available - backend API calls will fail gracefully');
   }
 }
 
