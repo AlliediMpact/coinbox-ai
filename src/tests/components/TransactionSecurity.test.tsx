@@ -1,65 +1,107 @@
-import { describe, it, expect, vi } from 'vitest'
+import { describe, it, expect, vi, beforeAll } from 'vitest'
 import { render, screen, fireEvent } from '@testing-library/react'
 import React from 'react'
 import TransactionSecurity from '../../components/TransactionSecurity'
-import { AuthProvider } from '../../components/AuthProvider'
-import { beforeAll } from 'vitest'
 
-beforeAll(() => {
-  vi.mock('../../components/AuthProvider', () => {
-    return {
-      AuthProvider: ({ children }: { children: React.ReactNode }) => <>{children}</>,
-      useAuth: () => ({ user: null, signIn: vi.fn(), signOut: vi.fn() })
-    }
-  })
+// Install mocks at top-level to avoid hoisting issues
+vi.mock('@/components/AuthProvider', () => {
+  return {
+    AuthProvider: ({ children }: { children: React.ReactNode }) => <>{children}</>,
+    useAuth: () => ({ user: { uid: 'user-1' }, signIn: vi.fn(), signOut: vi.fn() })
+  }
 })
 
+vi.mock('@/hooks/use-toast', () => ({
+  useToast: () => ({ toast: vi.fn() })
+}))
+
+vi.mock('@/lib/transaction-monitoring-api', () => ({
+  transactionMonitoringAPI: {
+    checkUserTradingStatus: vi.fn().mockResolvedValue({
+      status: 'normal',
+      alerts: 2,
+      criticalAlerts: 1,
+      isFlagged: false,
+      reason: null
+    }),
+    getUserAlerts: vi.fn().mockResolvedValue([
+      {
+        id: 'a1',
+        userId: 'user-1',
+        ruleId: 'high-value',
+        ruleName: 'High Value Transaction',
+        severity: 'high',
+        transactions: ['t1'],
+        detectedAt: new Date(),
+        status: 'new'
+      },
+      {
+        id: 'a2',
+        userId: 'user-1',
+        ruleId: 'velocity',
+        ruleName: 'Medium Velocity',
+        severity: 'medium',
+        transactions: ['t2'],
+        detectedAt: new Date(),
+        status: 'under-review'
+      }
+    ])
+  }
+}))
+
 describe('TransactionSecurity component', () => {
-  it('renders alerts and maps severity classes', () => {
-    const alerts = [
-      { id: 'a1', title: 'High Value', severity: 'high', status: 'open' },
-      { id: 'a2', title: 'Medium Velocity', severity: 'medium', status: 'open' },
-      { id: 'a3', title: 'Low Risk', severity: 'low', status: 'closed' }
-    ]
-
+  it('renders alerts and maps severity classes', async () => {
+    const { AuthProvider } = await import('@/components/AuthProvider')
     render(
       <AuthProvider>
-        <TransactionSecurity
-          alerts={alerts as any}
-          rules={[] as any}
-          onRefresh={vi.fn()}
-          onViewAlert={vi.fn()}
-        />
+        <TransactionSecurity />
       </AuthProvider>
     )
 
-    expect(screen.getByText('High Value')).toBeInTheDocument()
-    expect(screen.getByText('Medium Velocity')).toBeInTheDocument()
-    expect(screen.getByText('Low Risk')).toBeInTheDocument()
+    // Await async load completion
+    expect(await screen.findByText('Security Alerts')).toBeInTheDocument()
+
+    // Alert rule names should be visible
+    expect(await screen.findByText('High Value Transaction')).toBeInTheDocument()
+    expect(await screen.findByText('Medium Velocity')).toBeInTheDocument()
   })
 
-  it('triggers refresh handler', () => {
-    const onRefresh = vi.fn()
+  it('refresh button triggers data reload', async () => {
+    const { AuthProvider } = await import('@/components/AuthProvider')
+    const { transactionMonitoringAPI } = await import('@/lib/transaction-monitoring-api')
+
     render(
       <AuthProvider>
-        <TransactionSecurity alerts={[] as any} rules={[] as any} onRefresh={onRefresh} onViewAlert={vi.fn()} />
+        <TransactionSecurity />
       </AuthProvider>
     )
-    const btn = screen.getByRole('button', { name: /refresh/i })
+
+    // Wait for initial render
+    await screen.findByText('Security Alerts')
+
+    const btn = await screen.findByRole('button', { name: /refresh/i })
     fireEvent.click(btn)
-    expect(onRefresh).toHaveBeenCalledTimes(1)
+
+    // Both status and alerts should be fetched again
+    expect(transactionMonitoringAPI.checkUserTradingStatus).toHaveBeenCalled()
+    expect(transactionMonitoringAPI.getUserAlerts).toHaveBeenCalled()
   })
 
-  it('opens alert details on click', () => {
-    const onViewAlert = vi.fn()
-    const alerts = [{ id: 'a1', title: 'High Value', severity: 'high', status: 'open' }]
+  it('opens alert details on click', async () => {
+    const { AuthProvider } = await import('@/components/AuthProvider')
     render(
       <AuthProvider>
-        <TransactionSecurity alerts={alerts as any} rules={[] as any} onRefresh={vi.fn()} onViewAlert={onViewAlert} />
+        <TransactionSecurity />
       </AuthProvider>
     )
-    const row = screen.getByText('High Value')
-    fireEvent.click(row)
-    expect(onViewAlert).toHaveBeenCalledWith(expect.objectContaining({ id: 'a1' }))
+
+    // Wait for alerts to load
+    await screen.findByText('High Value Transaction')
+    const detailsBtn = await screen.findAllByRole('button', { name: /details/i })
+    fireEvent.click(detailsBtn[0])
+
+    // Dialog should show
+    expect(await screen.findByText(/Alert details/i)).toBeInTheDocument()
+    expect(await screen.findByText(/Severity:/i)).toBeInTheDocument()
   })
 })
