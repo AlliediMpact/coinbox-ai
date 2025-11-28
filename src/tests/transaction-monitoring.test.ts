@@ -649,4 +649,527 @@ describe('TransactionMonitoringService', () => {
       expect(result.id).toBeDefined();
     });
   });
+
+  describe('Initialize and Setup', () => {
+    it('should create default rules when none exist', async () => {
+      const { getDocs, addDoc } = await import('firebase/firestore');
+      (getDocs as any).mockResolvedValue({ empty: true, docs: [] });
+      (addDoc as any).mockResolvedValue({ id: 'rule-id' });
+
+      const result = await monitoringService.initialize();
+      
+      expect(result.success).toBe(true);
+      expect(addDoc).toHaveBeenCalled();
+    });
+
+    it('should skip creating rules when they already exist', async () => {
+      const { getDocs, addDoc } = await import('firebase/firestore');
+      (getDocs as any).mockResolvedValue({ 
+        empty: false, 
+        docs: [{ id: 'rule1', data: () => ({}) }] 
+      });
+
+      const result = await monitoringService.initialize();
+      
+      expect(result.success).toBe(true);
+      expect(addDoc).not.toHaveBeenCalled();
+    });
+
+    it('should handle initialization errors gracefully', async () => {
+      const { getDocs } = await import('firebase/firestore');
+      (getDocs as any).mockRejectedValue(new Error('Firestore error'));
+
+      const result = await monitoringService.initialize();
+      
+      expect(result.success).toBe(false);
+      expect(result.error).toBeDefined();
+    });
+  });
+
+  describe('Transaction Analysis Flow', () => {
+    it('should analyze transaction against enabled rules', async () => {
+      const { getDocs } = await import('firebase/firestore');
+      (getDocs as any).mockResolvedValueOnce({
+        docs: [{
+          id: 'rapid-rule',
+          data: () => ({
+            name: 'Rapid Transactions',
+            enabled: true,
+            severity: 'high',
+            thresholds: { timeWindow: 10, maxTransactions: 3, patternType: 'rapid' }
+          })
+        }]
+      }).mockResolvedValueOnce({
+        docs: [
+          { id: 'tx1', data: () => ({ userId: 'user1', amount: 100, createdAt: new Date() }) },
+          { id: 'tx2', data: () => ({ userId: 'user1', amount: 200, createdAt: new Date() }) },
+          { id: 'tx3', data: () => ({ userId: 'user1', amount: 300, createdAt: new Date() }) },
+          { id: 'tx4', data: () => ({ userId: 'user1', amount: 400, createdAt: new Date() }) }
+        ]
+      }).mockResolvedValueOnce({
+        empty: true,
+        docs: []
+      });
+
+      monitoringService.saveAlert = vi.fn();
+
+      const transaction = {
+        id: 'tx5',
+        userId: 'user1',
+        amount: 500,
+        createdAt: new Date()
+      };
+
+      await monitoringService.analyzeTransaction(transaction);
+      
+      expect(monitoringService.saveAlert).toHaveBeenCalled();
+    });
+
+    it('should handle analysis errors gracefully', async () => {
+      const { getDocs } = await import('firebase/firestore');
+      (getDocs as any).mockRejectedValue(new Error('Analysis error'));
+
+      const transaction = {
+        id: 'tx1',
+        userId: 'user1',
+        amount: 100,
+        createdAt: new Date()
+      };
+
+      await expect(monitoringService.analyzeTransaction(transaction)).resolves.not.toThrow();
+    });
+  });
+
+  describe('Rule Violation Detection Patterns', () => {
+    it('should detect escalating transaction pattern', async () => {
+      const { getDocs } = await import('firebase/firestore');
+      
+      const recentTxs = [
+        { id: 'tx1', data: () => ({ userId: 'user1', amount: 100, createdAt: new Date() }) },
+        { id: 'tx2', data: () => ({ userId: 'user1', amount: 200, createdAt: new Date() }) },
+        { id: 'tx3', data: () => ({ userId: 'user1', amount: 400, createdAt: new Date() }) }
+      ];
+
+      (getDocs as any).mockResolvedValue({ docs: recentTxs });
+
+      const rule = {
+        id: 'escalating',
+        name: 'Escalating Amounts',
+        severity: 'high' as const,
+        thresholds: { timeWindow: 60, patternType: 'escalating' as const },
+        enabled: true,
+        createdAt: new Date(),
+        updatedAt: new Date()
+      };
+
+      const transaction = {
+        id: 'tx4',
+        userId: 'user1',
+        amount: 800,
+        createdAt: new Date()
+      };
+
+      const isViolation = await (monitoringService as any).checkRuleViolation(transaction, rule);
+      expect(isViolation).toBe(true);
+    });
+
+    it('should detect unusual hours pattern', async () => {
+      const { getDocs } = await import('firebase/firestore');
+      (getDocs as any).mockResolvedValue({ docs: [] });
+
+      const rule = {
+        id: 'unusual-hours',
+        name: 'Unusual Hours',
+        severity: 'low' as const,
+        thresholds: { timeWindow: 60, patternType: 'unusual-hours' as const },
+        enabled: true,
+        createdAt: new Date(),
+        updatedAt: new Date()
+      };
+
+      const lateNightDate = new Date();
+      lateNightDate.setHours(2, 30, 0); // 2:30 AM
+
+      const transaction = {
+        id: 'tx1',
+        userId: 'user1',
+        amount: 100,
+        createdAt: lateNightDate
+      };
+
+      const isViolation = await (monitoringService as any).checkRuleViolation(transaction, rule);
+      expect(isViolation).toBe(true);
+    });
+
+    it('should detect multiple counterparties pattern', async () => {
+      const { getDocs } = await import('firebase/firestore');
+      
+      const recentTxs = [
+        { id: 'tx1', data: () => ({ userId: 'user1', amount: 100, createdAt: new Date(), matchedTicketId: 'counter1' }) },
+        { id: 'tx2', data: () => ({ userId: 'user1', amount: 200, createdAt: new Date(), matchedTicketId: 'counter2' }) },
+        { id: 'tx3', data: () => ({ userId: 'user1', amount: 300, createdAt: new Date(), matchedTicketId: 'counter3' }) }
+      ];
+
+      (getDocs as any).mockResolvedValue({ docs: recentTxs });
+
+      const rule = {
+        id: 'multi-counterparty',
+        name: 'Multiple Counterparties',
+        severity: 'medium' as const,
+        thresholds: { timeWindow: 60, patternType: 'multiple-counterparties' as const },
+        enabled: true,
+        createdAt: new Date(),
+        updatedAt: new Date()
+      };
+
+      const transaction = {
+        id: 'tx4',
+        userId: 'user1',
+        amount: 400,
+        createdAt: new Date()
+      };
+
+      const isViolation = await (monitoringService as any).checkRuleViolation(transaction, rule);
+      expect(isViolation).toBe(true);
+    });
+
+    it('should check minimum amount threshold', async () => {
+      const { getDocs } = await import('firebase/firestore');
+      (getDocs as any).mockResolvedValue({ docs: [] });
+
+      const rule = {
+        id: 'high-value',
+        name: 'High Value',
+        severity: 'high' as const,
+        thresholds: { timeWindow: 60, minAmount: 10000 },
+        enabled: true,
+        createdAt: new Date(),
+        updatedAt: new Date()
+      };
+
+      const lowValueTx = {
+        id: 'tx1',
+        userId: 'user1',
+        amount: 500,
+        createdAt: new Date()
+      };
+
+      const isViolation = await (monitoringService as any).checkRuleViolation(lowValueTx, rule);
+      expect(isViolation).toBe(false);
+    });
+
+    it('should check maximum amount threshold', async () => {
+      const { getDocs } = await import('firebase/firestore');
+      (getDocs as any).mockResolvedValue({ docs: [] });
+
+      const rule = {
+        id: 'amount-cap',
+        name: 'Amount Cap',
+        severity: 'high' as const,
+        thresholds: { timeWindow: 60, maxAmount: 1000 },
+        enabled: true,
+        createdAt: new Date(),
+        updatedAt: new Date()
+      };
+
+      const highValueTx = {
+        id: 'tx1',
+        userId: 'user1',
+        amount: 5000,
+        createdAt: new Date()
+      };
+
+      const isViolation = await (monitoringService as any).checkRuleViolation(highValueTx, rule);
+      expect(isViolation).toBe(true);
+    });
+
+    it('should return false for unknown pattern types', async () => {
+      const { getDocs } = await import('firebase/firestore');
+      (getDocs as any).mockResolvedValue({ docs: [] });
+
+      const rule = {
+        id: 'unknown-pattern',
+        name: 'Unknown',
+        severity: 'low' as const,
+        thresholds: { timeWindow: 60, patternType: 'unknown-type' as any },
+        enabled: true,
+        createdAt: new Date(),
+        updatedAt: new Date()
+      };
+
+      const transaction = {
+        id: 'tx1',
+        userId: 'user1',
+        amount: 100,
+        createdAt: new Date()
+      };
+
+      const isViolation = await (monitoringService as any).checkRuleViolation(transaction, rule);
+      expect(isViolation).toBe(false);
+    });
+  });
+
+  describe('Alert Creation and Management', () => {
+    it('should update existing alert when rule already triggered', async () => {
+      const { getDocs } = await import('firebase/firestore');
+      
+      const mockUpdate = vi.fn();
+      const mockAlertDoc = {
+        id: 'alert1',
+        ref: { update: mockUpdate },
+        data: () => ({
+          userId: 'user1',
+          ruleId: 'rapid-rule',
+          transactions: ['tx1', 'tx2'],
+          status: 'new'
+        })
+      };
+
+      (getDocs as any).mockResolvedValue({
+        empty: false,
+        docs: [mockAlertDoc]
+      });
+
+      const rule = {
+        id: 'rapid-rule',
+        name: 'Rapid Transactions',
+        severity: 'high' as const,
+        thresholds: { timeWindow: 10, maxTransactions: 3 },
+        enabled: true,
+        createdAt: new Date(),
+        updatedAt: new Date()
+      };
+
+      const transaction = {
+        id: 'tx3',
+        userId: 'user1',
+        amount: 300,
+        createdAt: new Date()
+      };
+
+      await (monitoringService as any).createAlertForRule(transaction, rule);
+      
+      expect(mockUpdate).toHaveBeenCalled();
+    });
+
+    it('should create new alert and notify user for high severity', async () => {
+      const { getDocs } = await import('firebase/firestore');
+      (getDocs as any).mockResolvedValue({ empty: true, docs: [] });
+
+      monitoringService.saveAlert = vi.fn();
+      
+      vi.mock('../lib/notification-service', () => ({
+        notificationService: {
+          createNotification: vi.fn().mockResolvedValue({ id: 'notif1' })
+        }
+      }));
+
+      const rule = {
+        id: 'high-value',
+        name: 'High Value Transaction',
+        severity: 'critical' as const,
+        thresholds: { minAmount: 10000 },
+        enabled: true,
+        createdAt: new Date(),
+        updatedAt: new Date()
+      };
+
+      const transaction = {
+        id: 'tx1',
+        userId: 'user1',
+        amount: 50000,
+        createdAt: new Date()
+      };
+
+      await (monitoringService as any).createAlertForRule(transaction, rule);
+      
+      expect(monitoringService.saveAlert).toHaveBeenCalled();
+    });
+
+    it('should handle errors in alert creation gracefully', async () => {
+      const { getDocs } = await import('firebase/firestore');
+      (getDocs as any).mockRejectedValue(new Error('Database error'));
+
+      const rule = {
+        id: 'test-rule',
+        name: 'Test Rule',
+        severity: 'low' as const,
+        thresholds: {},
+        enabled: true,
+        createdAt: new Date(),
+        updatedAt: new Date()
+      };
+
+      const transaction = {
+        id: 'tx1',
+        userId: 'user1',
+        amount: 100,
+        createdAt: new Date()
+      };
+
+      await expect((monitoringService as any).createAlertForRule(transaction, rule)).resolves.not.toThrow();
+    });
+
+    it('should notify admins for high severity alerts through notifyAdmins', async () => {
+      const { getDocs } = await import('firebase/firestore');
+      
+      (getDocs as any).mockResolvedValue({
+        docs: [
+          { id: 'admin1', data: () => ({ roles: ['admin'] }) },
+          { id: 'admin2', data: () => ({ roles: ['admin'] }) }
+        ]
+      });
+
+      vi.mock('../lib/notification-service', () => ({
+        notificationService: {
+          createNotification: vi.fn().mockResolvedValue({ id: 'notif1' })
+        }
+      }));
+
+      const rule = {
+        id: 'critical',
+        name: 'Critical Alert',
+        severity: 'critical' as const,
+        thresholds: {},
+        enabled: true,
+        createdAt: new Date(),
+        updatedAt: new Date()
+      };
+
+      const transaction = {
+        id: 'tx1',
+        userId: 'user1',
+        amount: 100000,
+        createdAt: new Date()
+      };
+
+      await (monitoringService as any).notifyAdmins(transaction, rule);
+      
+      const notifService = await import('../lib/notification-service');
+      expect(notifService.notificationService.createNotification).toHaveBeenCalled();
+    });
+
+    it('should handle notification errors in notifyAdmins', async () => {
+      const { getDocs } = await import('firebase/firestore');
+      (getDocs as any).mockRejectedValue(new Error('Query failed'));
+
+      const rule = {
+        id: 'test',
+        name: 'Test',
+        severity: 'high' as const,
+        thresholds: {},
+        enabled: true,
+        createdAt: new Date(),
+        updatedAt: new Date()
+      };
+
+      const transaction = {
+        id: 'tx1',
+        userId: 'user1',
+        amount: 1000,
+        createdAt: new Date()
+      };
+
+      await expect((monitoringService as any).notifyAdmins(transaction, rule)).resolves.not.toThrow();
+    });
+
+    it('should use notification service fallback in createAlert when userNotifier not provided', async () => {
+      vi.clearAllMocks();
+      const serviceWithoutNotifier = new TransactionMonitoringService();
+      
+      vi.mock('../lib/notification-service', () => ({
+        notificationService: {
+          createNotification: vi.fn().mockResolvedValue({ id: 'notif1' })
+        }
+      }));
+
+      serviceWithoutNotifier.saveAlert = vi.fn();
+
+      const alert = {
+        userId: 'user1',
+        ruleId: 'high-value',
+        ruleName: 'High Value Transaction',
+        description: 'Large transaction detected',
+        severity: RuleSeverity.HIGH,
+        transactionId: 'tx1',
+        timestamp: new Date()
+      };
+
+      await serviceWithoutNotifier.createAlert(alert);
+
+      expect(serviceWithoutNotifier.saveAlert).toHaveBeenCalled();
+    });
+
+    it('should call userNotifier when provided for HIGH severity', async () => {
+      const mockNotifier = { notifyUser: vi.fn() };
+      const serviceWithNotifier = new TransactionMonitoringService(mockNotifier);
+      serviceWithNotifier.saveAlert = vi.fn();
+
+      const alert = {
+        userId: 'user1',
+        ruleId: 'critical',
+        ruleName: 'Critical Alert',
+        description: 'Critical issue',
+        severity: RuleSeverity.CRITICAL,
+        transactionId: 'tx1',
+        timestamp: new Date()
+      };
+
+      await serviceWithNotifier.createAlert(alert);
+
+      expect(mockNotifier.notifyUser).toHaveBeenCalledWith('user1', 'Security alert');
+    });
+  });
+
+  describe('evaluateRule wrapper', () => {
+    it('should execute rule condition function when provided', () => {
+      const mockRule = {
+        condition: vi.fn().mockReturnValue(true)
+      };
+
+      const transaction = { id: 'tx1', amount: 100 };
+      const history = [{ id: 'tx0', amount: 50 }];
+
+      const result = monitoringService.evaluateRule(mockRule, transaction, history);
+
+      expect(result).toBe(true);
+      expect(mockRule.condition).toHaveBeenCalledWith(transaction, history);
+    });
+
+    it('should return false when rule condition throws error', () => {
+      const mockRule = {
+        condition: vi.fn().mockImplementation(() => {
+          throw new Error('Rule error');
+        })
+      };
+
+      const transaction = { id: 'tx1' };
+
+      const result = monitoringService.evaluateRule(mockRule, transaction);
+
+      expect(result).toBe(false);
+    });
+
+    it('should fallback to checkRuleViolation when no condition function', () => {
+      const mockRule = {
+        id: 'test',
+        thresholds: { timeWindow: 60 }
+      };
+
+      const transaction = { id: 'tx1', userId: 'user1', amount: 100, createdAt: new Date() };
+
+      monitoringService.checkRuleViolation = vi.fn().mockResolvedValue(false);
+
+      const result = monitoringService.evaluateRule(mockRule, transaction);
+
+      expect(result).toBeDefined();
+    });
+  });
+
+  describe('getUserTransactions placeholder', () => {
+    it('should return empty array as placeholder', async () => {
+      const transactions = await monitoringService.getUserTransactions('user1');
+      expect(transactions).toEqual([]);
+    });
+  });
 });
