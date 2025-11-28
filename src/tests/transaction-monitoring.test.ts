@@ -501,7 +501,9 @@ describe('TransactionMonitoringService', () => {
     it('should handle weekend transactions differently', async () => {
       // Arrange - set to Sunday 2 AM
       const sundayMorning = new Date();
-      sundayMorning.setDay(0); // Sunday
+      // Adjust to Sunday by shifting current day to 0 (Sunday)
+      const diffToSunday = (7 - sundayMorning.getDay()) % 7;
+      sundayMorning.setDate(sundayMorning.getDate() + diffToSunday);
       sundayMorning.setHours(2);
       
       vi.setSystemTime(sundayMorning);
@@ -533,7 +535,10 @@ describe('TransactionMonitoringService', () => {
     it('should not alert for normal business hours transactions', async () => {
       // Arrange - set to weekday 2 PM
       const businessHours = new Date();
-      businessHours.setDay(3); // Wednesday
+      // Adjust to Wednesday (3)
+      const target = 3;
+      const diffToWed = (7 + target - businessHours.getDay()) % 7;
+      businessHours.setDate(businessHours.getDate() + diffToWed);
       businessHours.setHours(14);
       
       vi.setSystemTime(businessHours);
