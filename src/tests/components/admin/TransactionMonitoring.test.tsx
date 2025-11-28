@@ -152,4 +152,5 @@ describe('TransactionMonitoring component', () => {
     const { transactionMonitoringAPI } = await import('@/lib/transaction-monitoring-api')
     expect(transactionMonitoringAPI.getAllAlerts).toHaveBeenCalled()
   })
+
 })

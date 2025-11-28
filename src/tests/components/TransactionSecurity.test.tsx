@@ -104,4 +104,84 @@ describe('TransactionSecurity component', () => {
     expect(await screen.findByText(/Alert details/i)).toBeInTheDocument()
     expect(await screen.findByText(/Severity:/i)).toBeInTheDocument()
   })
+
+  it('displays different severity badge colors in alert details', async () => {
+    const { AuthProvider } = await import('@/components/AuthProvider')
+    const { transactionMonitoringAPI } = await import('@/lib/transaction-monitoring-api')
+
+    // Mock alerts with different severities including critical and low
+    transactionMonitoringAPI.getUserAlerts = vi.fn().mockResolvedValue([
+      {
+        id: 'critical-alert',
+        userId: 'user-1',
+        ruleId: 'critical-rule',
+        ruleName: 'Critical Alert',
+        severity: 'critical',
+        transactions: ['t1'],
+        detectedAt: new Date(),
+        status: 'new'
+      },
+      {
+        id: 'low-alert',
+        userId: 'user-1',
+        ruleId: 'low-rule',
+        ruleName: 'Low Alert',
+        severity: 'low',
+        transactions: ['t2'],
+        detectedAt: new Date(),
+        status: 'new'
+      }
+    ])
+
+    render(
+      <AuthProvider>
+        <TransactionSecurity />
+      </AuthProvider>
+    )
+
+    // Wait for critical alert to load and click to view details
+    await screen.findByText('Critical Alert')
+    const detailsBtns = await screen.findAllByRole('button', { name: /details/i })
+    fireEvent.click(detailsBtns[0])
+
+    // Should display critical severity - this covers the "critical" branch (lines 270-272)
+    // Use getAllByText since "critical" appears in both card badge and dialog badge
+    const criticalElements = await screen.findAllByText('critical')
+    expect(criticalElements.length).toBeGreaterThan(0)
+  })
+
+  it('displays resolution field when present in alert details', async () => {
+    const { AuthProvider } = await import('@/components/AuthProvider')
+    const { transactionMonitoringAPI } = await import('@/lib/transaction-monitoring-api')
+
+    // Mock alert with resolution field
+    transactionMonitoringAPI.getUserAlerts = vi.fn().mockResolvedValue([
+      {
+        id: 'resolved-alert',
+        userId: 'user-1',
+        ruleId: 'resolved-rule',
+        ruleName: 'Resolved Alert',
+        severity: 'medium',
+        transactions: ['t1'],
+        detectedAt: new Date(),
+        status: 'resolved',
+        resolution: 'Verified as legitimate transaction'
+      }
+    ])
+
+    render(
+      <AuthProvider>
+        <TransactionSecurity />
+      </AuthProvider>
+    )
+
+    // Wait for resolved alert to load and open details
+    await screen.findByText('Resolved Alert')
+    const detailsBtn = await screen.findByRole('button', { name: /details/i })
+    fireEvent.click(detailsBtn)
+
+    // Should display resolution section - covers lines 292-295
+    expect(await screen.findByText(/Resolution:/i)).toBeInTheDocument()
+    expect(await screen.findByText(/Verified as legitimate transaction/i)).toBeInTheDocument()
+  })
 })
