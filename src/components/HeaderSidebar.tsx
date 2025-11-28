@@ -359,7 +359,7 @@ const HeaderSidebar: React.FC<{ children: React.ReactNode }> = ({ children }) =>
                     <motion.aside
                         initial={{ x: -320 }}
                         animate={{ 
-                            x: isMobileMenuOpen ? 0 : window?.innerWidth < 1024 ? -320 : 0
+                            x: isMobileMenuOpen ? 0 : (typeof window !== 'undefined' && window.innerWidth < 1024) ? -320 : 0
                         }}
                         transition={{ 
                             type: "spring", 

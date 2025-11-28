@@ -18,7 +18,7 @@ import {
   IdTokenResult, // Ensure IdTokenResult is imported
   MultiFactorInfo // Ensure MultiFactorInfo is imported
 } from 'firebase/auth';
-import { app } from '@/lib/firebase';
+import { app, auth as firebaseAuth } from '@/lib/firebase';
 import {
   getFirestore,
   doc,
@@ -87,9 +87,46 @@ interface Props {
 export const AuthProvider: React.FC<Props> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
-  const [userClaims, setUserClaims] = useState<IdTokenResult['claims'] | null>(null); // Typed userClaims state
+  const [userClaims, setUserClaims] = useState<IdTokenResult['claims'] | null>(null);
+  const [initError, setInitError] = useState<string | null>(null);
 
-  const auth = getAuth(app);
+  console.log('[AuthProvider] Rendering, firebaseAuth:', firebaseAuth ? 'initialized' : 'NOT initialized');
+
+  // Check if Firebase Auth is properly initialized
+  if (!firebaseAuth) {
+    console.error('[AuthProvider] Firebase Auth not initialized - check environment variables');
+    console.error('[AuthProvider] Returning fallback AuthContext');
+    return (
+      <AuthContext.Provider value={{
+        user: null,
+        loading: false,
+        signIn: async () => { throw new Error('Firebase not initialized'); },
+        signOut: async () => {},
+        sendPasswordReset: async () => { throw new Error('Firebase not initialized'); },
+        resetPassword: async () => { throw new Error('Firebase not initialized'); },
+        verifyEmail: async () => { throw new Error('Firebase not initialized'); },
+        updateUserProfile: async () => { throw new Error('Firebase not initialized'); },
+        resendVerificationEmail: async () => { throw new Error('Firebase not initialized'); },
+        refreshUserClaims: async () => { return null; },
+        isFlagged: false,
+        isPremium: false,
+        role: 'user',
+        mfaEnabled: false,
+        enrolledFactors: [],
+        premiumUntil: null,
+      }}>
+        <div style={{padding: '20px', background: '#fff3cd', border: '1px solid #ffc107'}}>
+          <strong>⚠️ Firebase Authentication Not Configured</strong>
+          <p>Please check your Firebase environment variables.</p>
+        </div>
+        {children}
+      </AuthContext.Provider>
+    );
+  }
+
+  console.log('[AuthProvider] Firebase Auth initialized successfully');
+
+  const auth = firebaseAuth;
   const db = getFirestore(app);
   const { toast } = useToast();
   const router = useRouter();

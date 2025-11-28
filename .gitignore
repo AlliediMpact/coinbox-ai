@@ -36,3 +36,15 @@ yarn-error.log*
 next-env.d.ts
 
 coinbox-connect-firebase-adminsdk-fbsvc-9391c339af.jsonnohup.out
+
+# Firebase Admin SDK private keys
+secrets/
+*.json
+firebase-admin*.json
+
+# Temporary and backup files
+*.backup
+*_old_full.*
+nohup.out
+*.with-providers
+test-simple/
