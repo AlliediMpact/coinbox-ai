@@ -1,5 +1,6 @@
-export const dynamic = 'force-dynamic';
 'use client';
+
+export const dynamic = 'force-dynamic';
 
 import { useAuth } from '@/components/AuthProvider';
 import { Sidebar, SidebarContent, SidebarTrigger, SidebarMenu, SidebarMenuItem, SidebarMenuButton } from '@/components/ui/sidebar';

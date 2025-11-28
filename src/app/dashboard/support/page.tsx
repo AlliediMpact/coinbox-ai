@@ -1,5 +1,6 @@
-export const dynamic = 'force-dynamic';
 'use client';
+
+export const dynamic = 'force-dynamic';
 
 import SupportComponent from "@/components/SupportComponent";
 import { RoleProtectedRoute } from '@/components/RoleProtectedRoute';

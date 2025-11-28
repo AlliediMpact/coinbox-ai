@@ -1,5 +1,6 @@
-export const dynamic = 'force-dynamic';
 'use client';
+
+export const dynamic = 'force-dynamic';
 
 import RiskAssessmentTool from "@/components/RiskAssessmentTool";
 import { useAuth } from '@/components/AuthProvider';

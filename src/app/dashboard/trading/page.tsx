@@ -1,5 +1,6 @@
-export const dynamic = 'force-dynamic';
 'use client';
+
+export const dynamic = 'force-dynamic';
 
 import CoinTrading from "@/components/CoinTrading";
 import { useState, useEffect } from 'react';
@@ -18,5 +19,3 @@ export default function TradingPage() {
         </div>
     );
 }
-
-
