@@ -103,8 +103,10 @@ const nextConfig = {
           });
         };
         
-        // Start with port 9008 to avoid conflicts with dev server on 9007
-        startServer(9008);
+        // Get the Next.js dev server port and use a different one for WebSocket
+        const nextPort = parseInt(process.env.PORT || '9004', 10);
+        const wsPort = nextPort + 100; // Use port 100 higher to avoid conflicts
+        startServer(wsPort);
       } catch (error) {
         console.error('Failed to start WebSocket server:', error);
       }
