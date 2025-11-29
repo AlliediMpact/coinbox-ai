@@ -4,7 +4,7 @@ export const dynamic = 'force-dynamic';
 
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/components/AuthProvider';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { Loader2 } from 'lucide-react';
 import HeroSection from '@/components/home/HeroSection';
 import StatsCards from '@/components/home/StatsCards';
@@ -13,6 +13,7 @@ import LiveTransactionsFeed from '@/components/home/LiveTransactionsFeed';
 export default function Home() {
     const router = useRouter();
     const { user, loading } = useAuth();
+    const [showContent, setShowContent] = useState(false);
 
     // Redirect authenticated users to dashboard
     useEffect(() => {
@@ -21,8 +22,29 @@ export default function Home() {
         }
     }, [user, loading, router]);
 
-    // Show loading state while checking auth
-    if (loading) {
+    // Show content after initial load or timeout
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            setShowContent(true);
+        }, 1000); // Show content after 1 second even if auth is still loading
+
+        return () => clearTimeout(timer);
+    }, []);
+
+    // If user is authenticated, don't render (will redirect)
+    if (user) {
+        return (
+            <div className="flex items-center justify-center min-h-screen w-full">
+                <div className="flex flex-col items-center space-y-4">
+                    <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                    <p className="text-lg font-medium">Redirecting to dashboard...</p>
+                </div>
+            </div>
+        );
+    }
+
+    // Show loading only briefly or if explicitly needed
+    if (loading && !showContent) {
         return (
             <div className="flex items-center justify-center min-h-screen w-full">
                 <div className="flex flex-col items-center space-y-4">
@@ -31,11 +53,6 @@ export default function Home() {
                 </div>
             </div>
         );
-    }
-
-    // Don't render home page content if user is authenticated (will redirect)
-    if (user) {
-        return null;
     }
 
     return (
