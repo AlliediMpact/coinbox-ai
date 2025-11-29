@@ -6,9 +6,7 @@ const nextConfig = {
   eslint: {
     ignoreDuringBuilds: true,
   },
-  experimental: {
-    serverActions: true,
-  },
+
   output: 'standalone',
   transpilePackages: ['firebase', 'firebase-admin', '@firebase'],
   async headers() {
@@ -105,8 +103,8 @@ const nextConfig = {
           });
         };
         
-        // Start with port 9007 to avoid conflicts
-        startServer(9007);
+        // Start with port 9008 to avoid conflicts with dev server on 9007
+        startServer(9008);
       } catch (error) {
         console.error('Failed to start WebSocket server:', error);
       }

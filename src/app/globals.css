@@ -83,8 +83,14 @@ body {
   * {
     @apply border-border;
   }
+  html {
+    overflow-x: hidden;
+    width: 100%;
+  }
   body {
     @apply bg-background text-foreground;
+    overflow-x: hidden;
+    width: 100%;
   }
 }
 /* Add the gradient background */
@@ -276,7 +282,7 @@ button[aria-label="Close sidebar"]:hover {
   align-items: center;
   justify-content: center;
   min-height: 100vh;
-  width: 100vw;
+  width: 100%;
   padding: 1rem;
   box-sizing: border-box;
 }
@@ -293,7 +299,7 @@ button[aria-label="Close sidebar"]:hover {
 /* Responsive tweaks */
 @media (max-width: 600px) {
   .auth-form {
-    max-width: 98vw;
+    max-width: 100%;
     padding: 1.2rem 0.5rem;
   }
   .auth-page, .auth-container {

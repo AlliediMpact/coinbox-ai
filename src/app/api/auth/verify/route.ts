@@ -3,6 +3,11 @@ import { adminAuth, adminDb } from '@/lib/firebase-admin';
 
 export async function GET(request: NextRequest) {
     try {
+        // In development, allow through without session verification
+        if (process.env.NODE_ENV === 'development') {
+            return new NextResponse('OK', { status: 200 });
+        }
+
         const sessionCookie = request.cookies.get('session')?.value;
         
         if (!sessionCookie) {

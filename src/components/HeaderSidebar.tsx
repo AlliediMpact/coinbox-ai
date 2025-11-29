@@ -200,10 +200,10 @@ const HeaderSidebar: React.FC<{ children: React.ReactNode }> = ({ children }) =>
     ];
 
     return (
-        <div className="min-h-screen bg-background">
+        <div className="min-h-screen bg-background w-full overflow-x-hidden">
             {/* Header */}
             <header className="sticky top-0 z-50 w-full border-b shadow-sm" style={{ backgroundColor: '#193281' }}>
-                <div className="container flex h-16 items-center px-4">
+                <div className="container flex h-16 items-center px-4 max-w-full mx-auto">
                     {/* Mobile Menu Button */}
                     <motion.div
                         whileTap={{ scale: 0.95 }}
@@ -340,7 +340,7 @@ const HeaderSidebar: React.FC<{ children: React.ReactNode }> = ({ children }) =>
             </header>
 
             {/* Sidebar and Content */}
-            <div className="flex">
+            <div className="flex w-full overflow-x-hidden">
                 {/* Mobile Menu Backdrop */}
                 <AnimatePresence>
                     {isMobileMenuOpen && (
@@ -366,7 +366,7 @@ const HeaderSidebar: React.FC<{ children: React.ReactNode }> = ({ children }) =>
                             stiffness: 300, 
                             damping: 30 
                         }}
-                        className="fixed inset-y-0 left-0 z-40 w-64 shadow-lg lg:shadow-none lg:static lg:inset-auto"
+                        className="fixed inset-y-0 left-0 z-40 w-64 shadow-lg lg:shadow-none lg:static lg:inset-auto overflow-y-auto"
                         style={{ backgroundColor: '#193281' }}
                     >
                     <nav className="mt-16 lg:mt-0 p-4 space-y-2">
@@ -455,7 +455,7 @@ const HeaderSidebar: React.FC<{ children: React.ReactNode }> = ({ children }) =>
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.5 }}
-                    className="flex-1 p-4"
+                    className="flex-1 p-4 w-full min-w-0 overflow-x-hidden"
                 >
                     {children}
                 </motion.main>

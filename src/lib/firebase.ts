@@ -23,17 +23,25 @@ export const db = getFirestore(app);
 // In test or misconfigured environments, Firebase Auth can throw.
 // Guard initialization to avoid crashing security/test suites.
 let authInstance: ReturnType<typeof getAuth> | null = null;
-try {
-  // Only initialize auth when required env vars exist
-  if (
-    firebaseConfig.apiKey &&
-    firebaseConfig.authDomain &&
-    firebaseConfig.projectId &&
-    typeof window !== 'undefined'
-  ) {
-    authInstance = getAuth(app);
+
+// Initialize auth on client-side only
+if (typeof window !== 'undefined') {
+  try {
+    // Only initialize auth when required env vars exist
+    if (
+      firebaseConfig.apiKey &&
+      firebaseConfig.authDomain &&
+      firebaseConfig.projectId
+    ) {
+      authInstance = getAuth(app);
+      console.log('[Firebase] Auth initialized successfully');
+    } else {
+      console.error('[Firebase] Missing required environment variables');
+    }
+  } catch (error) {
+    console.error('[Firebase] Auth initialization failed:', error);
+    authInstance = null;
   }
-} catch {
-  authInstance = null;
 }
+
 export const auth = authInstance as any;
