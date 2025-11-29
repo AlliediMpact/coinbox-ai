@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import Image from 'next/image';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
     DropdownMenu,
@@ -68,6 +68,7 @@ const HeaderSidebar: React.FC<{ children: React.ReactNode }> = ({ children }) =>
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
     const [searchTerm, setSearchTerm] = useState('');
     const router = useRouter();
+    const pathname = usePathname();
     const { user, signOut } = useAuth();
     const [walletBalance, setWalletBalance] = useState('0.00');
     const [commissionBalance, setCommissionBalance] = useState('0.00');
@@ -200,7 +201,7 @@ const HeaderSidebar: React.FC<{ children: React.ReactNode }> = ({ children }) =>
     ];
 
     return (
-        <div className="min-h-screen bg-background w-full overflow-x-hidden">
+        <div className="flex flex-col min-h-screen bg-background w-full overflow-x-hidden">
             {/* Header */}
             <header className="sticky top-0 z-50 w-full border-b shadow-sm" style={{ backgroundColor: '#193281' }}>
                 <div className="container flex h-16 items-center px-4 max-w-full mx-auto">
@@ -340,7 +341,7 @@ const HeaderSidebar: React.FC<{ children: React.ReactNode }> = ({ children }) =>
             </header>
 
             {/* Sidebar and Content */}
-            <div className="flex w-full overflow-x-hidden">
+            <div className="flex flex-1 w-full overflow-x-hidden">
                 {/* Mobile Menu Backdrop */}
                 <AnimatePresence>
                     {isMobileMenuOpen && (
@@ -371,7 +372,9 @@ const HeaderSidebar: React.FC<{ children: React.ReactNode }> = ({ children }) =>
                     >
                     <nav className="mt-16 lg:mt-0 p-4 space-y-2">
                         {/* Regular navigation items */}
-                        {navigationItems.map((item) => (
+                        {navigationItems.map((item) => {
+                            const isActive = pathname === item.href;
+                            return (
                             <motion.div
                                 key={item.href}
                                 whileHover={{ 
@@ -386,7 +389,10 @@ const HeaderSidebar: React.FC<{ children: React.ReactNode }> = ({ children }) =>
                                         <TooltipTrigger asChild>
                                             <Button
                                                 variant="ghost"
-                                                className="w-full justify-start text-white"
+                                                className={cn(
+                                                    "w-full justify-start text-white",
+                                                    isActive && "bg-white/20 font-semibold"
+                                                )}
                                                 onClick={() => {
                                                     router.push(item.href);
                                                     setIsMobileMenuOpen(false);
@@ -402,7 +408,8 @@ const HeaderSidebar: React.FC<{ children: React.ReactNode }> = ({ children }) =>
                                     </Tooltip>
                                 </TooltipProvider>
                             </motion.div>
-                        ))}
+                        )})}
+
 
                         {/* Admin section */}
                         {isAdmin && (
@@ -412,7 +419,9 @@ const HeaderSidebar: React.FC<{ children: React.ReactNode }> = ({ children }) =>
                                     <div className="mt-1 h-px bg-gray-400/20" />
                                 </div>
                                 
-                                {adminNavigationItems.map((item) => (
+                                {adminNavigationItems.map((item) => {
+                                    const isActive = pathname === item.href;
+                                    return (
                                     <motion.div
                                         key={item.href}
                                         whileHover={{ 
@@ -427,7 +436,10 @@ const HeaderSidebar: React.FC<{ children: React.ReactNode }> = ({ children }) =>
                                                 <TooltipTrigger asChild>
                                                     <Button
                                                         variant="ghost"
-                                                        className="w-full justify-start text-white"
+                                                        className={cn(
+                                                            "w-full justify-start text-white",
+                                                            isActive && "bg-white/20 font-semibold"
+                                                        )}
                                                         onClick={() => {
                                                             router.push(item.href);
                                                             setIsMobileMenuOpen(false);
@@ -443,7 +455,8 @@ const HeaderSidebar: React.FC<{ children: React.ReactNode }> = ({ children }) =>
                                             </Tooltip>
                                         </TooltipProvider>
                                     </motion.div>
-                                ))}
+                                )})}
+
                             </>
                         )}
                     </nav>
@@ -455,14 +468,16 @@ const HeaderSidebar: React.FC<{ children: React.ReactNode }> = ({ children }) =>
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.5 }}
-                    className="flex-1 p-4 w-full min-w-0 overflow-x-hidden"
+                    className="flex-1 p-4 w-full min-w-0 overflow-x-hidden flex flex-col"
                 >
-                    {children}
+                    <div className="flex-1">
+                        {children}
+                    </div>
+                    
+                    {/* Site Footer */}
+                    <SiteFooter />
                 </motion.main>
             </div>
-            
-            {/* Site Footer */}
-            <SiteFooter />
         </div>
     );
 };

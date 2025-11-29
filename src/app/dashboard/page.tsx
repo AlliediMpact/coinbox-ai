@@ -8,7 +8,7 @@ import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Coins, CreditCard, Home as HomeIcon, ReferralCode, Share2, Shield, Users, Wallet, BarChart3 } from 'lucide-react';
+import { Coins, CreditCard, Home as HomeIcon, ReferralCode, Share2, Shield, Users, Wallet, BarChart3, Loader2 } from 'lucide-react';
 import RiskAssessmentTool from "@/components/RiskAssessmentTool";
 import SummaryComponent from "@/components/SummaryComponent";
 import PWAInstallPrompt from "@/components/PWAInstallPrompt";
@@ -26,7 +26,7 @@ const recentTransactions = [
 ];
 
 export default function Dashboard() {
-  const { user, logout } = useAuth();
+  const { user, signOut, loading } = useAuth();
   const router = useRouter();
   const [isMounted, setIsMounted] = useState(false); // Use state to track mounting
     const [walletBalance, setWalletBalance] = useState<number | null>(null);
@@ -34,29 +34,41 @@ export default function Dashboard() {
 
   useEffect(() => {
     setIsMounted(true); // Set to true after the component mounts
-    if (!user) {
+    if (!user && !loading) {
       router.push('/auth');
     }
-  }, [user, router]);
+  }, [user, loading, router]);
 
     // Fetch user-specific data (replace with your actual data fetching logic)
     useEffect(() => {
-        if (user) {
-            // Simulate fetching wallet balance and commission balance from a database
-            const fetchBalances = async () => {
-                // Replace these with actual database calls using Firebase or your preferred backend
-                const wallet = await getWalletBalance(user.uid);
-                const commission = await getCommissionBalance(user.uid);
+        const fetchBalances = async () => {
+            if (user) {
+                try {
+                    const wallet = await getWalletBalance(user.uid);
+                    const commission = await getCommissionBalance(user.uid);
 
-                setWalletBalance(wallet);
-                setCommissionBalance(commission);
-            };
-            fetchBalances();
-        }
+                    setWalletBalance(wallet);
+                    setCommissionBalance(commission);
+                } catch (error) {
+                    console.error('Error fetching balances:', error);
+                    // Set default values on error
+                    setWalletBalance(0);
+                    setCommissionBalance(0);
+                }
+            }
+        };
+        fetchBalances();
     }, [user]);
 
-  if (!user || !isMounted) {
-    return <div>Redirecting to Authentication...</div>;
+  if (!user || !isMounted || loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="flex flex-col items-center space-y-4">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          <p className="text-lg font-medium">Loading Dashboard...</p>
+        </div>
+      </div>
+    );
   }
 
   // Animation variants
@@ -91,7 +103,7 @@ export default function Dashboard() {
 
   return (
     <motion.div 
-      className="flex flex-col items-center justify-center min-h-screen p-4 dashboard"
+      className="flex flex-col p-4 dashboard"
       initial="hidden"
       animate="visible"
       variants={containerVariants}
@@ -419,31 +431,45 @@ export default function Dashboard() {
 
       </div>
 
-      <button onClick={() => logout()} className="mt-8 px-6 py-3 bg-red-500 text-white rounded-md hover:bg-red-600 transition-colors duration-300">
+      <button onClick={() => signOut()} className="mt-8 px-6 py-3 bg-red-500 text-white rounded-md hover:bg-red-600 transition-colors duration-300">
         Sign Out
       </button>
     </motion.div>
   );
 }
 
-// Simulated function to fetch wallet balance from a database
+// Fetch wallet balance from Firestore
 async function getWalletBalance(userId: string): Promise<number> {
-    // Replace with your actual database call using Firebase or your preferred backend
-    // This is just a placeholder to simulate fetching data
-    return new Promise((resolve) => {
-        setTimeout(() => {
-            resolve(Math.floor(Math.random() * 2000)); // Simulating a balance
-        }, 500);
-    });
+    try {
+        const { getFirestore, doc, getDoc } = await import('firebase/firestore');
+        const db = getFirestore();
+        const walletDoc = await getDoc(doc(db, 'wallets', userId));
+        
+        if (walletDoc.exists()) {
+            const data = walletDoc.data();
+            return parseFloat(data.balance?.toString() || '0');
+        }
+        return 0;
+    } catch (error) {
+        console.error('Error fetching wallet balance:', error);
+        return 0;
+    }
 }
 
-// Simulated function to fetch commission balance from a database
+// Fetch commission balance from Firestore
 async function getCommissionBalance(userId: string): Promise<number> {
-    // Replace with your actual database call using Firebase or your preferred backend
-    // This is just a placeholder to simulate fetching data
-    return new Promise((resolve) => {
-        setTimeout(() => {
-            resolve(Math.floor(Math.random() * 500)); // Simulating a balance
-        }, 500);
-    });
+    try {
+        const { getFirestore, doc, getDoc } = await import('firebase/firestore');
+        const db = getFirestore();
+        const commissionsDoc = await getDoc(doc(db, 'commissions', userId));
+        
+        if (commissionsDoc.exists()) {
+            const data = commissionsDoc.data();
+            return parseFloat(data.balance?.toString() || '0');
+        }
+        return 0;
+    } catch (error) {
+        console.error('Error fetching commission balance:', error);
+        return 0;
+    }
 }

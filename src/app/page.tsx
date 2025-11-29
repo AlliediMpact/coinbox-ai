@@ -5,9 +5,37 @@ export const dynamic = 'force-dynamic';
 import { Button } from "@/components/ui/button";
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
+import { useAuth } from '@/components/AuthProvider';
+import { useEffect } from 'react';
+import { Loader2 } from 'lucide-react';
 
 export default function Home() {
     const router = useRouter();
+    const { user, loading } = useAuth();
+
+    // Redirect authenticated users to dashboard
+    useEffect(() => {
+        if (user && !loading) {
+            router.push('/dashboard');
+        }
+    }, [user, loading, router]);
+
+    // Show loading state while checking auth
+    if (loading) {
+        return (
+            <div className="flex items-center justify-center min-h-screen">
+                <div className="flex flex-col items-center space-y-4">
+                    <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                    <p className="text-lg font-medium">Loading...</p>
+                </div>
+            </div>
+        );
+    }
+
+    // Don't render home page content if user is authenticated (will redirect)
+    if (user) {
+        return null;
+    }
 
     return (
         <main className="flex flex-col items-center justify-center min-h-screen px-4 py-12 sm:px-6 md:px-8 lg:py-16 bg-gradient-to-b from-blue-50 to-white">
