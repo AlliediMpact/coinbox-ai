@@ -200,6 +200,13 @@ const HeaderSidebar: React.FC<{ children: React.ReactNode }> = ({ children }) =>
         },
     ];
 
+    // Don't show header/sidebar on landing page
+    const isHomePage = pathname === '/';
+    
+    if (isHomePage && !user) {
+        return <>{children}</>;
+    }
+
     return (
         <div className="flex flex-col min-h-screen bg-background w-full overflow-x-hidden">
             {/* Header */}
