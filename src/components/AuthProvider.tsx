@@ -89,11 +89,17 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
   const [loading, setLoading] = useState(true);
   const [userClaims, setUserClaims] = useState<IdTokenResult['claims'] | null>(null);
   const [initError, setInitError] = useState<string | null>(null);
+  const [isClient, setIsClient] = useState(false);
+
+  // Set client-side flag after mount
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
 
   console.log('[AuthProvider] Rendering, firebaseAuth:', firebaseAuth ? 'initialized' : 'NOT initialized');
 
-  // Check if Firebase Auth is properly initialized
-  if (!firebaseAuth) {
+  // Check if Firebase Auth is properly initialized (only show error on client side)
+  if (!firebaseAuth && isClient) {
     console.error('[AuthProvider] Firebase Auth not initialized - check environment variables');
     console.error('[AuthProvider] Returning fallback AuthContext');
     return (
@@ -119,6 +125,32 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
           <strong>⚠️ Firebase Authentication Not Configured</strong>
           <p>Please check your Firebase environment variables.</p>
         </div>
+        {children}
+      </AuthContext.Provider>
+    );
+  }
+  
+  // During SSR or before client hydration, return a temporary provider without the error banner
+  if (!firebaseAuth) {
+    return (
+      <AuthContext.Provider value={{
+        user: null,
+        loading: true,
+        signIn: async () => { throw new Error('Firebase initializing'); },
+        signOut: async () => {},
+        sendPasswordReset: async () => { throw new Error('Firebase initializing'); },
+        resetPassword: async () => { throw new Error('Firebase initializing'); },
+        verifyEmail: async () => { throw new Error('Firebase initializing'); },
+        updateUserProfile: async () => { throw new Error('Firebase initializing'); },
+        resendVerificationEmail: async () => { throw new Error('Firebase initializing'); },
+        refreshUserClaims: async () => { return null; },
+        isFlagged: false,
+        isPremium: false,
+        role: 'user',
+        mfaEnabled: false,
+        enrolledFactors: [],
+        premiumUntil: null,
+      }}>
         {children}
       </AuthContext.Provider>
     );
