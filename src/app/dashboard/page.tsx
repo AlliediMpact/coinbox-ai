@@ -34,10 +34,7 @@ export default function Dashboard() {
 
   useEffect(() => {
     setIsMounted(true); // Set to true after the component mounts
-    if (!user && !loading) {
-      router.push('/auth');
-    }
-  }, [user, loading, router]);
+  }, []);
 
     // Fetch user-specific data (replace with your actual data fetching logic)
     useEffect(() => {
@@ -209,7 +206,7 @@ export default function Dashboard() {
               <Tooltip>
                 <TooltipTrigger asChild>
                   <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-                    <Button onClick={() => router.push('/dashboard/wallet')} variant="secondary">
+                    <Button onClick={() => router.push('/dashboard/transactions')} variant="secondary">
                       <Share2 className="mr-2 h-4 w-4" />
                       Transactions
                     </Button>
@@ -280,7 +277,7 @@ export default function Dashboard() {
               >
                 <Button 
                   variant="link" 
-                  onClick={() => router.push('/dashboard/wallet')}
+                  onClick={() => router.push('/dashboard/transactions')}
                   className="text-primary-blue"
                 >
                   View All Transactions

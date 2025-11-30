@@ -111,12 +111,12 @@ export default function CompleteSignupPage() {
       // No localStorage to clear anymore
 
       toast({
-        title: "You[201~'re all set!",
-        description: "Your CoinBox account is ready. Please check your email to verify and unlock full access.",
+        title: "You're all set!",
+        description: "Your CoinBox account is ready. Redirecting to your profile...",
       });
 
-      // Redirect to a page instructing the user to verify email
-      router.push('/auth/verify-email'); // Assuming you have a page at /auth/verify-email
+      // Redirect to My Profile as requested
+      router.push('/dashboard/profile'); // Assuming you have a page at /auth/verify-email
 
     } catch (error: any) {
       console.error("Complete signup error:", error);

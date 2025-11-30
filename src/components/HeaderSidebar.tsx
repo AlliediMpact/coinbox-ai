@@ -123,10 +123,28 @@ const HeaderSidebar: React.FC<{ children: React.ReactNode }> = ({ children }) =>
             description: 'Buy and sell coins'
         },
         {
+            label: 'Swap',
+            icon: TrendingUp,
+            href: '/dashboard/swap',
+            description: 'Swap cryptocurrencies'
+        },
+        {
+            label: 'P2P Trading',
+            icon: Users,
+            href: '/dashboard/p2p',
+            description: 'Peer-to-peer trading'
+        },
+        {
             label: 'Wallet',
             icon: Wallet,
             href: '/dashboard/wallet',
             description: 'Manage your funds'
+        },
+        {
+            label: 'Transactions',
+            icon: FileText,
+            href: '/dashboard/transactions',
+            description: 'View transaction history'
         },
         {
             label: 'Receipts',
@@ -163,6 +181,12 @@ const HeaderSidebar: React.FC<{ children: React.ReactNode }> = ({ children }) =>
             icon: HelpCircle,
             href: '/dashboard/support',
             description: '24/7 customer support'
+        },
+        {
+            label: 'Notifications',
+            icon: Bell,
+            href: '/dashboard/notifications',
+            description: 'View your notifications'
         },
     ];
 
