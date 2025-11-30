@@ -7,18 +7,22 @@ import { useAuth } from '@/components/AuthProvider';
 import { useEffect } from 'react';
 import { Loader2 } from 'lucide-react';
 import HeroSection from '@/components/home/HeroSection';
+import { useState } from 'react';
 import StatsCards from '@/components/home/StatsCards';
 import LiveTransactionsFeed from '@/components/home/LiveTransactionsFeed';
 import HowItWorks from '@/components/home/HowItWorks';
 import TrustStrip from '@/components/home/TrustStrip';
 import WhyCoinBox from '@/components/home/WhyCoinBox';
 import BottomCTA from '@/components/home/BottomCTA';
+import AuthModal from '@/components/home/AuthModal';
 
 export default function Home() {
     const router = useRouter();
     const { user, loading } = useAuth();
 
     // Redirect authenticated users to dashboard
+    const [showLogin, setShowLogin] = useState(false);
+    const [showSignup, setShowSignup] = useState(false);
     useEffect(() => {
         if (user && !loading) {
             router.push('/dashboard');
@@ -50,7 +54,10 @@ export default function Home() {
             
             {/* Hero Section - Full width & height */}
             <div id="hero-section">
-                <HeroSection />
+                                <HeroSection
+                                    onOpenLogin={() => setShowLogin(true)}
+                                    onOpenSignup={() => setShowSignup(true)}
+                                />
             </div>
 
             {/* How it works */}
@@ -69,7 +76,18 @@ export default function Home() {
             <WhyCoinBox />
 
             {/* Bottom CTA */}
-            <BottomCTA />
+                        <BottomCTA
+                            onOpenLogin={() => setShowLogin(true)}
+                            onOpenSignup={() => setShowSignup(true)}
+                        />
+
+                        {/* Auth Modals overlaying the homepage */}
+                        <AuthModal
+                            openLogin={showLogin}
+                            openSignup={showSignup}
+                            onCloseLogin={() => setShowLogin(false)}
+                            onCloseSignup={() => setShowSignup(false)}
+                        />
         </main>
     );
 }
