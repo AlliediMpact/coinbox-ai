@@ -38,7 +38,7 @@ export default function BottomCTA() {
         >
           <Button
             size="lg"
-            onClick={() => router.push('/auth')}
+            onClick={() => router.push('/auth/signup')}
             className="px-8 py-6 text-lg bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white border-0 shadow-lg shadow-blue-500/50 transition-all duration-300 hover:scale-105"
           >
             Sign Up
