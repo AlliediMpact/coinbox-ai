@@ -224,10 +224,72 @@ const HeaderSidebar: React.FC<{ children: React.ReactNode }> = ({ children }) =>
         },
     ];
 
-    // Use unified header layout for all pages, with logged-out CTA layout
+    // Track route type for header state
     const isHomePage = pathname === '/';
     const isAuthPage = pathname.startsWith('/auth');
 
+    // Logged-out public pages (home + auth) use a simple header + content layout
+    // This keeps a single header component with two visual states while avoiding
+    // the dashboard sidebar shell on marketing/auth pages.
+    if ((isHomePage || isAuthPage) && !user) {
+        return (
+            <div className="flex flex-col min-h-screen bg-background w-full overflow-x-hidden">
+                {/* Marketing-style header for public pages (logged-out state) */}
+                <header className="w-full border-b bg-slate-950/80 backdrop-blur-md">
+                    <div className="max-w-7xl mx-auto flex h-16 items-center justify-between px-4 sm:px-6 lg:px-8">
+                        {/* Logo */}
+                        <div className="flex items-center">
+                            <Image
+                                src="/assets/coinbox-ai.png"
+                                alt="CoinBox Logo"
+                                width={40}
+                                height={40}
+                                className="rounded-full"
+                            />
+                            <span className="ml-2 text-lg font-bold text-white hidden sm:inline-block">
+                                CoinBox Connect
+                            </span>
+                        </div>
+
+                        {/* Logged-out header actions */}
+                        <div className="flex items-center gap-3">
+                            <Button
+                                variant="ghost"
+                                size="sm"
+                                className="text-slate-200 hover:text-white"
+                                onClick={() => router.push('/about')}
+                            >
+                                About
+                            </Button>
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                className="border-slate-500 text-slate-100 hover:bg-slate-800"
+                                onClick={() => router.push('/auth')}
+                            >
+                                Sign In
+                            </Button>
+                            <Button
+                                size="sm"
+                                className="bg-gradient-to-r from-blue-600 to-purple-600 text-white hover:from-blue-700 hover:to-purple-700"
+                                onClick={() => router.push('/auth/signup')}
+                            >
+                                Get Started
+                            </Button>
+                        </div>
+                    </div>
+                </header>
+
+                <main className="flex-1 w-full min-w-0 overflow-x-hidden">
+                    {children}
+                </main>
+
+                <SiteFooter />
+            </div>
+        );
+    }
+
+    // Authenticated / dashboard pages use full header + sidebar shell
     return (
         <div className="flex flex-col min-h-screen bg-background w-full overflow-x-hidden">
             {/* Unified Header: marketing-style layout with dashboard color */}
