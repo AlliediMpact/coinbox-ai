@@ -2,10 +2,14 @@
 
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
-import { useRouter } from 'next/navigation';
 import { ArrowRight, Shield, Zap, Globe } from 'lucide-react';
-export default function HeroSection() {
-  const router = useRouter();
+
+interface HeroSectionProps {
+  onOpenLogin?: () => void;
+  onOpenSignup?: () => void;
+}
+
+export default function HeroSection({ onOpenLogin, onOpenSignup }: HeroSectionProps) {
 
   return (
     <section className="relative min-h-screen w-full flex items-center justify-center overflow-hidden bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900">
@@ -154,7 +158,7 @@ export default function HeroSection() {
           >
             <Button
               size="lg"
-                  onClick={() => router.push('/auth/signup')}
+              onClick={onOpenSignup}
               className="w-full sm:w-auto px-8 py-6 text-lg bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white border-0 shadow-lg shadow-blue-500/50 transition-all duration-300 hover:scale-105"
             >
               Sign Up Now
@@ -163,7 +167,7 @@ export default function HeroSection() {
             <Button
               size="lg"
               variant="outline"
-                  onClick={() => router.push('/auth')}
+              onClick={onOpenLogin}
               className="w-full sm:w-auto px-8 py-6 text-lg bg-white/10 backdrop-blur-sm border-2 border-white/30 text-white hover:bg-white/20 transition-all duration-300 hover:scale-105"
             >
               Sign In
