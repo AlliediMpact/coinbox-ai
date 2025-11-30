@@ -5,7 +5,7 @@ export const dynamic = 'force-dynamic';
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { motion, AnimatePresence } from 'framer-motion';
+// Note: animations removed here to avoid hydration/visibility issues on auth page
 import { useAuth } from '@/components/AuthProvider';
 import ResendVerification from '@/components/ResendVerification';
 import MfaVerification from '@/components/MfaVerification';
@@ -145,156 +145,158 @@ export default function AuthPage() {
   };
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-gradient-to-b from-white to-neutral-lightest p-4">
-      <motion.div 
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5 }}
-        className="w-full max-w-md mb-8"
-      >
+    <div className="w-full flex flex-col items-center px-4 py-10 bg-gradient-to-b from-white to-neutral-lightest">
+      <div className="w-full max-w-md mb-6">
         <h1 className="text-3xl font-bold text-center mb-2 bg-gradient-to-r from-primary-blue to-primary-purple bg-clip-text text-transparent">
           Allied iMpact Coin Box
         </h1>
-        <p className="text-center text-neutral-dark">
+        <p className="text-center text-neutral-dark mb-4">
           Your trusted P2P financial platform
         </p>
-      </motion.div>
-      
-      <AnimatePresence mode="wait">
-        {mfaInProgress && mfaError ? (
-          <motion.div
-            key="mfa"
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: -20 }}
-            transition={{ duration: 0.3 }}
-            className="w-full max-w-md"
-          >
-            <MfaVerification 
-              error={mfaError}
-              phoneNumber={unverifiedEmail} // Using email as a reference
-              onSuccess={handleMfaSuccess}
-              onCancel={handleMfaCancel}
-              email={email}
-            />
-          </motion.div>
-        ) : showVerificationReminder ? (
-          <motion.div
-            key="verification"
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: -20 }}
-            transition={{ duration: 0.3 }}
-            className="w-full max-w-md"
-          >
-            <div className="bg-white p-6 rounded-lg shadow-lg border-2 border-primary-purple/20">
-              <div className="rounded-md bg-amber-50 p-4 mb-4 border border-amber-200">
-                <div className="flex">
-                  <div className="flex-shrink-0">
-                    <svg className="h-5 w-5 text-amber-400" viewBox="0 0 20 20" fill="currentColor">
-                      <path fillRule="evenodd" d="M8.485 2.495a.75.75 0 01.982 0l8.5 7.5a.75.75 0 01-.482 1.32H1.5a.75.75 0 01-.482-1.32l8.5-7.5zM4 12h12v3.75a.75.75 0 01-.75.75h-10.5a.75.75 0 01-.75-.75V12z" clipRule="evenodd" />
-                    </svg>
-                  </div>
-                  <div className="ml-3 flex-1">
-                    <p className="text-sm text-amber-800">
-                      Please verify your email address <strong>{unverifiedEmail}</strong> to continue.
-                    </p>
-                  </div>
+
+        {/* Simple 3-step auth indicator */}
+        <div className="flex items-center justify-center gap-4 text-xs text-slate-600">
+          <div className="flex items-center gap-1">
+            <div className={`h-5 w-5 rounded-full border flex items-center justify-center text-[10px] ${!mfaInProgress && !showVerificationReminder ? 'bg-blue-600 text-white border-blue-400' : 'bg-slate-100 text-slate-600 border-slate-300'}`}>
+              1
+            </div>
+            <span>Login</span>
+          </div>
+          <span className="h-px w-8 bg-slate-300" />
+          <div className="flex items-center gap-1">
+            <div className={`h-5 w-5 rounded-full border flex items-center justify-center text-[10px] ${mfaInProgress ? 'bg-blue-600 text-white border-blue-400' : 'bg-slate-100 text-slate-600 border-slate-300'}`}>
+              2
+            </div>
+            <span>MFA</span>
+          </div>
+          <span className="h-px w-8 bg-slate-300" />
+          <div className="flex items-center gap-1">
+            <div className={`h-5 w-5 rounded-full border flex items-center justify-center text-[10px] ${showVerificationReminder ? 'bg-blue-600 text-white border-blue-400' : 'bg-slate-100 text-slate-600 border-slate-300'}`}>
+              3
+            </div>
+            <span>Verified</span>
+          </div>
+        </div>
+      </div>
+
+      {mfaInProgress && mfaError ? (
+        <div className="w-full max-w-md">
+          <MfaVerification 
+            error={mfaError}
+            phoneNumber={unverifiedEmail} // Using email as a reference
+            onSuccess={handleMfaSuccess}
+            onCancel={handleMfaCancel}
+            email={email}
+          />
+        </div>
+      ) : showVerificationReminder ? (
+        <div className="w-full max-w-md">
+          <div className="bg-white p-6 rounded-lg shadow-lg border-2 border-primary-purple/20">
+            <div className="rounded-md bg-amber-50 p-4 mb-4 border border-amber-200">
+              <div className="flex">
+                <div className="flex-shrink-0">
+                  <svg className="h-5 w-5 text-amber-400" viewBox="0 0 20 20" fill="currentColor">
+                    <path fillRule="evenodd" d="M8.485 2.495a.75.75 0 01.982 0l8.5 7.5a.75.75 0 01-.482 1.32H1.5a.75.75 0 01-.482-1.32l8.5-7.5zM4 12h12v3.75a.75.75 0 01-.75.75h-10.5a.75.75 0 01-.75-.75V12z" clipRule="evenodd" />
+                  </svg>
+                </div>
+                <div className="ml-3 flex-1">
+                  <p className="text-sm text-amber-800">
+                    Please verify your email address <strong>{unverifiedEmail}</strong> to continue.
+                  </p>
                 </div>
               </div>
-              <ResendVerification email={unverifiedEmail} />
-              <Button
-                variant="outline" 
-                className="w-full mt-2"
-                onClick={() => setShowVerificationReminder(false)}
-              >
-                Try a different account
-              </Button>
             </div>
-          </motion.div>
-        ) : (
-          <motion.div
-            key="login"
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: 20 }}
-            transition={{ duration: 0.3 }}
-            className="w-full max-w-md bg-white p-8 rounded-xl shadow-2xl"
-          >
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="space-y-1">
-                <Input
-                  type="email"
-                  placeholder="Email"
-                  value={email}
-                  onChange={(e) => {
-                    setEmail(e.target.value);
-                    if (emailError) setEmailError(null);
-                  }}
-                  required
-                  disabled={isLoading}
-                  className={emailError ? 'border-destructive' : undefined}
-                />
-                {emailError && (
-                  <p className="text-xs text-destructive mt-0.5">{emailError}</p>
-                )}
-              </div>
-              {!isResetMode && (
-                <Input
-                  type="password"
-                  placeholder="Password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  required
-                  disabled={isLoading}
-                />
-              )}
-              <Button
-                type="submit"
-                className="w-full text-white hover:bg-[#5e17eb]"
-                style={{ 
-                  backgroundColor: '#193281', 
-                  transition: 'background-color 0.3s ease'
+            <ResendVerification email={unverifiedEmail} />
+            <Button
+              variant="outline" 
+              className="w-full mt-2"
+              onClick={() => setShowVerificationReminder(false)}
+            >
+              Try a different account
+            </Button>
+          </div>
+        </div>
+      ) : (
+        <div className="w-full max-w-md bg-white p-8 rounded-xl shadow-2xl">
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="space-y-1">
+              <Input
+                type="email"
+                placeholder="Email"
+                value={email}
+                onChange={(e) => {
+                  setEmail(e.target.value);
+                  if (emailError) setEmailError(null);
                 }}
-                disabled={isLoading || (!isResetMode && (!email || !password)) || (isResetMode && !email)}
+                required
+                disabled={isLoading}
+                className={emailError ? 'border-destructive' : undefined}
+              />
+              {emailError && (
+                <p className="text-xs text-destructive mt-0.5">{emailError}</p>
+              )}
+            </div>
+            {!isResetMode && (
+              <Input
+                type="password"
+                placeholder="Password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+                disabled={isLoading}
+              />
+            )}
+            <Button
+              type="submit"
+              className="w-full text-white hover:bg-[#5e17eb]"
+              style={{ 
+                backgroundColor: '#193281', 
+                transition: 'background-color 0.3s ease'
+              }}
+              disabled={isLoading || (!isResetMode && (!email || !password)) || (isResetMode && !email)}
+            >
+              {isLoading ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  {isResetMode ? 'Sending...' : 'Signing in...'}
+                </>
+              ) : (
+                isResetMode ? 'Send Reset Link' : 'Login'
+              )}
+            </Button>
+              <p className="mt-2 text-xs text-center text-slate-500">
+                {!mfaInProgress && !showVerificationReminder && !isResetMode && 'Step 1 of 3: Enter your login details to continue.'}
+                {mfaInProgress && 'Step 2 of 3: Confirm the MFA code sent to you.'}
+                {showVerificationReminder && !mfaInProgress && 'Final step: Verify your email to activate full access.'}
+                {isResetMode && 'We’ll email you a secure link to reset your password.'}
+              </p>
+            <div className="flex justify-between text-sm">
+              <button
+                type="button"
+                onClick={() => {
+                  setIsResetMode(!isResetMode);
+                  // Clear inputs when switching modes
+                  setEmail('');
+                  setPassword('');
+                  setResetSent(false);
+                }}
+                className="text-[#193281] hover:text-[#5e17eb]"
+                disabled={isLoading}
               >
-                {isLoading ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    {isResetMode ? 'Sending...' : 'Signing in...'}
-                  </>
-                ) : (
-                  isResetMode ? 'Send Reset Link' : 'Login'
-                )}
-              </Button>
-              <div className="flex justify-between text-sm">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setIsResetMode(!isResetMode);
-                    // Clear inputs when switching modes
-                    setEmail('');
-                    setPassword('');
-                    setResetSent(false);
-                  }}
+                {isResetMode ? 'Back to Login' : 'Forgot Password?'}
+              </button>
+              {!isResetMode && (
+                <Link
+                  href="/auth/signup"
                   className="text-[#193281] hover:text-[#5e17eb]"
-                  disabled={isLoading}
                 >
-                  {isResetMode ? 'Back to Login' : 'Forgot Password?'}
-                </button>
-                {!isResetMode && (
-                  <Link
-                    href="/auth/signup"
-                    className="text-[#193281] hover:text-[#5e17eb]"
-                  >
-                    Create Account
-                  </Link>
-                )}
-              </div>
-            </form>
-          </motion.div>
-        )}
-      </AnimatePresence>
+                  Create Account
+                </Link>
+              )}
+            </div>
+          </form>
+        </div>
+      )}
     </div>
   );
 }
