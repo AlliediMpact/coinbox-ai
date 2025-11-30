@@ -111,8 +111,8 @@ export default function CompleteSignupPage() {
       // No localStorage to clear anymore
 
       toast({
-        title: "Registration Successful",
-        description: "Your account has been created. Please check your email to verify your account.",
+        title: "You[201~'re all set!",
+        description: "Your CoinBox account is ready. Please check your email to verify and unlock full access.",
       });
 
       // Redirect to a page instructing the user to verify email

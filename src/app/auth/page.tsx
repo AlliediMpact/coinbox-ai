@@ -146,7 +146,7 @@ export default function AuthPage() {
 
   return (
     <div className="w-full flex flex-col items-center px-4 py-10 bg-gradient-to-b from-white to-neutral-lightest">
-      <div className="w-full max-w-md mb-6">
+      <div className="w-full max-w-xl mb-6">
         <h1 className="text-3xl font-bold text-center mb-2 bg-gradient-to-r from-primary-blue to-primary-purple bg-clip-text text-transparent">
           Allied iMpact Coin Box
         </h1>
@@ -180,7 +180,7 @@ export default function AuthPage() {
       </div>
 
       {mfaInProgress && mfaError ? (
-        <div className="w-full max-w-md">
+        <div className="w-full max-w-xl">
           <MfaVerification 
             error={mfaError}
             phoneNumber={unverifiedEmail} // Using email as a reference
@@ -190,7 +190,7 @@ export default function AuthPage() {
           />
         </div>
       ) : showVerificationReminder ? (
-        <div className="w-full max-w-md">
+        <div className="w-full max-w-xl">
           <div className="bg-white p-6 rounded-lg shadow-lg border-2 border-primary-purple/20">
             <div className="rounded-md bg-amber-50 p-4 mb-4 border border-amber-200">
               <div className="flex">
@@ -217,7 +217,7 @@ export default function AuthPage() {
           </div>
         </div>
       ) : (
-        <div className="w-full max-w-md bg-white p-8 rounded-xl shadow-2xl">
+        <div className="w-full max-w-xl bg-white p-10 rounded-xl shadow-2xl border border-slate-200/80">
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-1">
               <Input
@@ -270,7 +270,7 @@ export default function AuthPage() {
                 {showVerificationReminder && !mfaInProgress && 'Final step: Verify your email to activate full access.'}
                 {isResetMode && 'We’ll email you a secure link to reset your password.'}
               </p>
-            <div className="flex justify-between text-sm">
+            <div className="flex justify-between text-sm pt-1">
               <button
                 type="button"
                 onClick={() => {
