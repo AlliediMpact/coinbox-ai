@@ -20,6 +20,7 @@ export default function AuthPage() {
   const [isResetMode, setIsResetMode] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [resetSent, setResetSent] = useState(false);
+  const [emailError, setEmailError] = useState<string | null>(null);
   
   const [showVerificationReminder, setShowVerificationReminder] = useState(false);
   const [unverifiedEmail, setUnverifiedEmail] = useState('');
@@ -29,6 +30,13 @@ export default function AuthPage() {
   const { signIn, sendPasswordReset, user } = useAuth();
   const { toast } = useToast();
   const router = useRouter();
+
+  const validateEmail = (value: string) => {
+    if (!value) return 'Email is required';
+    const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailPattern.test(value)) return 'Please enter a valid email address';
+    return null;
+  };
   
   // Redirect to dashboard if user is already authenticated
   useEffect(() => {
@@ -39,6 +47,13 @@ export default function AuthPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    const emailValidationError = validateEmail(email);
+    if (emailValidationError) {
+      setEmailError(emailValidationError);
+      return;
+    }
+
+    setEmailError(null);
     setIsLoading(true);
 
     try {
@@ -55,7 +70,16 @@ export default function AuthPage() {
       }
     } catch (err: any) {
       console.error("Authentication failed:", err.message);
-      const errorMessage = err.message || 'Authentication failed';
+
+      // Normalize Firebase auth errors into user-friendly messages
+      let friendlyMessage = 'Authentication failed. Please check your details and try again.';
+      if (err.code === 'auth/invalid-credential' || err.code === 'auth/wrong-password') {
+        friendlyMessage = 'Incorrect email or password. Please try again.';
+      } else if (err.code === 'auth/user-not-found') {
+        friendlyMessage = 'No account found with that email address.';
+      } else if (err.code === 'auth/too-many-requests') {
+        friendlyMessage = 'Too many attempts. Please wait a few minutes before trying again.';
+      }
 
       // Check if this is an MFA error
       if (err.code === 'auth/multi-factor-auth-required') {
@@ -87,7 +111,7 @@ export default function AuthPage() {
       else {
         toast({
           title: "Authentication Failed",
-          description: errorMessage,
+          description: friendlyMessage,
           variant: "destructive",
         });
       }
@@ -198,14 +222,23 @@ export default function AuthPage() {
             className="w-full max-w-md bg-white p-8 rounded-xl shadow-2xl"
           >
             <form onSubmit={handleSubmit} className="space-y-4">
-              <Input
-                type="email"
-                placeholder="Email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-                disabled={isLoading}
-              />
+              <div className="space-y-1">
+                <Input
+                  type="email"
+                  placeholder="Email"
+                  value={email}
+                  onChange={(e) => {
+                    setEmail(e.target.value);
+                    if (emailError) setEmailError(null);
+                  }}
+                  required
+                  disabled={isLoading}
+                  className={emailError ? 'border-destructive' : undefined}
+                />
+                {emailError && (
+                  <p className="text-xs text-destructive mt-0.5">{emailError}</p>
+                )}
+              </div>
               {!isResetMode && (
                 <Input
                   type="password"

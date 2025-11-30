@@ -200,10 +200,11 @@ const HeaderSidebar: React.FC<{ children: React.ReactNode }> = ({ children }) =>
         },
     ];
 
-    // Don't show dashboard sidebar on public landing page, but keep header/footer
+    // Use marketing header/footer on public pages (home + auth) for logged-out users
     const isHomePage = pathname === '/';
+    const isAuthPage = pathname.startsWith('/auth');
     
-    if (isHomePage && !user) {
+    if ((isHomePage || isAuthPage) && !user) {
         return (
             <div className="flex flex-col min-h-screen bg-background w-full overflow-x-hidden">
                 {/* Marketing Header */}
@@ -241,7 +242,7 @@ const HeaderSidebar: React.FC<{ children: React.ReactNode }> = ({ children }) =>
                             <Button
                                 size="sm"
                                 className="bg-gradient-to-r from-blue-600 to-purple-600 text-white hover:from-blue-700 hover:to-purple-700"
-                                onClick={() => router.push('/auth')}
+                                onClick={() => router.push('/auth/signup')}
                             >
                                 Get Started
                             </Button>
