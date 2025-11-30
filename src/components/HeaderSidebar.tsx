@@ -200,11 +200,62 @@ const HeaderSidebar: React.FC<{ children: React.ReactNode }> = ({ children }) =>
         },
     ];
 
-    // Don't show header/sidebar on landing page
+    // Don't show dashboard sidebar on public landing page, but keep header/footer
     const isHomePage = pathname === '/';
     
     if (isHomePage && !user) {
-        return <>{children}</>;
+        return (
+            <div className="flex flex-col min-h-screen bg-background w-full overflow-x-hidden">
+                {/* Marketing Header */}
+                <header className="w-full border-b bg-slate-950/80 backdrop-blur-md">
+                    <div className="max-w-7xl mx-auto flex h-16 items-center justify-between px-4 sm:px-6 lg:px-8">
+                        <div className="flex items-center">
+                            <Image
+                                src="/assets/coinbox-ai.png"
+                                alt="CoinBox Logo"
+                                width={40}
+                                height={40}
+                                className="rounded-full"
+                            />
+                            <span className="ml-2 text-lg font-bold text-white hidden sm:inline-block">
+                                CoinBox Connect
+                            </span>
+                        </div>
+                        <div className="flex items-center gap-3">
+                            <Button
+                                variant="ghost"
+                                size="sm"
+                                className="text-slate-200 hover:text-white"
+                                onClick={() => router.push('/about')}
+                            >
+                                About
+                            </Button>
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                className="border-slate-500 text-slate-100 hover:bg-slate-800"
+                                onClick={() => router.push('/auth')}
+                            >
+                                Sign In
+                            </Button>
+                            <Button
+                                size="sm"
+                                className="bg-gradient-to-r from-blue-600 to-purple-600 text-white hover:from-blue-700 hover:to-purple-700"
+                                onClick={() => router.push('/auth')}
+                            >
+                                Get Started
+                            </Button>
+                        </div>
+                    </div>
+                </header>
+
+                <main className="flex-1 w-full min-w-0 overflow-x-hidden">
+                    {children}
+                </main>
+
+                <SiteFooter />
+            </div>
+        );
     }
 
     return (

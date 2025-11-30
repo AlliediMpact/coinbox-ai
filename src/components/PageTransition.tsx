@@ -9,11 +9,11 @@ interface PageTransitionProps {
   children: ReactNode;
 }
 
-// Animation variants for page transitions
+// Animation variants for page transitions - simplified to prevent blank screen
 const pageVariants: Variants = {
   initial: {
-    opacity: 0,
-    y: 10,
+    opacity: 1,
+    y: 0,
   },
   animate: {
     opacity: 1,
@@ -26,8 +26,8 @@ const pageVariants: Variants = {
     }
   },
   exit: {
-    opacity: 0,
-    y: -10,
+    opacity: 1,
+    y: 0,
     transition: {
       duration: 0.2,
       ease: "easeIn"

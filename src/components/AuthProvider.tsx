@@ -94,9 +94,18 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
   // Set client-side flag after mount
   useEffect(() => {
     setIsClient(true);
-  }, []);
+    // Set a timeout to prevent infinite loading
+    const timeout = setTimeout(() => {
+      if (loading) {
+        console.log('[AuthProvider] Loading timeout - setting loading to false');
+        setLoading(false);
+      }
+    }, 3000); // 3 second timeout
+    
+    return () => clearTimeout(timeout);
+  }, [loading]);
 
-  console.log('[AuthProvider] Rendering, firebaseAuth:', firebaseAuth ? 'initialized' : 'NOT initialized');
+  console.log('[AuthProvider] Rendering, firebaseAuth:', firebaseAuth ? 'initialized' : 'NOT initialized', 'loading:', loading);
 
   // Check if Firebase Auth is properly initialized (only show error on client side)
   if (!firebaseAuth && isClient) {

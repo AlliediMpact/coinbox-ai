@@ -300,12 +300,14 @@ export default function MembershipManagement() {
           <motion.div variants={itemVariants}>
             <CardTitle className="flex items-center">
               <Shield className="mr-2 h-5 w-5 text-primary" />
-              Membership Management
+              Membership & security deposit
             </CardTitle>
           </motion.div>
           <motion.div variants={itemVariants}>
             <CardDescription>
-              Upgrade your membership tier to unlock additional benefits and features
+              Choose the CoinBox membership tier that matches how you want to trade,
+              borrow and earn — each tier uses a refundable security deposit to unlock
+              higher limits and commissions.
             </CardDescription>
           </motion.div>
         </CardHeader>
@@ -377,12 +379,16 @@ export default function MembershipManagement() {
               transition={{ delay: 0.5 }}
               className="bg-primary/5 rounded-lg p-4 border border-primary/20 mb-6"
             >
-              <div className="flex items-center justify-between">
+              <div className="flex items-center justify-between gap-4 flex-wrap">
                 <div>
-                  <p className="text-sm font-medium text-primary">Current Membership</p>
+                  <p className="text-sm font-medium text-primary">Current membership tier</p>
                   <h3 className="text-xl font-bold text-primary mt-1">
                     {MEMBERSHIP_TIERS[currentTier].displayName}
                   </h3>
+                  <p className="text-xs text-primary/80 mt-1 max-w-md">
+                    Your tier controls how much you can invest and borrow on the
+                    platform, and the percentage you earn from referral commissions.
+                  </p>
                 </div>
                 <div className="bg-white rounded-lg p-3 shadow-sm border border-neutral-100">
                   <Shield className="h-6 w-6 text-primary" />
@@ -408,36 +414,69 @@ export default function MembershipManagement() {
                   >
                     <div className="absolute top-0 right-0 h-24 w-24 bg-white/20 rounded-full -translate-y-1/2 translate-x-1/2"></div>
                     
-                    <h3 className="font-bold text-xl mb-1">{selectedTier.displayName} Tier</h3>
-                    <p className="text-sm opacity-80 mb-4">Unlock premium features and higher limits</p>
+                    <h3 className="font-bold text-xl mb-1">{selectedTier.displayName} tier</h3>
+                    <p className="text-sm opacity-80 mb-4">
+                      This tier sets your security deposit, trading limits and
+                      referral commission rate inside CoinBox.
+                    </p>
                     
                     <div className="grid grid-cols-2 gap-3 text-sm">
                       <div className="bg-white/30 backdrop-blur-sm p-3 rounded">
-                        <p className="font-medium">Security Fee</p>
+                        <p className="font-medium">Security deposit</p>
                         <p className="text-lg font-bold">R{selectedTier.securityFee.toLocaleString()}</p>
+                        <p className="text-[11px] mt-1 opacity-90">
+                          One-time amount held as a safety deposit to activate
+                          this tier.
+                        </p>
                       </div>
                       <div className="bg-white/30 backdrop-blur-sm p-3 rounded">
-                        <p className="font-medium">Refundable</p>
+                        <p className="font-medium">Refundable amount</p>
                         <p className="text-lg font-bold">R{selectedTier.refundableAmount.toLocaleString()}</p>
+                        <p className="text-[11px] mt-1 opacity-90">
+                          Paid back according to your agreement when your
+                          membership is closed in good standing.
+                        </p>
                       </div>
                     </div>
                   </motion.div>
                   
                   <div className="space-y-3">
-                    <div className="flex justify-between">
-                      <span className="text-sm font-medium">Loan Limit:</span>
+                    <div className="flex justify-between items-baseline">
+                      <div>
+                        <span className="text-sm font-medium">Loan limit</span>
+                        <p className="text-[11px] text-muted-foreground mt-0.5">
+                          Maximum amount you can borrow using CoinBox tickets.
+                        </p>
+                      </div>
                       <span className="font-bold">R{selectedTier.loanLimit.toLocaleString()}</span>
                     </div>
-                    <div className="flex justify-between">
-                      <span className="text-sm font-medium">Investment Limit:</span>
+                    <div className="flex justify-between items-baseline">
+                      <div>
+                        <span className="text-sm font-medium">Investment limit</span>
+                        <p className="text-[11px] text-muted-foreground mt-0.5">
+                          Maximum you can invest into other members&rsquo; tickets.
+                        </p>
+                      </div>
                       <span className="font-bold">R{selectedTier.investmentLimit.toLocaleString()}</span>
                     </div>
-                    <div className="flex justify-between">
-                      <span className="text-sm font-medium">Commission Rate:</span>
+                    <div className="flex justify-between items-baseline">
+                      <div>
+                        <span className="text-sm font-medium">Referral commission rate</span>
+                        <p className="text-[11px] text-muted-foreground mt-0.5">
+                          Percentage you earn from activity of members you bring
+                          to CoinBox.
+                        </p>
+                      </div>
                       <span className="font-bold">{selectedTier.commissionRate}%</span>
                     </div>
-                    <div className="flex justify-between">
-                      <span className="text-sm font-medium">Transaction Fee:</span>
+                    <div className="flex justify-between items-baseline">
+                      <div>
+                        <span className="text-sm font-medium">Transaction fee</span>
+                        <p className="text-[11px] text-muted-foreground mt-0.5">
+                          Flat fee the platform charges per qualifying
+                          transaction.
+                        </p>
+                      </div>
                       <span className="font-bold">R{selectedTier.transactionFee}</span>
                     </div>
                   </div>

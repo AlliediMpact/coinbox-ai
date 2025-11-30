@@ -67,10 +67,11 @@ export default function HeroSection() {
 
       {/* Content */}
       <div className="relative z-10 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
+        {/* Make content immediately visible; keep subtle motion on inner elements */}
         <motion.div
-          initial={{ opacity: 0, y: 30 }}
+          initial={false}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8, ease: "easeOut" }}
+          transition={{ duration: 0.4, ease: "easeOut" }}
           className="text-center"
         >
           {/* Crypto Icon Illustration */}
@@ -101,39 +102,39 @@ export default function HeroSection() {
 
           {/* Headline */}
           <motion.h1
-            initial={{ opacity: 0, y: 20 }}
+            initial={{ opacity: 0.9, y: 5 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, delay: 0.3 }}
+            transition={{ duration: 0.5, delay: 0.1 }}
             className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold text-white mb-6 leading-tight"
           >
-            Move Money Instantly.
+            Trade, Lend & Borrow.
             <br />
             <span className="bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400 bg-clip-text text-transparent">
-              Globally. Securely.
+              One CoinBox membership.
             </span>
           </motion.h1>
 
           {/* Subheading */}
           <motion.p
-            initial={{ opacity: 0, y: 20 }}
+            initial={{ opacity: 0.9, y: 5 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, delay: 0.5 }}
+            transition={{ duration: 0.5, delay: 0.15 }}
             className="text-lg sm:text-xl md:text-2xl text-gray-300 mb-12 max-w-3xl mx-auto leading-relaxed"
           >
-            Join the growing CoinBox economy — fast, modern, and built for everyone.
+            Activate a tiered membership, invest or borrow coins, and earn up to 5% commission on every referral — with transparent fees and bank-grade protection.
           </motion.p>
 
           {/* Feature Pills */}
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
+            initial={{ opacity: 0.95, y: 4 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, delay: 0.6 }}
+            transition={{ duration: 0.5, delay: 0.2 }}
             className="flex flex-wrap justify-center gap-4 mb-12"
           >
             {[
-              { icon: Shield, text: "Bank-level Security" },
-              { icon: Zap, text: "Instant Transfers" },
-              { icon: Globe, text: "Global Access" }
+              { icon: Shield, text: "FSCA & SARB aligned" },
+              { icon: Zap, text: "Instant P2P trades" },
+              { icon: Globe, text: "Global-ready wallet" }
             ].map((feature, idx) => (
               <div
                 key={idx}
@@ -147,9 +148,9 @@ export default function HeroSection() {
 
           {/* CTA Buttons */}
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
+            initial={{ opacity: 0.95, y: 4 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, delay: 0.7 }}
+            transition={{ duration: 0.5, delay: 0.25 }}
             className="flex flex-col sm:flex-row gap-4 justify-center items-center"
           >
             <Button
