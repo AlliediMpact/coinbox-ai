@@ -224,77 +224,22 @@ const HeaderSidebar: React.FC<{ children: React.ReactNode }> = ({ children }) =>
         },
     ];
 
-    // Use marketing header/footer on public pages (home + auth) for logged-out users
+    // Use unified header layout for all pages, with logged-out CTA layout
     const isHomePage = pathname === '/';
     const isAuthPage = pathname.startsWith('/auth');
-    
-    if ((isHomePage || isAuthPage) && !user) {
-        return (
-            <div className="flex flex-col min-h-screen bg-background w-full overflow-x-hidden">
-                {/* Marketing Header */}
-                <header className="w-full border-b bg-slate-950/80 backdrop-blur-md">
-                    <div className="max-w-7xl mx-auto flex h-16 items-center justify-between px-4 sm:px-6 lg:px-8">
-                        <div className="flex items-center">
-                            <Image
-                                src="/assets/coinbox-ai.png"
-                                alt="CoinBox Logo"
-                                width={40}
-                                height={40}
-                                className="rounded-full"
-                            />
-                            <span className="ml-2 text-lg font-bold text-white hidden sm:inline-block">
-                                CoinBox Connect
-                            </span>
-                        </div>
-                        <div className="flex items-center gap-3">
-                            <Button
-                                variant="ghost"
-                                size="sm"
-                                className="text-slate-200 hover:text-white"
-                                onClick={() => router.push('/about')}
-                            >
-                                About
-                            </Button>
-                            <Button
-                                variant="outline"
-                                size="sm"
-                                className="border-slate-500 text-slate-100 hover:bg-slate-800"
-                                onClick={() => router.push('/auth')}
-                            >
-                                Sign In
-                            </Button>
-                            <Button
-                                size="sm"
-                                className="bg-gradient-to-r from-blue-600 to-purple-600 text-white hover:from-blue-700 hover:to-purple-700"
-                                onClick={() => router.push('/auth/signup')}
-                            >
-                                Get Started
-                            </Button>
-                        </div>
-                    </div>
-                </header>
-
-                <main className="flex-1 w-full min-w-0 overflow-x-hidden">
-                    {children}
-                </main>
-
-                <SiteFooter />
-            </div>
-        );
-    }
 
     return (
         <div className="flex flex-col min-h-screen bg-background w-full overflow-x-hidden">
-            {/* Header */}
-            <header className="sticky top-0 z-50 w-full border-b shadow-sm" style={{ backgroundColor: '#193281' }}>
-                <div className="container flex h-16 items-center px-4 max-w-full mx-auto">
+            {/* Unified Header: marketing-style layout with dashboard color */}
+            <header className="sticky top-0 z-50 w-full border-b shadow-sm bg-slate-950/90 backdrop-blur-md">
+                <div className="max-w-7xl mx-auto flex h-16 items-center justify-between px-4 sm:px-6 lg:px-8">
                     {/* Mobile Menu Button */}
                     <motion.div
                         whileTap={{ scale: 0.95 }}
                     >
                         <Button
                             variant="ghost"
-                            className="mr-2 px-2 text-white hover:opacity-80 lg:hidden"
+                            className="mr-2 px-2 text-slate-200 hover:text-white lg:hidden"
                             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
                         >
                             <motion.div
@@ -329,96 +274,113 @@ const HeaderSidebar: React.FC<{ children: React.ReactNode }> = ({ children }) =>
                         </span>
                     </div>
 
-                    {/* Search Bar */}
-                    <div className="hidden md:flex mx-4 flex-1 max-w-md">
-                        <div className="relative w-full">
-                            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-gray-500" />
-                            <Input
-                                type="search"
-                                placeholder="Search..."
-                                className="w-full pl-8 bg-white/10 text-white placeholder:text-gray-300"
-                                value={searchTerm}
-                                onChange={(e) => setSearchTerm(e.target.value)}
-                            />
-                        </div>
-                    </div>
-
-                    {/* Right Section */}
-                    <div className="ml-auto flex items-center space-x-4">
-                        {/* Balances */}
-                        <div className="hidden md:flex space-x-4">
-                            <TooltipProvider>
-                                <Tooltip>
-                                    <TooltipTrigger>
-                                        <div className="flex items-center text-white">
-                                            <Wallet className="h-4 w-4 mr-1" />
-                                            <span>{formatCurrency(typeof walletBalance === 'string' ? parseFloat(walletBalance) : walletBalance)}</span>
-                                        </div>
-                                    </TooltipTrigger>
-                                    <TooltipContent>
-                                        <p>Wallet Balance</p>
-                                    </TooltipContent>
-                                </Tooltip>
-                            </TooltipProvider>
-
-                            <TooltipProvider>
-                                <Tooltip>
-                                    <TooltipTrigger>
-                                        <div className="flex items-center" style={{ color: '#cb6ce6' }}>
-                                            <Share2 className="h-4 w-4 mr-1" />
-                                            <span>{formatCurrency(typeof commissionBalance === 'string' ? parseFloat(commissionBalance) : commissionBalance)}</span>
-                                        </div>
-                                    </TooltipTrigger>
-                                    <TooltipContent>
-                                        <p>Commission Balance</p>
-                                    </TooltipContent>
-                                </Tooltip>
-                            </TooltipProvider>
-                        </div>
-
-                        {/* Referral Notifications */}
-                        <ReferralNotifier />
-
-                        {/* User Menu */}
-                        <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
+                    {/* Right Section: logged-out vs logged-in */}
+                    <div className="flex items-center gap-3 ml-auto">
+                        {!user && (
+                            // Logged-out header actions (home-style)
+                            <div className="flex items-center gap-3">
                                 <Button
                                     variant="ghost"
-                                    className="relative h-8 w-8 rounded-full bg-primary-dark text-white"
+                                    size="sm"
+                                    className="text-slate-200 hover:text-white"
+                                    onClick={() => router.push('/about')}
                                 >
-                                    {user?.email?.[0]?.toUpperCase() || 'U'}
+                                    About
                                 </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end">
-                                <div className="flex items-center justify-start gap-2 p-2">
-                                    <div className="flex flex-col space-y-1">
-                                        <p className="text-sm font-medium">{user?.email}</p>
-                                        <p className="text-xs text-muted-foreground">{userMembership}</p>
-                                    </div>
-                                </div>
-                                <DropdownMenuSeparator />
-                                <DropdownMenuItem onClick={() => router.push('/dashboard/profile')}>
-                                    <UserIcon className="mr-2 h-4 w-4" />
-                                    <span>Profile</span>
-                                </DropdownMenuItem>
-                                <DropdownMenuItem onClick={() => router.push('/dashboard/membership')}>
-                                    <BadgeCheck className="mr-2 h-4 w-4" />
-                                    <span>Membership</span>
-                                </DropdownMenuItem>
-                                <DropdownMenuItem onClick={() => router.push('/dashboard/settings')}>
-                                    <Settings className="mr-2 h-4 w-4" />
-                                    <span>Settings</span>
-                                </DropdownMenuItem>
-                                <DropdownMenuSeparator />
-                                <DropdownMenuItem
-                                    className="text-red-500 focus:text-red-500"
-                                    onClick={() => signOut()}
+                                <Button
+                                    variant="outline"
+                                    size="sm"
+                                    className="border-slate-500 text-slate-100 hover:bg-slate-800"
+                                    onClick={() => router.push('/auth')}
                                 >
-                                    <LogOut className="mr-2 h-4 w-4" />
-                                    <span>Logout</span>
-                                </DropdownMenuItem>
-                            </DropdownMenuContent>
-                        </DropdownMenu>
+                                    Sign In
+                                </Button>
+                                <Button
+                                    size="sm"
+                                    className="bg-gradient-to-r from-blue-600 to-purple-600 text-white hover:from-blue-700 hover:to-purple-700"
+                                    onClick={() => router.push('/auth/signup')}
+                                >
+                                    Get Started
+                                </Button>
+                            </div>
+                        )}
+
+                        {user && (
+                            // Logged-in header: balances, notifications, avatar menu
+                            <>
+                                <div className="hidden md:flex space-x-4">
+                                    <TooltipProvider>
+                                        <Tooltip>
+                                            <TooltipTrigger>
+                                                <div className="flex items-center text-white">
+                                                    <Wallet className="h-4 w-4 mr-1" />
+                                                    <span>{formatCurrency(typeof walletBalance === 'string' ? parseFloat(walletBalance) : walletBalance)}</span>
+                                                </div>
+                                            </TooltipTrigger>
+                                            <TooltipContent>
+                                                <p>Wallet Balance</p>
+                                            </TooltipContent>
+                                        </Tooltip>
+                                    </TooltipProvider>
+
+                                    <TooltipProvider>
+                                        <Tooltip>
+                                            <TooltipTrigger>
+                                                <div className="flex items-center" style={{ color: '#cb6ce6' }}>
+                                                    <Share2 className="h-4 w-4 mr-1" />
+                                                    <span>{formatCurrency(typeof commissionBalance === 'string' ? parseFloat(commissionBalance) : commissionBalance)}</span>
+                                                </div>
+                                            </TooltipTrigger>
+                                            <TooltipContent>
+                                                <p>Commission Balance</p>
+                                            </TooltipContent>
+                                        </Tooltip>
+                                    </TooltipProvider>
+                                </div>
+
+                                <ReferralNotifier />
+
+                                <DropdownMenu>
+                                    <DropdownMenuTrigger asChild>
+                                        <Button
+                                            variant="ghost"
+                                            className="relative h-8 w-8 rounded-full bg-primary-dark text-white"
+                                        >
+                                            {user?.email?.[0]?.toUpperCase() || 'U'}
+                                        </Button>
+                                    </DropdownMenuTrigger>
+                                    <DropdownMenuContent align="end">
+                                        <div className="flex items-center justify-start gap-2 p-2">
+                                            <div className="flex flex-col space-y-1">
+                                                <p className="text-sm font-medium">{user?.email}</p>
+                                                <p className="text-xs text-muted-foreground">{userMembership}</p>
+                                            </div>
+                                        </div>
+                                        <DropdownMenuSeparator />
+                                        <DropdownMenuItem onClick={() => router.push('/dashboard/profile')}>
+                                            <UserIcon className="mr-2 h-4 w-4" />
+                                            <span>Profile</span>
+                                        </DropdownMenuItem>
+                                        <DropdownMenuItem onClick={() => router.push('/dashboard/membership')}>
+                                            <BadgeCheck className="mr-2 h-4 w-4" />
+                                            <span>Membership</span>
+                                        </DropdownMenuItem>
+                                        <DropdownMenuItem onClick={() => router.push('/dashboard/settings')}>
+                                            <Settings className="mr-2 h-4 w-4" />
+                                            <span>Settings</span>
+                                        </DropdownMenuItem>
+                                        <DropdownMenuSeparator />
+                                        <DropdownMenuItem
+                                            className="text-red-500 focus:text-red-500"
+                                            onClick={() => signOut()}
+                                        >
+                                            <LogOut className="mr-2 h-4 w-4" />
+                                            <span>Logout</span>
+                                        </DropdownMenuItem>
+                                    </DropdownMenuContent>
+                                </DropdownMenu>
+                            </>
+                        )}
                     </div>
                 </div>
             </header>
