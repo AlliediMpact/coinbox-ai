@@ -571,10 +571,7 @@ const HeaderSidebar: React.FC<{ children: React.ReactNode }> = ({ children }) =>
                 </AnimatePresence>
 
                 {/* Main Content */}
-                <motion.main 
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.5 }}
+                <main 
                     className="flex-1 p-4 w-full min-w-0 overflow-x-hidden flex flex-col"
                 >
                     <div className="flex-1">
@@ -583,7 +580,7 @@ const HeaderSidebar: React.FC<{ children: React.ReactNode }> = ({ children }) =>
                     
                     {/* Site Footer */}
                     <SiteFooter />
-                </motion.main>
+                </main>
             </div>
         </div>
     );
