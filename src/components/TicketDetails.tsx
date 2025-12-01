@@ -1,3 +1,5 @@
+'use client';
+
 import { useState, useEffect } from "react";
 import { getFirestore, doc, getDoc } from "firebase/firestore";
 import { TradeTicket } from "@/lib/types";

@@ -8,6 +8,7 @@ interface FirebaseAdminConfig {
   projectId: string;
   clientEmail: string;
   privateKey: string;
+  privateKeyId?: string;
   databaseURL: string;
 }
 
@@ -18,7 +19,8 @@ function getAdminConfig(): FirebaseAdminConfig {
   let projectId = process.env.FIREBASE_PROJECT_ID;
   let clientEmail = process.env.FIREBASE_CLIENT_EMAIL;
   let privateKey = process.env.FIREBASE_PRIVATE_KEY;
-  const databaseURL = process.env.FIREBASE_DATABASE_URL;
+  let privateKeyId = process.env.FIREBASE_PRIVATE_KEY_ID;
+  let databaseURL = process.env.FIREBASE_DATABASE_URL;
   const privateKeyPath = process.env.FIREBASE_PRIVATE_KEY_PATH;
 
   // Handle private key formatting (newlines)
@@ -50,6 +52,7 @@ function getAdminConfig(): FirebaseAdminConfig {
       if (fs.existsSync(keyPath)) {
         const serviceAccount = JSON.parse(fs.readFileSync(keyPath, 'utf8'));
         privateKey = serviceAccount.private_key;
+        privateKeyId = serviceAccount.private_key_id;
         // If project ID or client email are missing, get them from file too
         if (!projectId) projectId = serviceAccount.project_id;
         if (!clientEmail) clientEmail = serviceAccount.client_email;
@@ -57,6 +60,11 @@ function getAdminConfig(): FirebaseAdminConfig {
     } catch (error) {
       console.warn('Could not load Firebase private key from file:', error);
     }
+  }
+
+  // If databaseURL is not provided, construct default based on project_id
+  if (!databaseURL && projectId) {
+    databaseURL = `https://${projectId}.firebaseio.com`;
   }
 
   if (!projectId || !clientEmail || !privateKey || !databaseURL) {
@@ -68,6 +76,7 @@ function getAdminConfig(): FirebaseAdminConfig {
       projectId: projectId || 'dummy',
       clientEmail: clientEmail || 'dummy',
       privateKey: privateKey || 'dummy',
+      privateKeyId: privateKeyId,
       databaseURL: databaseURL || 'dummy'
     };
   }
@@ -76,6 +85,7 @@ function getAdminConfig(): FirebaseAdminConfig {
     projectId,
     clientEmail,
     privateKey: privateKey || '',
+    privateKeyId,
     databaseURL
   };
 }
@@ -87,12 +97,19 @@ if (typeof window === 'undefined') {
       const config = getAdminConfig();
       // Only initialize if we have a real key (not dummy from above fallback)
       if (config.privateKey !== 'dummy' && config.privateKey.includes('-----BEGIN PRIVATE KEY-----')) {
+        const credential: any = {
+          projectId: config.projectId,
+          clientEmail: config.clientEmail,
+          privateKey: config.privateKey,
+        };
+        
+        // Add privateKeyId if available
+        if (config.privateKeyId) {
+          credential.privateKeyId = config.privateKeyId;
+        }
+        
         admin.initializeApp({
-          credential: admin.credential.cert({
-            projectId: config.projectId,
-            clientEmail: config.clientEmail,
-            privateKey: config.privateKey,
-          }),
+          credential: admin.credential.cert(credential),
           databaseURL: config.databaseURL,
         });
         console.log("✅ Firebase Admin SDK initialized successfully.");

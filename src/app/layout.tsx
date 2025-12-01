@@ -48,8 +48,8 @@ export default function RootLayout({
                 </PageTransition>
               </HeaderSidebarLayout>
               <Toaster />
-                {/* User onboarding guide */}
-                <UserOnboarding />
+              {/* Temporarily disable UserOnboarding to avoid interaction issues; we'll re-enable after fixing it. */}
+              {/* <UserOnboarding /> */}
               </SidebarProvider>
             </OnboardingProvider>
           </AuthProvider>

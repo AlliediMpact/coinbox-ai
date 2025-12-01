@@ -1,3 +1,5 @@
+'use client';
+
 import { useState, useEffect, useCallback, BaseSyntheticEvent } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { z } from "zod";

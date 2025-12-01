@@ -1,0 +1,6 @@
+email,password,displayName,emailVerified,disabled
+user.investor@test.coinbox.local,UserInvestor123!,Test Investor,true,false
+user.newbasic@test.coinbox.local,UserNewBasic123!,New Basic User,true,false
+admin.main@test.coinbox.local,AdminMain123!,Main Admin,true,false
+support.agent@test.coinbox.local,SupportAgent123!,Support Agent,true,false
+user.rejected@test.coinbox.local,UserRejected123!,Rejected User,true,false
