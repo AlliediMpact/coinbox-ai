@@ -32,13 +32,7 @@ export default function BottomCTA({ onOpenLogin, onOpenSignup }: BottomCTAProps)
         >
           Choose a tier, fund your security deposit, and start trading, borrowing, and earning commissions with a single wallet.
         </motion.p>
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.6, delay: 0.2 }}
-          className="mt-8 flex flex-col sm:flex-row gap-4 justify-center"
-        >
+        <div className="mt-8 flex flex-col sm:flex-row gap-4 justify-center">
           <Button
             size="lg"
             onClick={onOpenSignup}
@@ -54,7 +48,7 @@ export default function BottomCTA({ onOpenLogin, onOpenSignup }: BottomCTAProps)
           >
             Sign In
           </Button>
-        </motion.div>
+        </div>
       </div>
     </section>
   );

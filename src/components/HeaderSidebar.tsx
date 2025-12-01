@@ -235,10 +235,10 @@ const HeaderSidebar: React.FC<{ children: React.ReactNode }> = ({ children }) =>
         return (
             <div className="flex flex-col min-h-screen bg-background w-full overflow-x-hidden">
                 {/* Marketing-style header for public pages (logged-out state) */}
-                <header className="w-full border-b bg-slate-950/80 backdrop-blur-md">
+                <header className="w-full border-b" style={{ backgroundColor: '#193281' }}>
                     <div className="max-w-7xl mx-auto flex h-16 items-center justify-between px-4 sm:px-6 lg:px-8">
                         {/* Logo */}
-                        <div className="flex items-center">
+                        <div className="flex items-center cursor-pointer" onClick={() => router.push('/')}>
                             <Image
                                 src="/assets/coinbox-ai.png"
                                 alt="CoinBox Logo"
@@ -247,24 +247,16 @@ const HeaderSidebar: React.FC<{ children: React.ReactNode }> = ({ children }) =>
                                 className="rounded-full"
                             />
                             <span className="ml-2 text-lg font-bold text-white hidden sm:inline-block">
-                                CoinBox Connect
+                                CoinBox
                             </span>
                         </div>
 
                         {/* Logged-out header actions */}
                         <div className="flex items-center gap-3">
                             <Button
-                                variant="ghost"
-                                size="sm"
-                                className="text-slate-200 hover:text-white"
-                                onClick={() => router.push('/about')}
-                            >
-                                About
-                            </Button>
-                            <Button
                                 variant="outline"
                                 size="sm"
-                                className="border-slate-500 text-slate-100 hover:bg-slate-800"
+                                className="border-white/30 text-white hover:bg-white/10"
                                 onClick={() => router.push('/auth')}
                             >
                                 Sign In
@@ -280,7 +272,7 @@ const HeaderSidebar: React.FC<{ children: React.ReactNode }> = ({ children }) =>
                     </div>
                 </header>
 
-                <main className="flex-1 w-full min-w-0 overflow-x-hidden">
+                <main className="flex-1 w-full min-w-0 overflow-x-hidden pt-0">
                     {children}
                 </main>
 
@@ -293,66 +285,44 @@ const HeaderSidebar: React.FC<{ children: React.ReactNode }> = ({ children }) =>
     return (
         <div className="flex flex-col min-h-screen bg-background w-full overflow-x-hidden">
             {/* Unified Header: marketing-style layout with dashboard color */}
-            <header className="sticky top-0 z-50 w-full border-b shadow-sm bg-slate-950/90 backdrop-blur-md">
+            <header className="sticky top-0 z-50 w-full border-b shadow-sm" style={{ backgroundColor: '#193281' }}>
                 <div className="max-w-7xl mx-auto flex h-16 items-center justify-between px-4 sm:px-6 lg:px-8">
                     {/* Mobile Menu Button */}
-                    <motion.div
-                        whileTap={{ scale: 0.95 }}
-                    >
+                    <div>
                         <Button
                             variant="ghost"
-                            className="mr-2 px-2 text-slate-200 hover:text-white lg:hidden"
+                            className="mr-2 px-2 text-white hover:bg-white/10 lg:hidden"
                             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
                         >
-                            <motion.div
-                                animate={{ rotate: isMobileMenuOpen ? 90 : 0 }}
-                                transition={{ duration: 0.3 }}
-                            >
-                                {isMobileMenuOpen ? (
-                                    <motion.div
-                                        initial={{ opacity: 0, rotate: 90 }}
-                                        animate={{ opacity: 1, rotate: 0 }}
-                                    >
-                                        <X className="h-6 w-6" />
-                                    </motion.div>
-                                ) : (
-                                    <Menu className="h-6 w-6" />
-                                )}
-                            </motion.div>
+                            {isMobileMenuOpen ? (
+                                <X className="h-6 w-6" />
+                            ) : (
+                                <Menu className="h-6 w-6" />
+                            )}
                         </Button>
-                    </motion.div>
-
-                    {/* Logo */}
-                    <div className="flex items-center">
-                        <Image
-                            src="/assets/coinbox-ai.png"
-                            alt="CoinBox Logo"
-                            width={40}
-                            height={40}
-                            className="rounded-full"
-                        />
-                        <span className="ml-2 text-lg font-bold text-white hidden sm:inline-block">
-                            CoinBox Connect
-                        </span>
                     </div>
 
-                    {/* Right Section: logged-out vs logged-in */}
+                        {/* Logo */}
+                        <div className="flex items-center cursor-pointer" onClick={() => router.push('/dashboard')}>
+                            <Image
+                                src="/assets/coinbox-ai.png"
+                                alt="CoinBox Logo"
+                                width={40}
+                                height={40}
+                                className="rounded-full"
+                            />
+                            <span className="ml-2 text-lg font-bold text-white hidden sm:inline-block">
+                                CoinBox
+                            </span>
+                        </div>                    {/* Right Section: logged-out vs logged-in */}
                     <div className="flex items-center gap-3 ml-auto">
                         {!user && (
-                            // Logged-out header actions (home-style)
+                            // Logged-out header actions
                             <div className="flex items-center gap-3">
-                                <Button
-                                    variant="ghost"
-                                    size="sm"
-                                    className="text-slate-200 hover:text-white"
-                                    onClick={() => router.push('/about')}
-                                >
-                                    About
-                                </Button>
                                 <Button
                                     variant="outline"
                                     size="sm"
-                                    className="border-slate-500 text-slate-100 hover:bg-slate-800"
+                                    className="border-white/30 text-white hover:bg-white/10"
                                     onClick={() => router.push('/auth')}
                                 >
                                     Sign In

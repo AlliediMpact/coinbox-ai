@@ -150,12 +150,7 @@ export default function HeroSection({ onOpenLogin, onOpenSignup }: HeroSectionPr
           </motion.div>
 
           {/* CTA Buttons */}
-          <motion.div
-            initial={{ opacity: 0.95, y: 4 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.25 }}
-            className="flex flex-col sm:flex-row gap-4 justify-center items-center"
-          >
+          <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
             <Button
               size="lg"
               onClick={onOpenSignup}
@@ -172,7 +167,7 @@ export default function HeroSection({ onOpenLogin, onOpenSignup }: HeroSectionPr
             >
               Sign In
             </Button>
-          </motion.div>
+          </div>
 
           {/* Scroll Indicator */}
           <motion.div
