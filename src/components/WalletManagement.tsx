@@ -84,18 +84,40 @@ export default function WalletManagement() {
     async (values) => {
       if (!user) throw new Error("Not authenticated");
       
+      // Call API route to initialize payment
+      const apiResponse = await fetch('/api/payments/initialize', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          userId: user.uid,
+          email: user.email,
+          amount: values.amount,
+          type: 'deposit'
+        })
+      });
+
+      if (!apiResponse.ok) {
+        throw new Error('Failed to initialize payment');
+      }
+
+      const response = await apiResponse.json();
+      
+      // Create pending transaction
       const walletRef = doc(db, "wallets", user.uid);
       const transactionRef = collection(walletRef, "transactions");
-      const pendingTransaction = await addDoc(transactionRef, {
+      await addDoc(transactionRef, {
         type: "Deposit",
         amount: values.amount,
         date: new Date().toISOString(),
         method: values.method,
-        status: 'pending'
+        status: 'pending',
+        reference: response.data.reference
       });
 
-      const { paystackService } = await import("@/lib/paystack-service");
-      const response = await paystackService.initializePayment(user.email, values.amount);
+      // Redirect to payment page
+      if (response.data.authorization_url) {
+        window.location.href = response.data.authorization_url;
+      }
       setOpen(false);
     },
     { successMessage: "Deposit initiated successfully" }
@@ -186,22 +208,29 @@ export default function WalletManagement() {
         description: 'Awaiting Paystack payment',
       });
 
-      // 2. Call Paystack to initialize payment
-      // Dynamically import paystackService to avoid SSR issues
-      const { paystackService } = await import("@/lib/paystack-service");
-      const paystackResponse = await paystackService.initializePayment(
-        user.email,
-        amount,
-        {
-          fullName: user.displayName || '',
-          phone: user.phoneNumber || '',
+      // 2. Call API route to initialize payment
+      const apiResponse = await fetch('/api/payments/initialize', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          userId: user.uid,
+          email: user.email,
+          amount: amount,
+          type: 'deposit',
           metadata: {
+            fullName: user.displayName || '',
+            phone: user.phoneNumber || '',
             transactionId: pendingTransaction.id,
-            userId: user.uid,
             depositMethod: method,
-          },
-        }
-      );
+          }
+        })
+      });
+
+      if (!apiResponse.ok) {
+        throw new Error('Failed to initialize payment');
+      }
+
+      const paystackResponse = await apiResponse.json();
 
       // 3. Store transaction reference for callback verification
       localStorage.setItem('pending_wallet_deposit', JSON.stringify({
@@ -212,7 +241,9 @@ export default function WalletManagement() {
       }));
 
       // 4. Redirect to Paystack payment page
-      window.location.href = paystackResponse.data.authorization_url;
+      if (paystackResponse.data.authorization_url) {
+        window.location.href = paystackResponse.data.authorization_url;
+      }
     } catch (error: any) {
       console.error('Deposit error:', error);
       toast({

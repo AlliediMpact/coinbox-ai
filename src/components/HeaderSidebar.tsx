@@ -36,6 +36,11 @@ import {
     Bell,
     X,
     FileText,
+    Moon,
+    Sun,
+    Plus,
+    ArrowUpRight,
+    ChevronRight,
 } from 'lucide-react';
 import { Card, CardContent } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
@@ -48,7 +53,7 @@ import {
 } from "@/components/ui/tooltip";
 import { getMembershipTier, formatCurrency } from '@/lib/membership-tiers';
 import { ReferralNotifier } from '@/components/referral/ReferralNotifier';
-import { getFirestore, doc, getDoc } from 'firebase/firestore';
+import { getFirestore, doc, getDoc, collection, query, where, getDocs, orderBy, limit } from 'firebase/firestore';
 import SiteFooter from '@/components/SiteFooter';
 
 interface HeaderProps {

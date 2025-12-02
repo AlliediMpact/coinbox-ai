@@ -24,7 +24,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useFormWithValidation } from "@/lib/form-utils";
 import { TradeTicket, Dispute } from "@/lib/types";
 import { tradingService, TradingService } from "@/lib/trading-service";
-import { disputeService } from "@/lib/dispute-service";
+// Removed server-side import - use API route instead
 import { MembershipTierType, getTierConfig } from "@/lib/membership-tiers";
 import { formatCurrency } from "@/lib/utils";
 import { ErrorBoundary } from './ErrorBoundary';
@@ -196,12 +196,20 @@ export default function CoinTrading() {
             const ticket = tickets.find(t => t.id === disputeDetails.ticketId);
             if (!ticket) throw new Error("Ticket not found");
             
-            // Use the dispute service instead of trading service
-            await disputeService.createDispute({
-                ticketId: disputeDetails.ticketId,
-                userId: user.uid,
-                ...values
+            // Call API route to create dispute
+            const apiResponse = await fetch('/api/disputes/create', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    ticketId: disputeDetails.ticketId,
+                    userId: user.uid,
+                    ...values
+                })
             });
+
+            if (!apiResponse.ok) {
+                throw new Error('Failed to create dispute');
+            }
             
             // Track the dispute creation
             await trackTransactionHistory(ticket, "Create Dispute", values.reason);

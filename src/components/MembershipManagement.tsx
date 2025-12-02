@@ -8,7 +8,6 @@ import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from '@/components/AuthProvider';
-import { paystackService } from '@/lib/paystack-service';
 import { MEMBERSHIP_TIERS, MembershipTierType } from '@/lib/membership-tiers';
 import { 
   AlertCircle, 
@@ -189,20 +188,30 @@ export default function MembershipManagement() {
     setPaymentStatus('processing');
 
     try {
-      // Initialize payment
-      const response = await paystackService.initializePayment(
-        user.uid,
-        user.email,
-        selectedTier.securityFee,
-        {
+      // Call API route to initialize payment
+      const apiResponse = await fetch('/api/payments/initialize', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          userId: user.uid,
+          email: user.email,
+          amount: selectedTier.securityFee,
           membershipTier: selectedTier.name,
           metadata: {
             securityFee: selectedTier.securityFee,
             refundableAmount: selectedTier.refundableAmount,
             administrationFee: selectedTier.administrationFee
           }
-        }
-      );
+        })
+      });
+
+      if (!apiResponse.ok) {
+        throw new Error('Failed to initialize payment');
+      }
+
+      const response = await apiResponse.json();
 
       // Redirect to Paystack
       if (response.status && response.data.authorization_url) {

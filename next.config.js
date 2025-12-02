@@ -8,7 +8,11 @@ const nextConfig = {
   },
 
   output: 'standalone',
-  transpilePackages: ['firebase', 'firebase-admin', '@firebase'],
+  transpilePackages: ['firebase', '@firebase'],
+  // Exclude server-only packages from client bundle
+  experimental: {
+    serverComponentsExternalPackages: ['firebase-admin', '@google-cloud/firestore'],
+  },
   async headers() {
     return [
       {
@@ -98,9 +102,12 @@ const nextConfig = {
             }
           });
           
-          server.listen(port, () => {
-            console.log(`WebSocket server listening on port ${port}`);
-          });
+          // Only listen if not already listening
+          if (!server.listening) {
+            server.listen(port, () => {
+              console.log(`WebSocket server listening on port ${port}`);
+            });
+          }
         };
         
         // Get the Next.js dev server port and use a different one for WebSocket
