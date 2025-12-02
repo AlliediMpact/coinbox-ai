@@ -99,7 +99,7 @@ export default function MfaSettingsPage() {
   }
   
   return (
-    <div className="container mx-auto p-6 max-w-3xl">
+    <div className="container mx-auto p-6 max-w-4xl">
       <Card>
         <CardHeader>
           <CardTitle className="text-2xl">Two-Factor Authentication</CardTitle>

@@ -1,5 +1,22 @@
-// Root layout now only defines metadata; route groups use their own layouts.
 import type { Metadata } from 'next';
+import { GeistSans, GeistMono } from 'geist/font';
+import './globals.css';
+import { Toaster } from '@/components/ui/toaster';
+import { AuthProvider } from '@/components/AuthProvider';
+import { ErrorBoundary } from '@/components/ErrorBoundary';
+import HeaderSidebarLayout from '@/components/HeaderSidebar';
+import PageTransition from '@/components/PageTransition';
+import AppLoading from '@/components/AppLoading';
+import RouteChangeIndicator from '@/components/RouteChangeIndicator';
+import { OnboardingProvider } from '@/components/onboarding/OnboardingProvider';
+import { ThemeProvider } from '@/contexts/ThemeContext';
+import dynamic from 'next/dynamic';
+
+// Import UserOnboarding dynamically to avoid SSR issues
+const UserOnboarding = dynamic(
+  () => import('@/components/onboarding/UserOnboarding'),
+  { ssr: false }
+);
 
 export const metadata: Metadata = {
   title: 'Allied iMpact Coin Box',
@@ -11,7 +28,33 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  return children;
+  return (
+    <html lang="en" className={`${GeistSans.variable} ${GeistMono.variable}`}>
+      <body className="antialiased">
+        <ErrorBoundary>
+          <ThemeProvider>
+            <AuthProvider>
+              <OnboardingProvider>
+                  {/* Temporarily disabled loading screens for debugging */}
+                  {/* <AppLoading minimumLoadTimeMs={1000} /> */}
+
+                  {/* Enhanced Route Change Progress Indicator - for subsequent navigation */}
+                  {/* <RouteChangeIndicator /> */}
+
+                  <HeaderSidebarLayout>
+                    {/* Page Transitions removed to fix interaction issues */}
+                    {children}
+                  </HeaderSidebarLayout>
+                  <Toaster />
+                  {/* Temporarily disable UserOnboarding to avoid interaction issues; we'll re-enable after fixing it. */}
+                  {/* <UserOnboarding /> */}
+              </OnboardingProvider>
+            </AuthProvider>
+          </ThemeProvider>
+        </ErrorBoundary>
+      </body>
+    </html>
+  );
 }
 
 

@@ -25,7 +25,14 @@ export default function PressPage() {
             <CardContent className="p-8">
               <h2 className="text-2xl font-bold mb-4">Media Kit</h2>
               <p className="text-muted-foreground mb-4">Download our logo, brand guidelines, and company information.</p>
-              <Button><Download className="mr-2 h-4 w-4" />Download Media Kit</Button>
+              <Button onClick={() => {
+                const link = document.createElement('a');
+                link.href = '/assets/media-kit.zip';
+                link.download = 'coinbox-media-kit.zip';
+                link.click();
+              }}>
+                <Download className="mr-2 h-4 w-4" />Download Media Kit
+              </Button>
             </CardContent>
           </Card>
         </motion.div>

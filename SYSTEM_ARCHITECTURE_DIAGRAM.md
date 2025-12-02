@@ -210,7 +210,7 @@ INVESTOR SIDE                               BORROWER SIDE
                    │ R1,000          │
                    └────────┬────────┘
                             │
-                            │ (Wait for Due Date: 3 months)
+                            │ (Wait for Due Date: 1 month)
                             ▼
                    ┌─────────────────┐
                    │  REPAYMENT      │

@@ -4,7 +4,7 @@ export const dynamic = 'force-dynamic';
 
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/components/AuthProvider';
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { Loader2 } from 'lucide-react';
 import HeroSection from '@/components/home/HeroSection';
 import StatsCards from '@/components/home/StatsCards';
@@ -13,13 +13,10 @@ import HowItWorks from '@/components/home/HowItWorks';
 import TrustStrip from '@/components/home/TrustStrip';
 import WhyCoinBox from '@/components/home/WhyCoinBox';
 import BottomCTA from '@/components/home/BottomCTA';
-import AuthModal from '@/components/home/AuthModal';
 
 export default function Home() {
     const router = useRouter();
     const { user, loading } = useAuth();
-    const [showLoginModal, setShowLoginModal] = useState(false);
-    const [showSignupModal, setShowSignupModal] = useState(false);
 
     // Redirect authenticated users to dashboard
     useEffect(() => {
@@ -42,7 +39,7 @@ export default function Home() {
 
     // Always show content - no waiting
     return (
-        <main className="w-full min-h-screen overflow-x-hidden">
+        <>
             {/* Skip to main content link for keyboard navigation */}
             <a 
                 href="#hero-section" 
@@ -53,10 +50,7 @@ export default function Home() {
             
             {/* Hero Section - Full width & height */}
             <div id="hero-section">
-                <HeroSection 
-                    onOpenLogin={() => setShowLoginModal(true)}
-                    onOpenSignup={() => setShowSignupModal(true)}
-                />
+                <HeroSection />
             </div>
 
             {/* How it works */}
@@ -75,18 +69,7 @@ export default function Home() {
             <WhyCoinBox />
 
             {/* Bottom CTA */}
-            <BottomCTA 
-                onOpenLogin={() => setShowLoginModal(true)}
-                onOpenSignup={() => setShowSignupModal(true)}
-            />
-
-            {/* Auth Modals */}
-            <AuthModal
-                openLogin={showLoginModal}
-                openSignup={showSignupModal}
-                onCloseLogin={() => setShowLoginModal(false)}
-                onCloseSignup={() => setShowSignupModal(false)}
-            />
-        </main>
+            <BottomCTA />
+        </>
     );
 }
