@@ -2,7 +2,7 @@ import { db } from './firebase';
 import { 
   collection, 
   setDoc,
-  doc as firestoreDoc,
+  doc,
   query, 
   where, 
   orderBy, 
@@ -14,7 +14,9 @@ import {
   limit, 
   writeBatch,
   DocumentData,
-  QuerySnapshot
+  QuerySnapshot,
+  Timestamp,
+  addDoc
 } from 'firebase/firestore';
 import { NotificationType, NotificationPriority, NotificationStatus, NotificationCategory } from './notification-constants';
 
