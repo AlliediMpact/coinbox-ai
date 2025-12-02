@@ -2,6 +2,7 @@
 
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
+import { useRouter } from 'next/navigation';
 
 interface BottomCTAProps {
   onOpenLogin?: () => void;
@@ -9,6 +10,8 @@ interface BottomCTAProps {
 }
 
 export default function BottomCTA({ onOpenLogin, onOpenSignup }: BottomCTAProps) {
+
+  const router = useRouter();
 
   return (
     <section className="w-full py-20 px-4 sm:px-6 lg:px-8 bg-gradient-to-tr from-slate-900 via-blue-900 to-purple-900 relative overflow-hidden">
@@ -35,7 +38,7 @@ export default function BottomCTA({ onOpenLogin, onOpenSignup }: BottomCTAProps)
         <div className="mt-8 flex flex-col sm:flex-row gap-4 justify-center">
           <Button
             size="lg"
-            onClick={onOpenSignup}
+            onClick={onOpenSignup ?? (() => router.push('/auth/signup'))}
             className="px-8 py-6 text-lg bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white border-0 shadow-lg shadow-blue-500/50 transition-all duration-300 hover:scale-105"
           >
             Sign Up
@@ -43,7 +46,7 @@ export default function BottomCTA({ onOpenLogin, onOpenSignup }: BottomCTAProps)
           <Button
             size="lg"
             variant="outline"
-            onClick={onOpenLogin}
+            onClick={onOpenLogin ?? (() => router.push('/auth'))}
             className="px-8 py-6 text-lg bg-white/10 backdrop-blur-sm border-2 border-white/30 text-white hover:bg-white/20 transition-all duration-300 hover:scale-105"
           >
             Sign In
