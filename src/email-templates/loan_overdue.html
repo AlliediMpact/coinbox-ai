@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Overdue Loan Notice</title>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+      line-height: 1.6;
+      color: #333;
+      max-width: 600px;
+      margin: 0 auto;
+      padding: 20px;
+      background-color: #f4f4f4;
+    }
+    .container {
+      background-color: #ffffff;
+      border-radius: 8px;
+      padding: 30px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    .header {
+      text-align: center;
+      margin-bottom: 30px;
+    }
+    .logo {
+      font-size: 32px;
+      font-weight: bold;
+      color: #dc2626;
+      margin-bottom: 10px;
+    }
+    .alert {
+      background-color: #fee2e2;
+      padding: 20px;
+      border-radius: 6px;
+      margin: 20px 0;
+      border-left: 4px solid #dc2626;
+    }
+    .alert-title {
+      font-size: 18px;
+      font-weight: bold;
+      color: #dc2626;
+      margin-bottom: 10px;
+    }
+    .amount {
+      font-size: 24px;
+      font-weight: bold;
+      color: #dc2626;
+      margin: 10px 0;
+    }
+    .overdue-days {
+      font-size: 18px;
+      color: #dc2626;
+      font-weight: bold;
+      margin: 10px 0;
+    }
+    .button {
+      display: inline-block;
+      padding: 14px 28px;
+      background-color: #dc2626;
+      color: #ffffff;
+      text-decoration: none;
+      border-radius: 6px;
+      margin: 20px 0;
+      font-weight: bold;
+      font-size: 16px;
+    }
+    .footer {
+      text-align: center;
+      margin-top: 30px;
+      padding-top: 20px;
+      border-top: 1px solid #e5e7eb;
+      color: #6b7280;
+      font-size: 14px;
+    }
+    .details-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 20px 0;
+    }
+    .details-table td {
+      padding: 10px;
+      border-bottom: 1px solid #e5e7eb;
+    }
+    .details-table td:first-child {
+      font-weight: bold;
+      color: #6b7280;
+    }
+    .warning-box {
+      background-color: #fef3c7;
+      padding: 15px;
+      border-radius: 6px;
+      margin: 20px 0;
+      border-left: 4px solid #f59e0b;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <div class="logo">⚠️ CoinBox AI</div>
+      <h2 style="color: #dc2626; margin: 0;">Overdue Loan Notice</h2>
+    </div>
+
+    <div class="alert">
+      <div class="alert-title">🚨 URGENT: Your loan is overdue</div>
+      <p style="margin: 10px 0;">
+        Your loan repayment was due on <strong>{{dueDate}}</strong> and is now <span class="overdue-days">{{daysOverdue}} days overdue</span>.
+      </p>
+    </div>
+
+    <div class="content">
+      <p>Hi {{borrowerName}},</p>
+      
+      <p>We have not received your loan repayment. This is a serious matter that requires immediate attention.</p>
+
+      <table class="details-table">
+        <tr>
+          <td>Loan Amount:</td>
+          <td class="amount">R {{loanAmount}}</td>
+        </tr>
+        <tr>
+          <td>Original Due Date:</td>
+          <td style="color: #dc2626; font-weight: bold;">{{dueDate}}</td>
+        </tr>
+        <tr>
+          <td>Days Overdue:</td>
+          <td class="overdue-days">{{daysOverdue}} days</td>
+        </tr>
+        <tr>
+          <td>Duration:</td>
+          <td>{{duration}} months</td>
+        </tr>
+        <tr>
+          <td>Interest Rate:</td>
+          <td>{{interestRate}}%</td>
+        </tr>
+      </table>
+
+      <div class="warning-box">
+        <strong>⚠️ Consequences of Non-Payment:</strong>
+        <ul style="margin: 10px 0; padding-left: 20px;">
+          <li>Late payment fees may apply</li>
+          <li>Your credit rating may be affected</li>
+          <li>Future loan applications may be declined</li>
+          <li>Legal action may be taken if payment is not received</li>
+        </ul>
+      </div>
+
+      <p style="margin-top: 20px;">
+        <strong>What to do now:</strong>
+      </p>
+      <ol>
+        <li><strong>Make an immediate payment</strong> to clear your outstanding balance</li>
+        <li><strong>Contact us</strong> if you're experiencing financial difficulties</li>
+        <li><strong>Set up a payment plan</strong> if needed (contact support)</li>
+      </ol>
+
+      <div style="text-align: center; margin: 30px 0;">
+        <a href="{{dashboardUrl}}/dashboard/loans" class="button">Repay Now</a>
+      </div>
+
+      <div style="background-color: #f3f4f6; padding: 15px; border-radius: 6px; margin: 20px 0;">
+        <p style="margin: 0; font-size: 14px;">
+          <strong>Need assistance?</strong><br>
+          If you're facing financial hardship, please contact us immediately at:<br>
+          📧 support@coinbox.ai<br>
+          📞 +27 (0)XX XXX XXXX<br>
+          We're here to help find a solution.
+        </p>
+      </div>
+    </div>
+
+    <div class="footer">
+      <p>CoinBox AI - Peer-to-Peer Lending Platform</p>
+      <p>This is an automated notice. Immediate action required.</p>
+      <p style="margin-top: 10px; font-size: 12px; color: #9ca3af;">
+        If you've already made the payment, please contact support with proof of payment.
+      </p>
+    </div>
+  </div>
+</body>
+</html>
