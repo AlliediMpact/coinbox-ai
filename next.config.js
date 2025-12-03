@@ -86,7 +86,10 @@ const nextConfig = {
   // },
   // Add WebSocket server initialization
   webpack: (config, { isServer }) => {
-    if (isServer && !global.webhookServerStarted) {
+    // Only start the dev WebSocket server in local development builds
+    const isDev = process.env.NODE_ENV === 'development';
+    const isVercel = !!process.env.VERCEL;
+    if (isServer && isDev && !isVercel && !global.webhookServerStarted) {
       try {
         global.webhookServerStarted = true;
         const { webhookMonitoring } = require('./src/lib/webhook-monitoring');
