@@ -7,7 +7,7 @@ const nextConfig = {
     ignoreDuringBuilds: true,
   },
 
-  output: 'standalone',
+  // output: 'standalone',
   transpilePackages: ['firebase', '@firebase'],
   // Exclude server-only packages from client bundle
   experimental: {
