@@ -15,7 +15,6 @@ import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 
 export default function AuthPage() {
-  const [isMounted, setIsMounted] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isResetMode, setIsResetMode] = useState(false);
@@ -28,14 +27,9 @@ export default function AuthPage() {
   const [mfaError, setMfaError] = useState<any>(null);
   const [mfaInProgress, setMfaInProgress] = useState(false);
 
-  const { signIn, sendPasswordReset, user } = useAuth();
+  const { signIn, sendPasswordReset, user, loading } = useAuth();
   const { toast } = useToast();
   const router = useRouter();
-
-  // Ensure component is mounted before enabling interactions
-  useEffect(() => {
-    setIsMounted(true);
-  }, []);
 
   const validateEmail = (value: string) => {
     if (!value) return 'Email is required';
@@ -46,10 +40,10 @@ export default function AuthPage() {
   
   // Redirect to dashboard if user is already authenticated
   useEffect(() => {
-    if (user) {
+    if (user && !loading) {
       router.push('/dashboard');
     }
-  }, [user, router]);
+  }, [user, loading, router]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -150,11 +144,14 @@ export default function AuthPage() {
     setIsLoading(false);
   };
 
-  // Show loading state until mounted to prevent hydration issues
-  if (!isMounted) {
+  // Show loading only while checking auth state
+  if (loading) {
     return (
       <div className="min-h-screen w-full bg-slate-950 flex items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-white" />
+        <div className="text-center space-y-4">
+          <Loader2 className="h-8 w-8 animate-spin text-white mx-auto" />
+          <p className="text-white text-sm">Loading...</p>
+        </div>
       </div>
     );
   }
