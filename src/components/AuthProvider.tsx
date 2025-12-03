@@ -96,8 +96,8 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
     setIsClient(true);
     // Set a timeout to prevent infinite loading
     const timeout = setTimeout(() => {
-      if (loading) {
-        console.log('[AuthProvider] Loading timeout - setting loading to false');
+      if (loading && !firebaseAuth) {
+        console.log('[AuthProvider] Loading timeout - Firebase not initialized, setting loading to false');
         setLoading(false);
       }
     }, 3000); // 3 second timeout
@@ -105,12 +105,11 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
     return () => clearTimeout(timeout);
   }, [loading]);
 
-  console.log('[AuthProvider] Rendering, firebaseAuth:', firebaseAuth ? 'initialized' : 'NOT initialized', 'loading:', loading);
+  console.log('[AuthProvider] Rendering, firebaseAuth:', firebaseAuth ? 'initialized' : 'NOT initialized', 'loading:', loading, 'isClient:', isClient);
 
-  // Check if Firebase Auth is properly initialized (only show error on client side)
+  // If Firebase Auth is not initialized and we're on client side, show error
   if (!firebaseAuth && isClient) {
     console.error('[AuthProvider] Firebase Auth not initialized - check environment variables');
-    console.error('[AuthProvider] Returning fallback AuthContext');
     return (
       <AuthContext.Provider value={{
         user: null,
@@ -130,21 +129,22 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
         enrolledFactors: [],
         premiumUntil: null,
       }}>
-        <div style={{padding: '20px', background: '#fff3cd', border: '1px solid #ffc107'}}>
+        <div style={{padding: '20px', background: '#fff3cd', border: '1px solid #ffc107', margin: '20px'}}>
           <strong>⚠️ Firebase Authentication Not Configured</strong>
-          <p>Please check your Firebase environment variables.</p>
+          <p>Please check your Firebase environment variables and restart the dev server.</p>
         </div>
         {children}
       </AuthContext.Provider>
     );
   }
   
-  // During SSR or before client hydration, return a temporary provider without the error banner
+  // During SSR, just show loading - component will re-render on client
   if (!firebaseAuth) {
+    console.log('[AuthProvider] Firebase not yet initialized (SSR), returning loading state');
     return (
       <AuthContext.Provider value={{
         user: null,
-        loading: true,
+        loading: false, // Changed to false to prevent infinite loading
         signIn: async () => { throw new Error('Firebase initializing'); },
         signOut: async () => {},
         sendPasswordReset: async () => { throw new Error('Firebase initializing'); },
