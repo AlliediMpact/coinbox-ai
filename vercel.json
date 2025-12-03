@@ -1,0 +1,10 @@
+{
+  "buildCommand": "next build",
+  "framework": "nextjs",
+  "crons": [
+    {
+      "path": "/api/cron/check-loan-repayments",
+      "schedule": "0 9 * * *"
+    }
+  ]
+}
