@@ -7,8 +7,8 @@ const nextConfig = {
     ignoreDuringBuilds: true,
   },
 
-  // Explicitly set distDir to .next to ensure Vercel finds the build output
-  distDir: '.next',
+  // output: 'standalone',
+  // distDir: '.next',
   
   transpilePackages: ['firebase', '@firebase'],
   // Exclude server-only packages from client bundle
