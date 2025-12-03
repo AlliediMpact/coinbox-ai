@@ -35,8 +35,19 @@ if (typeof window !== 'undefined') {
     ) {
       authInstance = getAuth(app);
       console.log('[Firebase] Auth initialized successfully');
+      console.log('[Firebase] Config check:', {
+        hasApiKey: !!firebaseConfig.apiKey,
+        hasAuthDomain: !!firebaseConfig.authDomain,
+        hasProjectId: !!firebaseConfig.projectId,
+        projectId: firebaseConfig.projectId
+      });
     } else {
       console.error('[Firebase] Missing required environment variables');
+      console.error('[Firebase] Config:', {
+        apiKey: firebaseConfig.apiKey ? 'set' : 'MISSING',
+        authDomain: firebaseConfig.authDomain ? 'set' : 'MISSING',
+        projectId: firebaseConfig.projectId ? 'set' : 'MISSING',
+      });
     }
   } catch (error) {
     console.error('[Firebase] Auth initialization failed:', error);
