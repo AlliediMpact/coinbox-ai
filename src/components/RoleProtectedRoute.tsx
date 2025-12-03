@@ -40,3 +40,5 @@ export function RoleProtectedRoute({
   // If authorized, render children
   return <>{children}</>;
 }
+
+export default RoleProtectedRoute;

@@ -2,7 +2,7 @@
 
 export const dynamic = 'force-dynamic';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -11,7 +11,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Loader2, CheckCircle, XCircle } from 'lucide-react';
 import ResendVerification from '@/components/ResendVerification';
 
-export default function VerifyEmailPage() {
+function VerifyEmailContent() {
     const [verifying, setVerifying] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [verified, setVerified] = useState(false);
@@ -111,5 +111,17 @@ export default function VerifyEmailPage() {
                 </CardContent>
             </Card>
         </div>
+    );
+}
+
+export default function VerifyEmailPage() {
+    return (
+        <Suspense fallback={
+            <div className="flex items-center justify-center min-h-screen">
+                <Loader2 className="h-8 w-8 animate-spin text-[#193281]" />
+            </div>
+        }>
+            <VerifyEmailContent />
+        </Suspense>
     );
 }

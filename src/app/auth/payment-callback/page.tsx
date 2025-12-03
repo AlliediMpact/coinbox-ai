@@ -1,12 +1,13 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuth } from '@/components/AuthProvider';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from '@/hooks/use-toast';
+import { Loader2 } from 'lucide-react';
 
-export default function PaymentCallbackPage() {
+function PaymentCallbackContent() {
   const [verifying, setVerifying] = useState(true);
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -78,5 +79,17 @@ export default function PaymentCallbackPage() {
         </CardContent>
       </Card>
     </div>
+  );
+}
+
+export default function PaymentCallbackPage() {
+  return (
+    <Suspense fallback={
+      <div className="flex items-center justify-center min-h-screen">
+        <Loader2 className="h-8 w-8 animate-spin text-[#193281]" />
+      </div>
+    }>
+      <PaymentCallbackContent />
+    </Suspense>
   );
 }

@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { loanRepaymentService } from '@/lib/loan-repayment-service';
 
+export const dynamic = 'force-dynamic';
+
 // This endpoint should be called daily by a cron job
 // Vercel Cron: Configure in vercel.json
 export async function GET(request: NextRequest) {

@@ -4,6 +4,8 @@ import { safeNextResponseJson } from '@/app/api-utils';
 import { hasAdminAccess, getUserRole } from '@/lib/auth-utils'; // Import utilities
 import { getServerSession, Session } from 'next-auth';
 
+export const dynamic = 'force-dynamic';
+
 export async function GET(request: NextRequest) {
     try {
         if (!adminAuth || !adminDb) {

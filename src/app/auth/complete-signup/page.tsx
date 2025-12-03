@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -22,7 +22,7 @@ const PASSWORD_REQUIREMENTS: PasswordRequirement[] = [
   { regex: /[!@#$%^&*(),.?":{}|<>]/.test, message: "Contains special character" } // Fixed regex test
 ];
 
-export default function CompleteSignupPage() {
+function CompleteSignupContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { toast } = useToast();
@@ -223,5 +223,17 @@ export default function CompleteSignupPage() {
         </CardContent>
       </Card>
     </div>
+  );
+}
+
+export default function CompleteSignupPage() {
+  return (
+    <Suspense fallback={
+      <div className="flex items-center justify-center min-h-screen">
+        <Loader2 className="h-8 w-8 animate-spin text-[#193281]" />
+      </div>
+    }>
+      <CompleteSignupContent />
+    </Suspense>
   );
 }
