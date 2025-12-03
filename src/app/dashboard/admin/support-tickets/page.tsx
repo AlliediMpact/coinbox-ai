@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useAuth } from '@/context/AuthProvider';
+import { useAuth } from '@/components/AuthProvider';
 import { supportTicketService, SupportTicket, TicketStats } from '@/lib/support-ticket-service';
 import { useRouter } from 'next/navigation';
 
