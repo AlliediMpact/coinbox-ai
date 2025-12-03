@@ -8,12 +8,14 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { ShieldAlert, Lock, Activity, AlertTriangle } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { ProtectedRoute } from '@/components/ProtectedRoute';
 
 export default function SecurityPage() {
   const [activeTab, setActiveTab] = useState('monitoring');
 
   return (
-    <div className="security-page">
+    <ProtectedRoute>
+      <div className="security-page">
       <h1 className="text-2xl font-bold mb-2">Account Security</h1>
       <p className="text-muted-foreground mb-6">
         Monitor and manage your account security settings
@@ -110,5 +112,6 @@ export default function SecurityPage() {
         </TabsContent>
       </Tabs>
     </div>
+    </ProtectedRoute>
   );
 }

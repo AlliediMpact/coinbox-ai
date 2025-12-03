@@ -26,6 +26,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { formatDistanceToNow } from 'date-fns';
+import { ProtectedRoute } from '@/components/ProtectedRoute';
 
 export default function MessagesPage() {
   const { user } = useAuth();
@@ -133,7 +134,8 @@ export default function MessagesPage() {
   }
 
   return (
-    <div className="h-[calc(100vh-120px)] flex gap-4 p-6">
+    <ProtectedRoute>
+      <div className="h-[calc(100vh-120px)] flex gap-4 p-6">
       {/* Conversations List */}
       <Card className="w-80 flex flex-col">
         <CardHeader>
@@ -325,5 +327,6 @@ export default function MessagesPage() {
         )}
       </Card>
     </div>
+    </ProtectedRoute>
   );
 }

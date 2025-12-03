@@ -22,6 +22,7 @@ import {
   XCircle,
   Clock
 } from 'lucide-react';
+import { ProtectedRoute } from '@/components/ProtectedRoute';
 
 interface PaymentHistory {
   id: string;
@@ -157,7 +158,8 @@ export default function PaymentsPage() {
   }
 
   return (
-    <div className="payments-page max-w-7xl mx-auto p-6">
+    <ProtectedRoute>
+      <div className="payments-page max-w-7xl mx-auto p-6">
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-gray-900 mb-2">Payments & Billing</h1>
         <p className="text-gray-600">Manage your membership, view payment history, and download receipts</p>
@@ -348,5 +350,6 @@ export default function PaymentsPage() {
         </TabsContent>
       </Tabs>
     </div>
+    </ProtectedRoute>
   );
 }

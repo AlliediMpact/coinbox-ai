@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { useAuth } from '@/components/AuthProvider'; // Keep useAuth if other functions like signIn/signOut are used elsewhere
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, CheckCircle2, XCircle, Eye, EyeOff, Lock, ArrowRight } from 'lucide-react';
+import { Loader2, CheckCircle2, XCircle, Eye, EyeOff, Lock, ArrowRight, ShieldCheck } from 'lucide-react';
 import {
   Select,
   SelectContent,
@@ -18,6 +18,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import Script from "next/script";
+
+import Link from 'next/link';
 
 interface PasswordRequirement {
   regex: RegExp;
@@ -237,22 +239,85 @@ export default function SignUpPage() {
     setCurrentStep((s) => Math.max(0, s - 1));
   };
 
+  // Modified handleSubmit to handle "Enter" key for next step
+  const handleFormSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (currentStep < steps.length - 1) {
+      handleNext();
+    } else {
+      handleSubmit(e);
+    }
+  };
+
   return (
-    <> {/* This fragment wraps the entire return content */}
+    <>
       {/* Paystack inline script */}
       <Script src="https://js.paystack.co/v1/inline.js" strategy="beforeInteractive" />
-      <div className="flex items-center justify-center min-h-screen bg-gradient-to-b from-white to-neutral-lightest p-4">
-        <Card className="w-full max-w-xl shadow-2xl border border-slate-200/80">
-          <CardHeader className="space-y-4 pb-3">
+
+      <div className="min-h-screen w-full bg-slate-950 text-slate-50 flex flex-col lg:flex-row">
+        {/* Left brand panel (mirrors login but signup-focused) */}
+        <div className="hidden lg:flex lg:w-1/2 relative overflow-hidden bg-gradient-to-br from-blue-600 via-indigo-700 to-slate-900">
+          <div className="absolute inset-0 opacity-40 bg-[radial-gradient(circle_at_top,_rgba(255,255,255,0.25),_transparent_55%),radial-gradient(circle_at_bottom,_rgba(56,189,248,0.38),_transparent_60%)] pointer-events-none" />
+          <div className="relative z-10 flex flex-col justify-between p-10 xl:p-14 w-full">
             <div>
-              <CardTitle className="text-2xl font-semibold">Create your CoinBox account</CardTitle>
-              <CardDescription>
-                Join a regulated P2P network with protected deposits and referral rewards.
-              </CardDescription>
+              <p className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-white/10 border border-white/15 text-slate-100 mb-6">
+                <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 mr-2" />
+                Membership-first P2P platform
+              </p>
+              <h1 className="text-4xl xl:text-5xl font-semibold tracking-tight text-slate-50 mb-4">
+                Create your CoinBox
+                <br />
+                membership in a few steps.
+              </h1>
+              <p className="text-sm text-slate-200/80 max-w-md mb-8">
+                Start with a secure, tiered membership that unlocks trading limits, referral rewards, and protected deposits – all under one account.
+              </p>
+
+              <div className="grid grid-cols-2 gap-4 text-xs text-slate-100/90 max-w-md">
+                <div className="flex items-start gap-2">
+                  <ShieldCheck className="h-4 w-4 mt-0.5 text-emerald-300" />
+                  <div>
+                    <p className="font-medium">Tiered protections</p>
+                    <p className="text-slate-200/80">Choose a membership tier that matches how you trade and earn.</p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-2">
+                  <Lock className="h-4 w-4 mt-0.5 text-sky-200" />
+                  <div>
+                    <p className="font-medium">Secure onboarding</p>
+                    <p className="text-slate-200/80">Verified email, strong password rules, and refundable deposits.</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="mt-10 border-t border-white/10 pt-4 flex flex-col gap-3 text-xs text-slate-200/80">
+              <p className="uppercase tracking-[0.2em] text-[11px] text-slate-200/70">Membership journey</p>
+              <div className="flex flex-wrap gap-4 text-[11px] font-medium text-slate-100/80">
+                <span className="px-2.5 py-1 rounded-full bg-white/5 border border-white/10">Step 1: Details</span>
+                <span className="px-2.5 py-1 rounded-full bg-white/5 border border-white/10">Step 2: Security</span>
+                <span className="px-2.5 py-1 rounded-full bg-white/5 border border-white/10">Step 3: Tier</span>
+                <span className="px-2.5 py-1 rounded-full bg-white/5 border border-white/10">Step 4: Deposit</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Right signup wizard column */}
+        <div className="flex-1 flex items-center justify-center px-4 py-10 bg-gradient-to-b from-white to-slate-50 lg:py-0">
+          <div className="w-full max-w-md">
+            {/* Mobile heading */}
+            <div className="lg:hidden text-center space-y-2 mb-6">
+              <h1 className="text-2xl font-semibold tracking-tight bg-gradient-to-r from-primary-blue to-primary-purple bg-clip-text text-transparent">
+                Allied iMpact Coin Box
+              </h1>
+              <p className="text-xs text-slate-600">
+                Create a CoinBox membership with secure onboarding and a refundable deposit.
+              </p>
             </div>
 
             {/* 4-step wizard header */}
-            <div className="flex flex-col gap-2">
+            <div className="flex flex-col gap-2 mb-5">
               <div className="flex justify-between items-center text-xs sm:text-sm text-slate-600 font-medium">
                 {steps.map((label, index) => {
                   const active = index === currentStep;
@@ -265,13 +330,13 @@ export default function SignUpPage() {
                             completed
                               ? 'bg-emerald-400 text-slate-900 border-emerald-300'
                               : active
-                              ? 'bg-blue-600 text-white border-blue-300'
+                              ? 'bg-blue-600 text-white border-blue-400'
                               : 'bg-slate-100 text-slate-500 border-slate-300'
                           }`}
                         >
                           {completed ? <CheckCircle2 className="h-3 w-3" /> : index + 1}
                         </div>
-                        <span className={active ? 'text-slate-900' : 'text-slate-500'}>{label}</span>
+                        <span className={active ? 'text-slate-900 font-semibold' : 'text-slate-500'}>{label}</span>
                       </div>
                       {index < steps.length - 1 && (
                         <div className="hidden sm:block h-0.5 w-full bg-gradient-to-r from-slate-200 via-slate-300 to-slate-200 rounded-full" />
@@ -280,14 +345,14 @@ export default function SignUpPage() {
                   );
                 })}
               </div>
-              <p className="text-xs text-slate-500">
-                Step {currentStep + 1} of {steps.length}. You’ll review your details before paying your refundable security deposit.
+              <p className="text-[11px] text-slate-500">
+                Step {currentStep + 1} of {steps.length}. We’ll guide you from basic details to a secure, refundable deposit.
               </p>
             </div>
-          </CardHeader>
-          <CardContent className="grid gap-4 pt-2">
-            {/* Wrapped the conditional rendering in a fragment */}
-            <>
+
+            <div className="bg-white p-7 sm:p-8 rounded-xl shadow-2xl border border-slate-200/80">
+              {/* Wrapped the conditional rendering in a fragment */}
+              <>
                 {showVerifyNotice ? (
                   <div className="text-center space-y-4">
                     <p className="text-lg text-[#193281] font-semibold">
@@ -301,7 +366,7 @@ export default function SignUpPage() {
                     <Button onClick={() => router.push('/auth')}>Go to Login</Button>
                   </div>
                 ) : (
-                  <form onSubmit={handleSubmit} className="grid gap-4">
+                  <form onSubmit={handleFormSubmit} className="grid gap-4">
                     {/* Step 1: account details */}
                     {currentStep === 0 && (
                       <div className="grid gap-3">
@@ -465,10 +530,42 @@ export default function SignUpPage() {
                             </div>
                           </div>
                         </div>
+                      </>
+                    )}
 
+                    {/* Wizard navigation buttons */}
+                    <div className="flex items-center justify-between pt-4">
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        disabled={currentStep === 0 || isLoading}
+                        onClick={handleBack}
+                        className="text-slate-600 hover:text-slate-900"
+                      >
+                        Back
+                      </Button>
+                      {currentStep < 3 ? (
+                        <Button
+                          type="button"
+                          onClick={handleNext}
+                          disabled={isLoading}
+                          className="text-white hover:bg-[#5e17eb]"
+                          style={{ 
+                            backgroundColor: '#193281', 
+                            transition: 'background-color 0.3s ease'
+                          }}
+                        >
+                          Next
+                          <ArrowRight className="ml-2 h-4 w-4" />
+                        </Button>
+                      ) : (
                         <Button
                           type="submit"
-                          className="w-full mt-3 flex items-center justify-center gap-2"
+                          className="text-white hover:bg-[#5e17eb]"
+                          style={{ 
+                            backgroundColor: '#193281', 
+                            transition: 'background-color 0.3s ease'
+                          }}
                           disabled={
                             isLoading ||
                             !passwordRequirements.every(req => req) ||
@@ -487,54 +584,28 @@ export default function SignUpPage() {
                           ) : (
                             <>
                               Continue to secure deposit
-                              <ArrowRight className="h-4 w-4" />
+                              <ArrowRight className="ml-2 h-4 w-4" />
                             </>
                           )}
-                        </Button>
-                      </>
-                    )}
-
-                    {/* Wizard navigation buttons */}
-                    <div className="flex items-center justify-between pt-1">
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        disabled={currentStep === 0 || isLoading}
-                        onClick={handleBack}
-                        className="text-slate-600 hover:text-slate-900"
-                      >
-                        Back
-                      </Button>
-                      {currentStep < 3 && (
-                        <Button
-                          type="button"
-                          variant="default"
-                          onClick={handleNext}
-                          disabled={isLoading}
-                          className="flex items-center gap-2"
-                        >
-                          Next
-                          <ArrowRight className="h-4 w-4" />
                         </Button>
                       )}
                     </div>
 
-                    <div className="text-center text-sm mt-1">
-                      <span className="text-gray-600">Already have an account? </span>
-                      <Button
-                        variant="link"
-                        className="p-0 h-auto font-semibold text-[#193281] hover:text-[#5e17eb]"
-                        onClick={() => router.push('/auth')}
-                        disabled={isLoading}
+                    <div className="flex justify-center text-sm pt-2">
+                      <span className="text-slate-500 mr-1">Already have an account?</span>
+                      <Link
+                        href="/auth"
+                        className="text-[#193281] hover:text-[#5e17eb] font-medium"
                       >
-                        Sign in
-                      </Button>
+                        Sign In
+                      </Link>
                     </div>
                   </form>
                 )}
-            </>
-          </CardContent>
-        </Card>
+              </>
+            </div>
+          </div>
+        </div>
       </div>
     </>
   );

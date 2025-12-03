@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from '@/hooks/use-toast';
 import { doc, getDoc, getFirestore } from 'firebase/firestore';
+import { ProtectedRoute } from '@/components/ProtectedRoute';
 
 interface UserProfileData {
     fullName: string;
@@ -107,8 +108,9 @@ export default function ProfilePage() {
     };
 
     return (
-        <div className="container mx-auto py-8">
-            <Card className="max-w-5xl mx-auto">
+        <ProtectedRoute>
+            <div className="container mx-auto py-8">
+                <Card className="max-w-5xl mx-auto">
                 <CardHeader>
                     <CardTitle>{isNewUser ? 'Complete Your Profile' : 'Edit Profile'}</CardTitle>
                     <CardDescription>
@@ -239,5 +241,6 @@ export default function ProfilePage() {
                 </CardContent>
             </Card>
         </div>
+        </ProtectedRoute>
     );
 }

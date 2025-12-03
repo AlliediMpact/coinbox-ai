@@ -23,6 +23,7 @@ import {
   Shield
 } from 'lucide-react';
 import { getFirestore, doc, getDoc, updateDoc } from 'firebase/firestore';
+import { ProtectedRoute } from '@/components/ProtectedRoute';
 
 export default function SettingsPage() {
   const { user, loading } = useAuth();
@@ -115,7 +116,8 @@ export default function SettingsPage() {
   }
 
   return (
-    <div className="container mx-auto p-6 max-w-7xl">
+    <ProtectedRoute>
+      <div className="container mx-auto p-6 max-w-7xl">
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -309,5 +311,6 @@ export default function SettingsPage() {
         </div>
       </motion.div>
     </div>
+    </ProtectedRoute>
   );
 }

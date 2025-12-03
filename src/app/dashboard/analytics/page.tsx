@@ -7,6 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, BarChart3, TrendingUp } from 'lucide-react';
 import AdvancedAnalyticsDashboard from '@/components/AdvancedAnalyticsDashboard';
+import { ProtectedRoute } from '@/components/ProtectedRoute';
 
 export default function AnalyticsPage() {
   const { user } = useAuth();
@@ -23,7 +24,8 @@ export default function AnalyticsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 p-6">
+    <ProtectedRoute>
+      <div className="min-h-screen bg-gray-50 p-6">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="mb-8 flex items-center justify-between">
@@ -64,6 +66,6 @@ export default function AnalyticsPage() {
           </Card>
         </div>
       </div>
-    </div>
+    </ProtectedRoute>
   );
 }

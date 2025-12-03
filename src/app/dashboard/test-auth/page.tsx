@@ -16,6 +16,7 @@ import {
   checkMfaStatus
 } from '@/lib/auth-test-utils';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { ProtectedRoute } from '@/components/ProtectedRoute';
 
 export default function TestAuthPage() {
   const { user, signOut } = useAuth();
@@ -78,8 +79,9 @@ export default function TestAuthPage() {
   };
   
   return (
-    <div className="container mx-auto p-6 max-w-3xl">
-      <Card>
+    <ProtectedRoute>
+      <div className="container mx-auto p-6 max-w-3xl">
+        <Card>
         <CardHeader>
           <CardTitle className="text-2xl">Authentication Testing Tool</CardTitle>
           <CardDescription>
@@ -260,5 +262,6 @@ export default function TestAuthPage() {
         </CardFooter>
       </Card>
     </div>
+    </ProtectedRoute>
   );
 }

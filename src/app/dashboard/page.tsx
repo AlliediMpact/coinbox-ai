@@ -18,6 +18,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip"
+import { ProtectedRoute } from '@/components/ProtectedRoute';
 
 const recentTransactions = [
   { id: 1, type: "Deposit", amount: "R1000", date: "2024-07-15" },
@@ -57,7 +58,7 @@ export default function Dashboard() {
         fetchBalances();
     }, [user]);
 
-  if (!user || !isMounted || loading) {
+  if (!isMounted || loading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="flex flex-col items-center space-y-4">
@@ -99,12 +100,13 @@ export default function Dashboard() {
   };
 
   return (
-    <motion.div 
-      className="flex flex-col p-4 dashboard"
-      initial="hidden"
-      animate="visible"
-      variants={containerVariants}
-    >
+    <ProtectedRoute>
+      <motion.div 
+        className="flex flex-col p-4 dashboard"
+        initial="hidden"
+        animate="visible"
+        variants={containerVariants}
+      >
       <motion.h1 
         className="text-3xl font-bold mb-6"
         initial={{ opacity: 0, y: -20 }}
@@ -428,10 +430,11 @@ export default function Dashboard() {
 
       </div>
 
-      <button onClick={() => signOut()} className="mt-8 px-6 py-3 bg-red-500 text-white rounded-md hover:bg-red-600 transition-colors duration-300">
-        Sign Out
-      </button>
-    </motion.div>
+        <button onClick={() => signOut()} className="mt-8 px-6 py-3 bg-red-500 text-white rounded-md hover:bg-red-600 transition-colors duration-300">
+          Sign Out
+        </button>
+      </motion.div>
+    </ProtectedRoute>
   );
 }
 

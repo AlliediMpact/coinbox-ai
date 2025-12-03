@@ -11,6 +11,7 @@ import { Shield, Lock, Loader2 } from 'lucide-react';
 import MfaEnrollment from '@/components/MfaEnrollment';
 import { useToast } from '@/hooks/use-toast';
 import { mfaService } from '@/lib/mfa-service';
+import { ProtectedRoute } from '@/components/ProtectedRoute';
 
 export default function MfaSettingsPage() {
   const { user } = useAuth();
@@ -99,8 +100,9 @@ export default function MfaSettingsPage() {
   }
   
   return (
-    <div className="container mx-auto p-6 max-w-4xl">
-      <Card>
+    <ProtectedRoute>
+      <div className="container mx-auto p-6 max-w-4xl">
+        <Card>
         <CardHeader>
           <CardTitle className="text-2xl">Two-Factor Authentication</CardTitle>
           <CardDescription>
@@ -170,5 +172,6 @@ export default function MfaSettingsPage() {
         </CardContent>
       </Card>
     </div>
+    </ProtectedRoute>
   );
 }

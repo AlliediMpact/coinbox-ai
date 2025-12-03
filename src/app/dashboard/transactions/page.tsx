@@ -1,6 +1,7 @@
 'use client';
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { ProtectedRoute } from '@/components/ProtectedRoute';
 import { Coins, Wallet, Shield } from 'lucide-react';
 
 const transactions = [
@@ -11,8 +12,9 @@ const transactions = [
 
 export default function TransactionsPage() {
   return (
-    <div className="p-6">
-      <Card>
+    <ProtectedRoute>
+      <div className="p-6">
+        <Card>
         <CardHeader>
           <CardTitle>Transactions</CardTitle>
         </CardHeader>
@@ -39,5 +41,6 @@ export default function TransactionsPage() {
         </CardContent>
       </Card>
     </div>
+    </ProtectedRoute>
   );
 }
