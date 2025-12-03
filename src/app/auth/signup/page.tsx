@@ -44,6 +44,7 @@ declare global {
 }
 
 export default function SignUpPage() {
+  const [isMounted, setIsMounted] = useState(false);
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
@@ -64,6 +65,11 @@ export default function SignUpPage() {
   // const { signUp } = useAuth(); // signUp is now fully server-side
   const { toast } = useToast();
   const router = useRouter();
+
+  // Ensure component is mounted before enabling interactions
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
 
   const steps = [
     'Account details',
@@ -248,6 +254,15 @@ export default function SignUpPage() {
       handleSubmit(e);
     }
   };
+
+  // Show loading state until mounted to prevent hydration issues
+  if (!isMounted) {
+    return (
+      <div className="min-h-screen w-full bg-slate-950 flex items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-white" />
+      </div>
+    );
+  }
 
   return (
     <>

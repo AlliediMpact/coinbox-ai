@@ -15,6 +15,7 @@ import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 
 export default function AuthPage() {
+  const [isMounted, setIsMounted] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isResetMode, setIsResetMode] = useState(false);
@@ -30,6 +31,11 @@ export default function AuthPage() {
   const { signIn, sendPasswordReset, user } = useAuth();
   const { toast } = useToast();
   const router = useRouter();
+
+  // Ensure component is mounted before enabling interactions
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
 
   const validateEmail = (value: string) => {
     if (!value) return 'Email is required';
@@ -143,6 +149,15 @@ export default function AuthPage() {
     setMfaError(null);
     setIsLoading(false);
   };
+
+  // Show loading state until mounted to prevent hydration issues
+  if (!isMounted) {
+    return (
+      <div className="min-h-screen w-full bg-slate-950 flex items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-white" />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen w-full bg-slate-950 text-slate-50 flex flex-col lg:flex-row">
