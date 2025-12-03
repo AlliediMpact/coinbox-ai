@@ -193,10 +193,21 @@ service cloud.firestore {
       allow read: if isAuthenticated() && 
                     (resource.data.referrerId == request.auth.uid || isSupport());
       
-      // Only system can create/update commissions
+      // System can create/update commissions via server
       allow create, update: if false;
       
       // No deletes (audit trail)
+      allow delete: if false;
+    }
+    
+    // Commission payouts
+    match /commission_payouts/{payoutId} {
+      // Users can read their own payouts
+      allow read: if isAuthenticated() && 
+                    (resource.data.referrerId == request.auth.uid || isSupport());
+      
+      // System only
+      allow create, update: if false;
       allow delete: if false;
     }
     

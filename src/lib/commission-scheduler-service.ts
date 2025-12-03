@@ -251,6 +251,7 @@ class CommissionSchedulerService {
 export const commissionSchedulerService = new CommissionSchedulerService();
 
 // Auto-start scheduler in production environment
-if (process.env.NODE_ENV === 'production') {
-  commissionSchedulerService.startScheduler().catch(console.error);
-}
+// Disabled during build - should be started via API or cron job instead
+// if (process.env.NODE_ENV === 'production') {
+//   commissionSchedulerService.startScheduler().catch(console.error);
+// }
