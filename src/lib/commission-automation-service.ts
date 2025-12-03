@@ -115,6 +115,25 @@ class CommissionAutomationService {
     }
   }
 
+  // Get all pending commissions
+  async getPendingCommissions(): Promise<Commission[]> {
+    try {
+      const pendingCommissionsQuery = query(
+        collection(db, 'commissions'),
+        where('status', '==', 'pending')
+      );
+
+      const pendingSnapshot = await getDocs(pendingCommissionsQuery);
+      return pendingSnapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      })) as Commission[];
+    } catch (error) {
+      console.error('Error getting pending commissions:', error);
+      return [];
+    }
+  }
+
   // Process automated commission payouts (run daily)
   async processAutomatedPayouts(): Promise<void> {
     try {
