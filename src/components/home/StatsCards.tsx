@@ -2,6 +2,7 @@
 
 import { motion } from 'framer-motion';
 import { useEffect, useState } from 'react';
+import { useAuth } from '@/components/AuthProvider';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Users, TrendingUp, Wallet, Newspaper, ArrowUpRight, ArrowDownRight } from 'lucide-react';
 import { db } from '@/lib/firebase';
@@ -29,36 +30,38 @@ export default function StatsCards() {
   const [coins, setCoins] = useState<CoinData[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
+  const { user } = useAuth();
   useEffect(() => {
     const fetchData = async () => {
       try {
-        // Fetch active users count
-        const usersRef = collection(db, 'users');
-        const countSnapshot = await getCountFromServer(usersRef);
-        const totalUsers = countSnapshot.data().count;
+        // Only fetch users data if authenticated (not public)
+        if (user) {
+          const usersRef = collection(db, 'users');
+          const countSnapshot = await getCountFromServer(usersRef);
+          const totalUsers = countSnapshot.data().count;
+          const recentUsersQuery = query(usersRef, limit(5));
+          const recentUsersSnapshot = await getDocs(recentUsersQuery);
+          const recentUserNames = recentUsersSnapshot.docs
+            .map(doc => {
+              const data = doc.data();
+              return data.firstName || data.displayName?.split(' ')[0] || 'User';
+            })
+            .filter(name => name !== 'User')
+            .slice(0, 5);
+          setActiveUsers({
+            total: totalUsers,
+            recentUsers: recentUserNames
+          });
+        } else {
+          // Fallback for public users
+          setActiveUsers({ total: 1000, recentUsers: ['John', 'Sarah', 'Michael', 'Emma', 'David'] });
+        }
 
-        // Fetch recent user first names (public safe data)
-        const recentUsersQuery = query(usersRef, limit(5));
-        const recentUsersSnapshot = await getDocs(recentUsersQuery);
-        const recentUserNames = recentUsersSnapshot.docs
-          .map(doc => {
-            const data = doc.data();
-            return data.firstName || data.displayName?.split(' ')[0] || 'User';
-          })
-          .filter(name => name !== 'User')
-          .slice(0, 5);
-
-        setActiveUsers({
-          total: totalUsers,
-          recentUsers: recentUserNames
-        });
-
-        // Try to fetch news from Firestore
+        // Try to fetch news from Firestore (public)
         try {
           const newsRef = collection(db, 'news');
           const newsQuery = query(newsRef, limit(3));
           const newsSnapshot = await getDocs(newsQuery);
-          
           if (!newsSnapshot.empty) {
             const newsData = newsSnapshot.docs.map(doc => {
               const data = doc.data();
@@ -69,7 +72,6 @@ export default function StatsCards() {
             });
             setNews(newsData);
           } else {
-            // Fallback static news
             setNews([
               { title: 'CoinBox reaches 10,000 users milestone', date: 'Today' },
               { title: 'New security features launched', date: 'Yesterday' },
@@ -77,7 +79,6 @@ export default function StatsCards() {
             ]);
           }
         } catch {
-          // Fallback static news
           setNews([
             { title: 'CoinBox reaches 10,000 users milestone', date: 'Today' },
             { title: 'New security features launched', date: 'Yesterday' },
@@ -85,12 +86,11 @@ export default function StatsCards() {
           ]);
         }
 
-        // Try to fetch trending coins
+        // Try to fetch trending coins (public)
         try {
           const coinsRef = collection(db, 'coins');
           const coinsQuery = query(coinsRef, limit(3));
           const coinsSnapshot = await getDocs(coinsQuery);
-          
           if (!coinsSnapshot.empty) {
             const coinsData = coinsSnapshot.docs.map(doc => {
               const data = doc.data();
@@ -102,7 +102,6 @@ export default function StatsCards() {
             });
             setCoins(coinsData);
           } else {
-            // Fallback static coins
             setCoins([
               { name: 'Bitcoin', symbol: 'BTC', change: 5.23 },
               { name: 'Ethereum', symbol: 'ETH', change: 3.45 },
@@ -110,7 +109,6 @@ export default function StatsCards() {
             ]);
           }
         } catch {
-          // Fallback static coins
           setCoins([
             { name: 'Bitcoin', symbol: 'BTC', change: 5.23 },
             { name: 'Ethereum', symbol: 'ETH', change: 3.45 },
@@ -119,7 +117,6 @@ export default function StatsCards() {
         }
       } catch (error) {
         console.error('Error fetching data:', error);
-        // Set fallback data
         setActiveUsers({ total: 1000, recentUsers: ['John', 'Sarah', 'Michael', 'Emma', 'David'] });
         setNews([
           { title: 'CoinBox reaches 10,000 users milestone', date: 'Today' },
@@ -135,9 +132,8 @@ export default function StatsCards() {
         setIsLoading(false);
       }
     };
-
     fetchData();
-  }, []);
+  }, [user]);
 
   const cardVariants = {
     hidden: { opacity: 0.8, y: 15 },

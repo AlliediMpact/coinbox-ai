@@ -27,6 +27,32 @@ service cloud.firestore {
       return request.resource.data.createdAt == request.time;
     }
     
+    // Public collections: allow read for everyone, write for no one
+    match /stats/{doc} {
+      allow read: if true;
+      allow write: if false;
+    }
+    match /publicContent/{doc} {
+      allow read: if true;
+      allow write: if false;
+    }
+    match /testimonials/{doc} {
+      allow read: if true;
+      allow write: if false;
+    }
+    match /press/{doc} {
+      allow read: if true;
+      allow write: if false;
+    }
+    match /education/{doc} {
+      allow read: if true;
+      allow write: if false;
+    }
+    match /systemStatus/{doc} {
+      allow read: if true;
+      allow write: if false;
+    }
+
     // Users collection
     match /users/{userId} {
       // Users can read their own data, admins can read all
