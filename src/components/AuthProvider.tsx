@@ -96,14 +96,14 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
     setIsClient(true);
     // Set a timeout to prevent infinite loading
     const timeout = setTimeout(() => {
-      if (loading && !firebaseAuth) {
-        console.log('[AuthProvider] Loading timeout - Firebase not initialized, setting loading to false');
+      if (loading) {
+        console.log('[AuthProvider] Loading timeout - setting loading to false after 3 seconds');
         setLoading(false);
       }
     }, 3000); // 3 second timeout
     
     return () => clearTimeout(timeout);
-  }, [loading]);
+  }, []); // Run only once on mount
 
   console.log('[AuthProvider] Rendering, firebaseAuth:', firebaseAuth ? 'initialized' : 'NOT initialized', 'loading:', loading, 'isClient:', isClient);
 
