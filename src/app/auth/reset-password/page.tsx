@@ -4,34 +4,27 @@ export const dynamic = 'force-dynamic';
 
 import { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
+import Link from 'next/link';
 import { useAuth } from '@/components/AuthProvider';
 import { useToast } from "@/hooks/use-toast";
-import { Label } from "@/components/ui/label";
-import { Key, Loader2, CheckCircle2, XCircle } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { CheckCircle2, Loader2 } from 'lucide-react';
 
-interface PasswordRequirement {
-  regex: RegExp;
-  message: string;
-}
-
-const PASSWORD_REQUIREMENTS: PasswordRequirement[] = [
-  { regex: /.{8,}/, message: "At least 8 characters long" },
-  { regex: /[A-Z]/, message: "Contains uppercase letter" },
-  { regex: /[a-z]/, message: "Contains lowercase letter" },
-  { regex: /[0-9]/, message: "Contains number" },
-  { regex: /[!@#$%^&*(),.?":{}|<>]/, message: "Contains special character" }
-];
+import AuthLayout from '@/components/auth/AuthLayout';
+import { AnimatedInput } from '@/components/auth/AnimatedInput';
+import AnimatedButton from '@/components/auth/AnimatedButton';
+import AnimatedAlert from '@/components/auth/AnimatedAlert';
+import PasswordStrength from '@/components/auth/PasswordStrength';
 
 function ResetPasswordContent() {
     const [newPassword, setNewPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
     const [isSubmitting, setIsSubmitting] = useState(false);
-    const [passwordRequirements, setPasswordRequirements] = useState<boolean[]>(
-        new Array(PASSWORD_REQUIREMENTS.length).fill(false)
-    );
+    const [success, setSuccess] = useState(false);
+    const [error, setError] = useState('');
+    const [passwordError, setPasswordError] = useState('');
+    const [confirmPasswordError, setConfirmPasswordError] = useState('');
+    
     const { resetPassword } = useAuth();
     const { toast } = useToast();
     const router = useRouter();
@@ -40,59 +33,75 @@ function ResetPasswordContent() {
 
     useEffect(() => {
         if (!oobCode) {
-            toast({
-                title: "Invalid Reset Link",
-                description: "Please use the link from your email to reset your password.",
-                variant: "destructive",
-            });
-            router.push('/auth');
+            setError("Invalid or expired reset link. Please request a new one.");
         }
-    }, [oobCode, router, toast]);
+    }, [oobCode]);
 
-    useEffect(() => {
-        const newRequirements = PASSWORD_REQUIREMENTS.map(req => req.regex.test(newPassword));
-        setPasswordRequirements(newRequirements);
-    }, [newPassword]);
+    const validatePassword = (password: string) => {
+        if (!password) {
+            setPasswordError('Password is required');
+            return false;
+        }
+        if (password.length < 8) {
+            setPasswordError('Password must be at least 8 characters');
+            return false;
+        }
+        if (!/[A-Z]/.test(password)) {
+            setPasswordError('Password must contain an uppercase letter');
+            return false;
+        }
+        if (!/[a-z]/.test(password)) {
+            setPasswordError('Password must contain a lowercase letter');
+            return false;
+        }
+        if (!/[0-9]/.test(password)) {
+            setPasswordError('Password must contain a number');
+            return false;
+        }
+        setPasswordError('');
+        return true;
+    };
+
+    const validateConfirmPassword = (confirm: string) => {
+        if (!confirm) {
+            setConfirmPasswordError('Please confirm your password');
+            return false;
+        }
+        if (confirm !== newPassword) {
+            setConfirmPasswordError('Passwords do not match');
+            return false;
+        }
+        setConfirmPasswordError('');
+        return true;
+    };
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
+        setError('');
         
         if (!oobCode) {
-            toast({
-                title: "Invalid Reset Link",
-                description: "Please use the link from your email to reset your password.",
-                variant: "destructive",
-            });
+            setError("Invalid or expired reset link. Please request a new one.");
             return;
         }
 
-        if (!passwordRequirements.every(req => req)) {
-            toast({
-                title: "Invalid Password",
-                description: "Please meet all password requirements",
-                variant: "destructive",
-            });
-            return;
-        }
+        const isPasswordValid = validatePassword(newPassword);
+        const isConfirmValid = validateConfirmPassword(confirmPassword);
 
-        if (newPassword !== confirmPassword) {
-            toast({
-                title: "Passwords Don't Match",
-                description: "Please make sure your passwords match.",
-                variant: "destructive",
-            });
+        if (!isPasswordValid || !isConfirmValid) {
             return;
         }
 
         setIsSubmitting(true);
+
         try {
             await resetPassword(oobCode, newPassword);
+            setSuccess(true);
             toast({
                 title: "Password Reset Successful",
                 description: "You can now login with your new password.",
             });
-            router.push('/auth');
         } catch (error: any) {
+            setError(error.message || 'Password reset failed. The link may have expired.');
             toast({
                 title: "Password Reset Failed",
                 description: error.message,
@@ -103,90 +112,142 @@ function ResetPasswordContent() {
         }
     };
 
-    if (!oobCode) return null;
+    if (!oobCode && !error) {
+        return (
+            <AuthLayout>
+                <div className="flex items-center justify-center py-12">
+                    <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
+                </div>
+            </AuthLayout>
+        );
+    }
 
     return (
-        <div className="flex items-center justify-center min-h-screen auth-page">
-            <Card className="w-[400px]">
-                <CardHeader>
-                    <CardTitle>Reset Password</CardTitle>
-                    <CardDescription>Enter your new password below</CardDescription>
-                </CardHeader>
-                <CardContent>
-                    <form onSubmit={handleSubmit} className="space-y-4">
-                        <div className="space-y-2">
-                            <Label htmlFor="newPassword">New Password</Label>
-                            <div className="relative">
-                                <Key className="absolute left-3 top-3 h-4 w-4 text-white/60" />
-                                <Input
-                                    id="newPassword"
-                                    type="password"
-                                    placeholder="Enter new password"
-                                    className="auth-input pl-10"
-                                    value={newPassword}
-                                    onChange={(e) => setNewPassword(e.target.value)}
-                                    required
-                                    disabled={isSubmitting}
-                                />
+        <AuthLayout
+            title="Reset Password"
+            subtitle="Choose a new secure password for your account"
+        >
+            <AnimatePresence mode="wait">
+                {!success ? (
+                    <motion.div
+                        key="form"
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                    >
+                        <form onSubmit={handleSubmit} className="space-y-6">
+                            <AnimatePresence mode="wait">
+                                {error && (
+                                    <AnimatedAlert type="error" message={error} />
+                                )}
+                            </AnimatePresence>
+
+                            <AnimatedInput
+                                label="New Password"
+                                type="password"
+                                placeholder="Create a strong password"
+                                value={newPassword}
+                                onChange={(e) => {
+                                    setNewPassword(e.target.value);
+                                    if (confirmPassword) validateConfirmPassword(confirmPassword);
+                                }}
+                                onBlur={() => validatePassword(newPassword)}
+                                error={passwordError}
+                                showPasswordToggle
+                                disabled={isSubmitting || !!error}
+                                autoComplete="new-password"
+                            />
+
+                            <PasswordStrength password={newPassword} />
+
+                            <AnimatedInput
+                                label="Confirm Password"
+                                type="password"
+                                placeholder="Re-enter your password"
+                                value={confirmPassword}
+                                onChange={(e) => {
+                                    setConfirmPassword(e.target.value);
+                                    if (e.target.value) validateConfirmPassword(e.target.value);
+                                }}
+                                onBlur={() => validateConfirmPassword(confirmPassword)}
+                                error={confirmPasswordError}
+                                success={confirmPassword && !confirmPasswordError ? 'Passwords match' : undefined}
+                                showPasswordToggle
+                                disabled={isSubmitting || !!error}
+                                autoComplete="new-password"
+                            />
+
+                            <div className="space-y-3">
+                                <AnimatedButton
+                                    type="submit"
+                                    loading={isSubmitting}
+                                    loadingText="Resetting password..."
+                                    disabled={
+                                        !newPassword ||
+                                        !confirmPassword ||
+                                        !!passwordError ||
+                                        !!confirmPasswordError ||
+                                        isSubmitting ||
+                                        !!error
+                                    }
+                                >
+                                    Reset Password
+                                </AnimatedButton>
+
+                                <Link href="/auth/login">
+                                    <AnimatedButton
+                                        type="button"
+                                        variant="outline"
+                                        className="bg-white dark:bg-slate-800"
+                                        disabled={isSubmitting}
+                                    >
+                                        Back to Sign In
+                                    </AnimatedButton>
+                                </Link>
                             </div>
-                            <div className="space-y-1">
-                                {PASSWORD_REQUIREMENTS.map((req, index) => (
-                                    <div key={index} className="flex items-center space-x-2 text-sm">
-                                        {passwordRequirements[index] ? (
-                                            <CheckCircle2 className="h-4 w-4 text-green-500" />
-                                        ) : (
-                                            <XCircle className="h-4 w-4 text-red-500" />
-                                        )}
-                                        <span className={passwordRequirements[index] ? "text-green-700" : "text-red-700"}>
-                                            {req.message}
-                                        </span>
-                                    </div>
-                                ))}
-                            </div>
-                        </div>
-                        <div className="space-y-2">
-                            <Label htmlFor="confirmPassword">Confirm Password</Label>
-                            <div className="relative">
-                                <Key className="absolute left-3 top-3 h-4 w-4 text-white/60" />
-                                <Input
-                                    id="confirmPassword"
-                                    type="password"
-                                    placeholder="Confirm new password"
-                                    className="auth-input pl-10"
-                                    value={confirmPassword}
-                                    onChange={(e) => setConfirmPassword(e.target.value)}
-                                    required
-                                    disabled={isSubmitting}
-                                />
-                            </div>
-                        </div>
-                        <Button
-                            type="submit"
-                            className="auth-button w-full"
-                            disabled={isSubmitting || !passwordRequirements.every(req => req)}
+                        </form>
+                    </motion.div>
+                ) : (
+                    <motion.div
+                        key="success"
+                        initial={{ opacity: 0, scale: 0.9 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        exit={{ opacity: 0, scale: 0.9 }}
+                        className="text-center space-y-6 py-8"
+                    >
+                        <motion.div
+                            initial={{ scale: 0 }}
+                            animate={{ scale: 1 }}
+                            transition={{ type: 'spring', stiffness: 200, damping: 20 }}
+                            className="w-20 h-20 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center mx-auto"
                         >
-                            {isSubmitting ? (
-                                <>
-                                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                                    Resetting Password...
-                                </>
-                            ) : (
-                                "Reset Password"
-                            )}
-                        </Button>
-                        <Button
-                            type="button"
-                            variant="outline"
-                            className="auth-button-outline w-full"
-                            onClick={() => router.push('/auth')}
-                            disabled={isSubmitting}
+                            <CheckCircle2 className="w-10 h-10 text-green-600 dark:text-green-400" />
+                        </motion.div>
+
+                        <div className="space-y-2">
+                            <h3 className="text-2xl font-bold text-slate-900 dark:text-white">
+                                Password Reset Complete!
+                            </h3>
+                            <p className="text-slate-600 dark:text-slate-400">
+                                Your password has been successfully reset.
+                            </p>
+                        </div>
+
+                        <motion.div
+                            initial={{ opacity: 0, y: 10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ delay: 0.2 }}
                         >
-                            Back to Login
-                        </Button>
-                    </form>
-                </CardContent>
-            </Card>
-        </div>
+                            <Link href="/auth/login">
+                                <AnimatedButton type="button">
+                                    Sign In with New Password
+                                </AnimatedButton>
+                            </Link>
+                        </motion.div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
+        </AuthLayout>
     );
 }
 
