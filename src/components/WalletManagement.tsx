@@ -159,12 +159,18 @@ export default function WalletManagement() {
         );
       }
 
+      // Only fetch transactions if user is authenticated
+      if (!user) {
+        // Not authenticated, skip fetching transactions
+        setTransactions([]);
+        setHasMore(false);
+        setLoading(false);
+        return;
+      }
       const documentSnapshots = await getDocs(transactionQuery);
       const newTransactions = documentSnapshots.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-      
       setLastDoc(documentSnapshots.docs[documentSnapshots.docs.length - 1]);
       setHasMore(newTransactions.length === ITEMS_PER_PAGE);
-
       if (loadMore) {
         setTransactions(prev => [...prev, ...newTransactions]);
       } else {

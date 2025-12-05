@@ -185,7 +185,11 @@ class KycService {
     return snapshot.empty ? null : doc(db, 'kyc_verifications', snapshot.docs[0].id);
   }
 
-  async getUserDocuments(userId: string): Promise<KycDocument[]> {
+  async getUserDocuments(userId: string, user?: any): Promise<KycDocument[]> {
+    if (!user) {
+      // Not authenticated, skip fetching KYC documents
+      return [];
+    }
     const q = query(collection(db, 'kyc_documents'), where('userId', '==', userId));
     const snapshot = await getDocs(q);
     return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as KycDocument));
@@ -199,7 +203,11 @@ class KycService {
     return verification.status === 'approved';
   }
 
-  async getDocumentStatus(userId: string, documentType: KycDocument['type']) {
+  async getDocumentStatus(userId: string, documentType: KycDocument['type'], user?: any) {
+    if (!user) {
+      // Not authenticated, skip fetching KYC document status
+      return null;
+    }
     const q = query(
       collection(db, 'kyc_documents'),
       where('userId', '==', userId),

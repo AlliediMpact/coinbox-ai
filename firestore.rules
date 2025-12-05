@@ -28,6 +28,10 @@ service cloud.firestore {
     }
     
     // Public collections: allow read for everyone, write for no one
+    match /publicData/{document=**} {
+      allow read: if true;
+      allow write: if false;
+    }
     match /stats/{doc} {
       allow read: if true;
       allow write: if false;
@@ -49,6 +53,14 @@ service cloud.firestore {
       allow write: if false;
     }
     match /systemStatus/{doc} {
+      allow read: if true;
+      allow write: if false;
+    }
+    match /news/{doc} {
+      allow read: if true;
+      allow write: if false;
+    }
+    match /coins/{doc} {
       allow read: if true;
       allow write: if false;
     }
